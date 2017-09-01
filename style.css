@@ -15,6 +15,17 @@ p.code {
   display: none;
 }
 
+.gets-typed {
+  display: none;
+}
+
+#cursor {
+  white-space: pre;
+  background: black;
+  width: 14px;
+  height: 28px;
+}
+
 #inner {
   padding-left: 25px;
 }
