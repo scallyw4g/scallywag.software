@@ -133,6 +133,8 @@ let Main = () => {
     return typeText(typedElements[3]);
   }).then ( () => {
     return typeText(typedElements[4]);
+  }).then ( () => {
+    return typeText(typedElements[6]);
   })
 
 
