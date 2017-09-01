@@ -11,6 +11,12 @@ p.code {
   white-space: pre;
 }
 
+.heading::after {
+  content: " ";
+  width: 100%;
+  background: red;
+}
+
 .content {
   display: none;
 }
@@ -20,10 +26,20 @@ p.code {
 }
 
 #cursor {
-  white-space: pre;
-  background: black;
-  width: 14px;
-  height: 28px;
+  width: 0;
+  height: 0;
+
+  margin-bottom: -28px;
+  margin-right: -14px;
+}
+
+#cursor::after {
+  content: " ";
+  display: inline-block;
+  background: red;
+  padding-bottom: 28px;
+  padding-right: 14px;
+
 }
 
 #inner {

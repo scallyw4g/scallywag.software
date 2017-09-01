@@ -3,6 +3,10 @@
 let VISIBILITY_OFF = "hidden";
 let VISIBILITY_ON = "visible";
 
+let DISPLAY_INLINE_BLOCK = "inline-block";
+let DISPLAY_BLOCK = "block";
+let DISPLAY_NONE = "none";
+
 let InvalidCodePath = () => { Assert(!"InvalidCodePath"); }
 
 let Assert = ( expression ) => {
@@ -37,33 +41,23 @@ let SetVisibility = (element, vis) => {
   element.style.visibility = vis;
 }
 
-let ToggleVisibility = (element) => {
-  let visibility = window.getComputedStyle(element).visibility;
-
-  if (visibility === VISIBILITY_ON) {
-    element.style.visibility = VISIBILITY_OFF;
-
-  } else if (visibility === VISIBILITY_OFF) {
-    element.style.visibility = VISIBILITY_ON;
-
-  } else { InvalidCodePath() }
-
-}
-
-let ToggleDisplay = (element) => {
+let ToggleDisplay = (element, d1, d2) => {
   let display = window.getComputedStyle(element).display;
 
-  if (display === "block") {
-    element.style.display = "none";
+  if (display === d1) {
+    element.style.display = d2;
 
-  } else if (display === "none") {
-    element.style.display = "block";
+  } else if (display === d2) {
+    element.style.display = d1;
 
   } else { InvalidCodePath() }
-
 }
 
-let blink = () => {
+let SetDisplay = (element, display) => {
+  element.style.display = display;
+}
+
+let blink = (cursor) => {
   let blinkTime = 500;
 
   return new Promise( (resolve, reject) => {
@@ -79,40 +73,49 @@ let blink = () => {
   });
 }
 
-let blinkCursor = (count) => {
-  let cursor = document.getElementById("cursor");
+let positionCursor = (cursor) => {
+
+}
+
+let blinkCursor = (cursor, count) => {
 
   let promise = new Promise( (resolve) => { resolve() } );
 
   while (--count >= 0) {
     promise = promise.then( () => {
-      return blink();
+      return blink(cursor);
     });
   }
 
   return promise;
 }
 
-let typeText = (elem) => {
+let typeText = (elem, finalDelay = 80) => {
 
   return new Promise( (resolve, reject) => {
     let text = elem.innerHTML.split("");
     elem.innerHTML = "";
 
-    ToggleDisplay(elem);
+    SetDisplay(elem, DISPLAY_INLINE_BLOCK);
 
     let anim = setInterval( () => {
       if (text.length == 0) {
         setTimeout( () => {
           clearInterval(anim);
           resolve();
-        }, 80 );
+        }, finalDelay );
 
       } else {
         elem.innerHTML += text.shift();
+
+        let bounds = elem.getBoundingClientRect();
+        let x = bounds.left + elem.offsetWidth;
+        let y = bounds.top + elem.offsetHeight;
+        console.log({x,y});
+        // setCursorP(cursor, {x,y} );
       }
 
-    }, 50 );
+    }, 0 );
 
   });
 }
@@ -120,11 +123,12 @@ let typeText = (elem) => {
 let Main = () => {
 
   let typedElements = Array.from(document.getElementsByClassName("gets-typed"));
+  let cursor = document.getElementById("cursor");
 
-  blinkCursor(4).then( () => {
-    return typeText(typedElements[0]);
+  blinkCursor(cursor, 1).then( () => {
+    return typeText(typedElements[0], 0);
   }).then ( () => {
-    return typeText(typedElements[5]);
+    return typeText(typedElements[5], 500);
   }).then( () => {
     return typeText(typedElements[1]);
   }).then( () => {
@@ -132,7 +136,7 @@ let Main = () => {
   }).then ( () => {
     return typeText(typedElements[3]);
   }).then ( () => {
-    return typeText(typedElements[4]);
+    return typeText(typedElements[4], 1000);
   }).then ( () => {
     return typeText(typedElements[6]);
   })
@@ -148,7 +152,8 @@ let Main = () => {
     let elem = headings[headingIndex];
 
     elem.onclick = (event) => {
-      ToggleDisplay(event.target.nextElementSibling);
+      let sibling = event.target.nextElementSibling;
+      ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
     }
 
   }
