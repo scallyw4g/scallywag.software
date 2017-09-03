@@ -39,10 +39,15 @@ let WaitTillLoaded = setInterval( () => {
 //   Elem['on' + event] = callback;
 // }
 
-let TypedElement = () => {
-  let Element = {}
+let TypedElement = (Elem) => {
+  let Result = {}
 
-  Element.CursorDim = {x,y}
+  Result.Content = Elem.innerHTML.split("");
+  Result.FinalBounds = Elem.getBoundingClientRect();
+
+  Result.DomElem = Elem;
+
+  return Result;
 }
 
 let SetVisibility = (element, vis) => {
@@ -65,19 +70,19 @@ let SetDisplay = (element, display) => {
   element.style.display = display;
 }
 
-let blink = (cursor) => {
+let blink = (Cursor) => {
   let blinkTime = 750;
   let blinkTick = blinkTime/3;
 
   return new Promise( (resolve, reject) => {
-    SetVisibility(cursor, VISIBILITY_ON);
+    SetVisibility(Cursor, VISIBILITY_ON);
 
     setTimeout( () => {
-      SetVisibility(cursor, VISIBILITY_OFF);
+      SetVisibility(Cursor, VISIBILITY_OFF);
     }, blinkTick );
 
     setTimeout( () => {
-      SetVisibility(cursor, VISIBILITY_ON);
+      SetVisibility(Cursor, VISIBILITY_ON);
     }, blinkTick*2 );
 
     setTimeout( () => {
@@ -86,62 +91,66 @@ let blink = (cursor) => {
   });
 }
 
-let blinkCursor = (cursor, count) => {
+let blinkCursor = (Cursor, count) => {
 
   let promise = new Promise( (resolve) => { resolve() } );
 
   while (--count >= 0) {
     promise = promise.then( () => {
-      return blink(cursor);
+      return blink(Cursor);
     });
   }
 
   return promise;
 }
 
-let setCursorDim = (cursor, {width, height}) => {
-  cursor.style.width = width + "px";
-  cursor.style.height = height + "px";
+let setCursorDim = (Cursor, {width, height}) => {
+  Cursor.style.width = width + "px";
+  Cursor.style.height = height + "px";
 }
 
-let setCursorP = (cursor, {x, y}) => {
-  cursor.style.position = "fixed";
-  cursor.style.left = x;
-  cursor.style.top = y;
+let setCursorP = (Cursor, {x, y}) => {
+  Cursor.style.position = "fixed";
+  Cursor.style.left = x;
+  Cursor.style.top = y;
+
+  return;
 }
 
-let UpdateCursor = (cursor, Elem) => {
-  let bounds = Elem.getBoundingClientRect();
+let UpdateCursor = (Cursor, Elem) => {
+  let bounds = Elem.DomElem.getBoundingClientRect();
 
   let height = bounds.bottom - bounds.top;
   let width = 0.35 * height;
 
-  let x = bounds.left + Elem.offsetWidth;
-  let y = bounds.top + Elem.offsetHeight - height;
+  let x = bounds.left + Elem.DomElem.offsetWidth;
+  let y = bounds.top + Elem.DomElem.offsetHeight - height;
 
-  setCursorP(cursor, {x,y} );
-  setCursorDim(cursor, {width, height});
+  setCursorP(Cursor, {x,y} );
+  setCursorDim(Cursor, {width, height});
+
+  return;
 }
 
-let typeText = (Elem, cursor, finalDelay = 500) => {
+let typeText = (Elem, Cursor, finalDelay = 500) => {
 
   return new Promise( (resolve, reject) => {
-    let text = Elem.innerHTML.split("");
-    Elem.innerHTML = "";
+    let text = Elem.Content;
+    Elem.DomElem.innerHTML = "";
 
-    SetDisplay(Elem, DISPLAY_INLINE_BLOCK);
+    SetDisplay(Elem.DomElem, DISPLAY_INLINE_BLOCK);
 
     let anim = setInterval( () => {
       if (text.length == 0) {
         setTimeout( () => {
-          SetVisibility(cursor, VISIBILITY_ON);
+          SetVisibility(Cursor, VISIBILITY_ON);
           clearInterval(anim);
           resolve();
         }, finalDelay );
 
       } else {
-        Elem.innerHTML += text.shift();
-        UpdateCursor(cursor, Elem);
+        Elem.DomElem.innerHTML += text.shift();
+        UpdateCursor(Cursor, Elem);
       }
 
     }, 50 );
@@ -149,25 +158,33 @@ let typeText = (Elem, cursor, finalDelay = 500) => {
   });
 }
 
-let RewindCursor = (cursor, Elem) => {
-  let bounds = Elem.getBoundingClientRect();
+let RewindCursor = (Cursor, Elem) => {
+  let bounds = Elem.DomElem.getBoundingClientRect();
 
   let x = bounds.left;
-  let y = cursor.style.top;
+  let y = Cursor.style.top;
 
-  setCursorP(cursor, {x,y} );
+  setCursorP(Cursor, {x,y} );
+}
+
+let PrepareToType = (Cursor, Elem) => {
+  UpdateCursor(Cursor, Elem);
+  RewindCursor(Cursor, Elem);
 }
 
 let Init = () => {
   return new Promise ( (resolve) => {
 
     let typedElements = Array.from(document.getElementsByClassName("gets-typed"));
+
     let content = Array.from(document.getElementsByClassName("content"));
+    let Cursor = document.getElementById("cursor");
 
-    let cursor = document.getElementById("cursor");
+    let firstElem = TypedElement(typedElements[0]);
 
-    UpdateCursor(cursor, typedElements[0]);
-    RewindCursor(cursor, typedElements[0]);
+    let mainElements = [];
+
+    PrepareToType(Cursor, firstElem);
 
     for ( let Index = 0;
           Index < typedElements.length;
@@ -175,6 +192,7 @@ let Init = () => {
     {
       let Elem = typedElements[Index];
       SetDisplay(Elem, DISPLAY_NONE);
+      mainElements.push(TypedElement(Elem));
     }
 
     for ( let Index = 0;
@@ -187,34 +205,34 @@ let Init = () => {
 
     SetVisibility(document.body, VISIBILITY_ON);
 
-    resolve(typedElements);
+    resolve(mainElements);
   });
 }
 
 let Main = (typedElements) => {
 
-  let cursor = document.getElementById("cursor");
+  let Cursor = document.getElementById("cursor");
 
-  blinkCursor(cursor, 5).then( () => {
-    return typeText(typedElements[0], cursor);
+  blinkCursor(Cursor, 5).then( () => {
+    return typeText(typedElements[0], Cursor);
   }).then ( () => {
-    return typeText(typedElements[5], cursor, 500);
+    return typeText(typedElements[5], Cursor, 500);
   }).then( () => {
-    return typeText(typedElements[1], cursor);
+    return typeText(typedElements[1], Cursor);
   }).then( () => {
-    return typeText(typedElements[2], cursor);
+    return typeText(typedElements[2], Cursor);
   }).then ( () => {
-    return typeText(typedElements[3], cursor);
+    return typeText(typedElements[3], Cursor);
   }).then ( () => {
-    return typeText(typedElements[4], cursor, 0);
+    return typeText(typedElements[4], Cursor, 0);
   }).then ( () => {
-    return blinkCursor(cursor, 1);
+    return blinkCursor(Cursor, 1);
   }).then ( () => {
-    return typeText(typedElements[6], cursor, 0);
+    return typeText(typedElements[6], Cursor, 0);
   }).then ( () => {
-    return blinkCursor(cursor, 1);
+    return blinkCursor(Cursor, 1);
   }).then ( () => {
-    return typeText(typedElements[7], cursor, 300);
+    return typeText(typedElements[7], Cursor, 300);
   })
 
 
