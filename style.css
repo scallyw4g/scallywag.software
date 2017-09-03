@@ -11,35 +11,24 @@ p.code {
   white-space: pre;
 }
 
-.heading::after {
-  content: " ";
-  width: 100%;
-  background: red;
-}
-
-.content {
-  display: none;
-}
-
 .gets-typed {
-  display: none;
+  display: inline-block;
 }
 
 #cursor {
-  width: 0;
-  height: 0;
+  display: fixed;
+  background: red;
 
-  margin-bottom: -28px;
-  margin-right: -14px;
+  height: 0;
+  width: 0;
+
+  left: 0;
+  top: 0;
 }
 
-#cursor::after {
-  content: " ";
+.whitespace {
   display: inline-block;
-  background: red;
-  padding-bottom: 28px;
-  padding-right: 14px;
-
+  width: 0.4em;
 }
 
 #inner {
@@ -47,7 +36,6 @@ p.code {
 }
 
 #contact {
-  display: inline-block;
   width: 100%;
   text-align: center;
   font-size: 2em;

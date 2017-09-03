@@ -7,6 +7,8 @@ let DISPLAY_INLINE_BLOCK = "inline-block";
 let DISPLAY_BLOCK = "block";
 let DISPLAY_NONE = "none";
 
+let TypingElement = null;
+
 let InvalidCodePath = () => { Assert(!"InvalidCodePath"); }
 
 let Assert = ( expression ) => {
@@ -20,9 +22,10 @@ let PageLoaded = () => {
 }
 
 let WaitTillLoaded = setInterval( () => {
+  SetVisibility(document.body, VISIBILITY_OFF);
   if ( PageLoaded() ) {
     clearInterval(WaitTillLoaded);
-    Main();
+    Init().then ( (typedElements) => Main(typedElements) );
   }
 }, 5);
 
@@ -36,6 +39,11 @@ let WaitTillLoaded = setInterval( () => {
 //   Elem['on' + event] = callback;
 // }
 
+let TypedElement = () => {
+  let Element = {}
+
+  Element.CursorDim = {x,y}
+}
 
 let SetVisibility = (element, vis) => {
   element.style.visibility = vis;
@@ -58,23 +66,24 @@ let SetDisplay = (element, display) => {
 }
 
 let blink = (cursor) => {
-  let blinkTime = 500;
+  let blinkTime = 750;
+  let blinkTick = blinkTime/3;
 
   return new Promise( (resolve, reject) => {
     SetVisibility(cursor, VISIBILITY_ON);
 
     setTimeout( () => {
       SetVisibility(cursor, VISIBILITY_OFF);
-    }, blinkTime );
+    }, blinkTick );
+
+    setTimeout( () => {
+      SetVisibility(cursor, VISIBILITY_ON);
+    }, blinkTick*2 );
 
     setTimeout( () => {
       resolve();
-    }, blinkTime + 250 );
+    }, blinkTick*3 );
   });
-}
-
-let positionCursor = (cursor) => {
-
 }
 
 let blinkCursor = (cursor, count) => {
@@ -90,55 +99,122 @@ let blinkCursor = (cursor, count) => {
   return promise;
 }
 
-let typeText = (elem, finalDelay = 80) => {
+let setCursorDim = (cursor, {width, height}) => {
+  cursor.style.width = width + "px";
+  cursor.style.height = height + "px";
+}
+
+let setCursorP = (cursor, {x, y}) => {
+  cursor.style.position = "fixed";
+  cursor.style.left = x;
+  cursor.style.top = y;
+}
+
+let UpdateCursor = (cursor, Elem) => {
+  let bounds = Elem.getBoundingClientRect();
+
+  let height = bounds.bottom - bounds.top;
+  let width = 0.35 * height;
+
+  let x = bounds.left + Elem.offsetWidth;
+  let y = bounds.top + Elem.offsetHeight - height;
+
+  setCursorP(cursor, {x,y} );
+  setCursorDim(cursor, {width, height});
+}
+
+let typeText = (Elem, cursor, finalDelay = 500) => {
 
   return new Promise( (resolve, reject) => {
-    let text = elem.innerHTML.split("");
-    elem.innerHTML = "";
+    let text = Elem.innerHTML.split("");
+    Elem.innerHTML = "";
 
-    SetDisplay(elem, DISPLAY_INLINE_BLOCK);
+    SetDisplay(Elem, DISPLAY_INLINE_BLOCK);
 
     let anim = setInterval( () => {
       if (text.length == 0) {
         setTimeout( () => {
+          SetVisibility(cursor, VISIBILITY_ON);
           clearInterval(anim);
           resolve();
         }, finalDelay );
 
       } else {
-        elem.innerHTML += text.shift();
-
-        let bounds = elem.getBoundingClientRect();
-        let x = bounds.left + elem.offsetWidth;
-        let y = bounds.top + elem.offsetHeight;
-        console.log({x,y});
-        // setCursorP(cursor, {x,y} );
+        Elem.innerHTML += text.shift();
+        UpdateCursor(cursor, Elem);
       }
 
-    }, 0 );
+    }, 50 );
 
   });
 }
 
-let Main = () => {
+let RewindCursor = (cursor, Elem) => {
+  let bounds = Elem.getBoundingClientRect();
 
-  let typedElements = Array.from(document.getElementsByClassName("gets-typed"));
+  let x = bounds.left;
+  let y = cursor.style.top;
+
+  setCursorP(cursor, {x,y} );
+}
+
+let Init = () => {
+  return new Promise ( (resolve) => {
+
+    let typedElements = Array.from(document.getElementsByClassName("gets-typed"));
+    let content = Array.from(document.getElementsByClassName("content"));
+
+    let cursor = document.getElementById("cursor");
+
+    UpdateCursor(cursor, typedElements[0]);
+    RewindCursor(cursor, typedElements[0]);
+
+    for ( let Index = 0;
+          Index < typedElements.length;
+          ++Index)
+    {
+      let Elem = typedElements[Index];
+      SetDisplay(Elem, DISPLAY_NONE);
+    }
+
+    for ( let Index = 0;
+          Index < content.length;
+          ++Index)
+    {
+      let Elem = content[Index];
+      SetDisplay(Elem, DISPLAY_NONE);
+    }
+
+    SetVisibility(document.body, VISIBILITY_ON);
+
+    resolve(typedElements);
+  });
+}
+
+let Main = (typedElements) => {
+
   let cursor = document.getElementById("cursor");
 
-  blinkCursor(cursor, 1).then( () => {
-    return typeText(typedElements[0], 0);
+  blinkCursor(cursor, 5).then( () => {
+    return typeText(typedElements[0], cursor);
   }).then ( () => {
-    return typeText(typedElements[5], 500);
+    return typeText(typedElements[5], cursor, 500);
   }).then( () => {
-    return typeText(typedElements[1]);
+    return typeText(typedElements[1], cursor);
   }).then( () => {
-    return typeText(typedElements[2]);
+    return typeText(typedElements[2], cursor);
   }).then ( () => {
-    return typeText(typedElements[3]);
+    return typeText(typedElements[3], cursor);
   }).then ( () => {
-    return typeText(typedElements[4], 1000);
+    return typeText(typedElements[4], cursor, 0);
   }).then ( () => {
-    return typeText(typedElements[6]);
+    return blinkCursor(cursor, 1);
+  }).then ( () => {
+    return typeText(typedElements[6], cursor, 0);
+  }).then ( () => {
+    return blinkCursor(cursor, 1);
+  }).then ( () => {
+    return typeText(typedElements[7], cursor, 300);
   })
 
 
@@ -149,9 +225,9 @@ let Main = () => {
         headingIndex < headings.length;
         ++headingIndex )
   {
-    let elem = headings[headingIndex];
+    let Elem = headings[headingIndex];
 
-    elem.onclick = (event) => {
+    Elem.onclick = (event) => {
       let sibling = event.target.nextElementSibling;
       ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
     }
