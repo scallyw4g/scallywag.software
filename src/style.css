@@ -16,7 +16,7 @@ p.code {
 }
 
 #cursor {
-  display: fixed;
+  position: fixed;
   background: red;
 
   height: 0;
