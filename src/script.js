@@ -27,9 +27,14 @@ let WaitTillLoaded = setInterval( () => {
   document.body.style.visibility = VISIBILITY_OFF;
   if ( PageLoaded() ) {
     clearInterval(WaitTillLoaded);
-    Init().then ( (typedElements) => Main(typedElements) );
+    Init().then ( (data) => Main(data.mainElements, data.Cursor) );
   }
 }, 5);
+
+function MakeCursor(Elem) {
+  this.Target = null;
+  this.DomElem = Elem;
+}
 
 function TypedElement(Elem) {
   this.Content = Elem.innerHTML.split("");
@@ -66,14 +71,14 @@ let blink = (Cursor) => {
   let blinkTick = blinkTime/3;
 
   return new Promise( (resolve, reject) => {
-    SetVisibility(Cursor, VISIBILITY_ON);
+    SetVisibility(Cursor.DomElem, VISIBILITY_ON);
 
     setTimeout( () => {
-      SetVisibility(Cursor, VISIBILITY_OFF);
+      SetVisibility(Cursor.DomElem, VISIBILITY_OFF);
     }, blinkTick );
 
     setTimeout( () => {
-      SetVisibility(Cursor, VISIBILITY_ON);
+      SetVisibility(Cursor.DomElem, VISIBILITY_ON);
     }, blinkTick*2 );
 
     setTimeout( () => {
@@ -83,6 +88,7 @@ let blink = (Cursor) => {
 }
 
 let blinkCursor = (Cursor, count) => {
+  Assert(Cursor instanceof MakeCursor);
 
   let promise = new Promise( (resolve) => { resolve() } );
 
@@ -95,21 +101,29 @@ let blinkCursor = (Cursor, count) => {
   return promise;
 }
 
-let setCursorDim = (Cursor, {width, height}) => {
-  Cursor.style.width = width + "px";
-  Cursor.style.height = height + "px";
-}
+let SetCursorDim = (Cursor, {width, height}) => {
+  Assert(Cursor instanceof MakeCursor);
 
-let setCursorP = (Cursor, {x, y}) => {
-  Cursor.style.position = "fixed";
-  Cursor.style.left = x;
-  Cursor.style.top = y;
+  Cursor.DomElem.style.width = width + "px";
+  Cursor.DomElem.style.height = height + "px";
 
   return;
 }
 
-let UpdateCursor = (Cursor, Elem) => {
+let SetCursorP = (Cursor, {x, y}) => {
+  Assert(Cursor instanceof MakeCursor);
+
+  Cursor.DomElem.style.display = "fixed";
+  Cursor.DomElem.style.left = x;
+  Cursor.DomElem.style.top = y;
+
+  return;
+}
+
+let UpdateCursorP = (Cursor, Elem) => {
+  Assert(Cursor instanceof MakeCursor);
   Assert(Elem instanceof TypedElement);
+
   let bounds = Elem.DomElem.getBoundingClientRect();
 
   let height = bounds.bottom - bounds.top;
@@ -118,21 +132,23 @@ let UpdateCursor = (Cursor, Elem) => {
   let x = bounds.left + Elem.DomElem.offsetWidth;
   let y = bounds.top + Elem.DomElem.offsetHeight - height;
 
-  setCursorP(Cursor, {x,y} );
-  setCursorDim(Cursor, {width, height});
+  console.log({x,y});
+
+  SetCursorP(Cursor, {x,y} );
+  SetCursorDim(Cursor, {width, height});
 
   return;
 }
 
 let typeText = (Elem, Cursor, finalDelay = 500) => {
+  Assert(Cursor instanceof MakeCursor);
   Assert(Elem instanceof TypedElement);
   let charInterval = 50;
 
   return new Promise( (resolve, reject) => {
+
       PrepareToType(Cursor, Elem);
-      setTimeout( () => {
-        resolve();
-      }, charInterval );
+      setTimeout( () => { resolve(); }, charInterval );
 
   }).then( () => {
 
@@ -150,7 +166,7 @@ let typeText = (Elem, Cursor, finalDelay = 500) => {
 
         } else {
           Elem.DomElem.innerHTML += text.shift();
-          UpdateCursor(Cursor, Elem);
+          UpdateCursorP(Cursor, Elem);
         }
 
       }, charInterval );
@@ -164,9 +180,9 @@ let RewindCursor = (Cursor, Elem) => {
   let bounds = Elem.DomElem.getBoundingClientRect();
 
   let x = bounds.left;
-  let y = Cursor.style.top;
+  let y = Cursor.DomElem.style.top;
 
-  setCursorP(Cursor, {x,y} );
+  SetCursorP(Cursor, {x,y} );
 }
 
 let SetHeight = (DomElem, Bounds) => {
@@ -175,14 +191,21 @@ let SetHeight = (DomElem, Bounds) => {
 }
 
 let PrepareToType = (Cursor, Elem) => {
+  Assert(Cursor instanceof MakeCursor);
   Assert(Elem instanceof TypedElement);
 
+  Cursor.Target = Elem;
+
+  // Set the height of the elem so it doesn't flicker the rest when setting
+  // display: none
   SetHeight(Elem.DomElem, Elem.FinalBounds);
 
   SetDisplay(Elem.DomElem, DISPLAY_INLINE_BLOCK);
   SetVisibility(Elem.DomElem, VISIBILITY_OFF);
 
-  UpdateCursor(Cursor, Elem);
+  // TODO(Jesse): Calling these together is inefficient.. should they be a
+  // single call or something?
+  UpdateCursorP(Cursor, Elem);
   RewindCursor(Cursor, Elem);
 }
 
@@ -192,13 +215,16 @@ let Init = () => {
     let typedElements = Array.from(document.getElementsByClassName("gets-typed"));
 
     let content = Array.from(document.getElementsByClassName("content"));
-    let Cursor = document.getElementById("cursor");
+    let Cursor = new MakeCursor(document.getElementById("cursor"));
+    Assert(Cursor instanceof MakeCursor);
 
-    let firstElem = new TypedElement(typedElements[0]);
+    document.body.onresize = () => UpdateCursorP(Cursor, Elem);
 
     let mainElements = [];
 
-    PrepareToType(Cursor, firstElem);
+    // Hack to initialize the cursor
+      let firstElem = new TypedElement(typedElements[0]);
+      PrepareToType(Cursor, firstElem);
 
     for ( let Index = 0;
           Index < typedElements.length;
@@ -220,15 +246,18 @@ let Init = () => {
 
     document.body.style.visibility = VISIBILITY_ON;
 
-    resolve(mainElements);
+    resolve({mainElements, Cursor});
   });
 }
 
-let Main = (elements) => {
+let Main = (elements, Cursor) => {
 
-  let Cursor = document.getElementById("cursor");
+  console.log(elements);
 
-  blinkCursor(Cursor, 1).then( () => {
+  Assert(elements);
+  Assert(Cursor instanceof MakeCursor);
+
+  blinkCursor(Cursor, 3).then( () => {
     return typeText(elements[0], Cursor);
   }).then ( () => {
     return typeText(elements[5], Cursor, 500);
@@ -241,13 +270,12 @@ let Main = (elements) => {
   }).then ( () => {
     return typeText(elements[4], Cursor, 0);
   }).then ( () => {
-    return blinkCursor(Cursor, 1);
-  }).then ( () => {
     return typeText(elements[6], Cursor, 0);
   }).then ( () => {
-    return blinkCursor(Cursor, 1);
+    return blinkCursor(Cursor, 3);
   }).then ( () => {
-    return typeText(elements[7], Cursor, 300);
+    SetDisplay(Cursor.DomElem, DISPLAY_NONE);
+    // return typeText(elements[7], Cursor, 300);
   })
 
 
