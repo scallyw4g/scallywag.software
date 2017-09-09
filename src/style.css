@@ -1,14 +1,17 @@
 html, body {
   width: 100%;
   height: 100%;
+  background: #272822;
+  color: #F9F5C2;
+  /* color: #FFF7FB; */
+}
+
+a {
+  color: #ABAA98;
 }
 
 p {
   width: 800px;
-}
-
-p.code {
-  white-space: pre;
 }
 
 .gets-typed {
@@ -17,7 +20,8 @@ p.code {
 
 #cursor {
   position: fixed;
-  background: red;
+  /* background: #FF3D73; */
+  background: #F7208B;
 
   height: 0;
   width: 0;

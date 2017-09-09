@@ -71,15 +71,11 @@ let blink = (Cursor) => {
   let blinkTick = blinkTime/3;
 
   return new Promise( (resolve, reject) => {
-    SetVisibility(Cursor.DomElem, VISIBILITY_ON);
-
-    setTimeout( () => {
-      SetVisibility(Cursor.DomElem, VISIBILITY_OFF);
-    }, blinkTick );
+    SetVisibility(Cursor.DomElem, VISIBILITY_OFF);
 
     setTimeout( () => {
       SetVisibility(Cursor.DomElem, VISIBILITY_ON);
-    }, blinkTick*2 );
+    }, blinkTick );
 
     setTimeout( () => {
       resolve();
@@ -131,8 +127,6 @@ let UpdateCursorP = (Cursor, Elem) => {
 
   let x = bounds.left + Elem.DomElem.offsetWidth;
   let y = bounds.top + Elem.DomElem.offsetHeight - height;
-
-  console.log({x,y});
 
   SetCursorP(Cursor, {x,y} );
   SetCursorDim(Cursor, {width, height});
@@ -252,8 +246,6 @@ let Init = () => {
 
 let Main = (elements, Cursor) => {
 
-  console.log(elements);
-
   Assert(elements);
   Assert(Cursor instanceof MakeCursor);
 
@@ -268,7 +260,7 @@ let Main = (elements, Cursor) => {
   }).then ( () => {
     return typeText(elements[3], Cursor);
   }).then ( () => {
-    return typeText(elements[4], Cursor, 0);
+    return typeText(elements[4], Cursor);
   }).then ( () => {
     return typeText(elements[6], Cursor, 0);
   }).then ( () => {
