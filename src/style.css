@@ -44,3 +44,7 @@ p {
   text-align: center;
   font-size: 2em;
 }
+
+.display-none {
+  display: none;
+}

@@ -4,62 +4,76 @@
     <meta charset="UTF-8">
 
     <link rel="stylesheet" type="text/css" href="style.css">
-    <script src="script.js"> </script>
+
+    <script src="router.js"> </script>
+    <script src="init-main.js"> </script>
+    <script src="route-vim.js"> </script>
+    <script src="route-console.js"> </script>
+    <script src="cursor.js"> </script>
   </head>
 
   <body>
-    <h1 class="gets-typed"> bare_metal_software() { </h1>
-    <div id="inner">
-
-      <div>
-        <h2 class="heading gets-typed">about() {}</h2>
-        <div class="content">
-          I'm a believer in minimalism.
-        </div>
-      </div>
-
-      <div>
-        <h2 class="heading gets-typed">say_hi() {}</h2>
-        <div class="content">
-          <p>
-            let Jesse = [ problem_solver,
-                          bug_squasher,
-                          outdoor_adventurer ]
-          </p>
-        </div>
-      </div>
-
-      <div>
-        <h2 class="heading gets-typed">interests() {}</h2>
-        <div class="content">
-          <h3> Flatbreads!! </h3>
-          <p>
-            Recently I've become inspired by the work of Casey Muratori on
-            <a href=http://handmadehero.org>Handmade Hero</a> and decided to write a
-            game engine in C.
-          </p>
-        </div>
-      </div>
-
-      <div>
-        <h2 class="heading gets-typed">projects() {}</h2>
-        <div class="content">
-          <p>
-            Stuff about Projects
-          </p>
-        </div>
-      </div>
-
+    <div class="route display-none" data-route="404">
+      Oops, couldn't find that.
     </div>
 
-    <h1 class="gets-typed"> } </h1>
-
-    <div id="contact">
-      <a href="mailto:hi@bare.software"><span class="gets-typed">hi@bare.software</span></a>
-      <!-- <span class="gets-typed">:)</span> -->
+    <div class="route display-none" data-route="console">
     </div>
 
-    <div id="cursor"> </div>
+    <div class="route" data-route="vim">
+      <h1 class="gets-typed"> bare_metal_software() { </h1>
+      <div id="inner">
+
+        <div>
+          <h2 class="heading gets-typed">about() {}</h2>
+          <div class="content">
+            I'm a believer in minimalism.
+          </div>
+        </div>
+
+        <div>
+          <h2 class="heading gets-typed">say_hi() {}</h2>
+          <div class="content">
+            <p>
+              let Jesse = [ problem_solver,
+                            bug_squasher,
+                            outdoor_adventurer ]
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="heading gets-typed">interests() {}</h2>
+          <div class="content">
+            <h3> Flatbreads!! </h3>
+            <p>
+              Recently I've become inspired by the work of Casey Muratori on
+              <a href=http://handmadehero.org>Handmade Hero</a> and decided to write a
+              game engine in C.
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="heading gets-typed">projects() {}</h2>
+          <div class="content">
+            <p>
+              Stuff about Projects
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <h1 class="gets-typed"> } </h1>
+
+      <div id="contact">
+        <a href="mailto:hi@bare.software"><span class="gets-typed">hi@bare.software</span></a>
+        <!-- <span class="gets-typed">:)</span> -->
+      </div>
+
+      <div id="cursor"> </div>
+    </div>
   </body>
 
 </html>
