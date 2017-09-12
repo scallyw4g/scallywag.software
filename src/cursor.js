@@ -90,16 +90,18 @@ let PrepareToType = (Cursor, Elem) => {
 
   Cursor.Target = Elem;
 
-  // Set the height of the elem so it doesn't flicker the rest when setting
-  // display: none
-  SetHeight(Elem.DomElem, Elem.FinalBounds);
-
   SetDisplay(Elem.DomElem, DISPLAY_INLINE_BLOCK);
   SetVisibility(Elem.DomElem, VISIBILITY_OFF);
 
-  // TODO(Jesse): Calling these together is inefficient.. should they be a
-  // single call or something?
-  UpdateCursorP(Cursor, Elem);
-  RewindCursor(Cursor, Elem);
+  let bounds = Elem.DomElem.getBoundingClientRect();
+
+  let height = bounds.bottom - bounds.top;
+  let width = 0.4 * height;
+
+  let x = bounds.left;
+  let y = bounds.top;
+
+  SetCursorP(Cursor, {x,y} );
+  SetCursorDim(Cursor, {width, height});
 }
 

@@ -72,30 +72,29 @@ let typeText = (Elem, Cursor, finalDelay = 500) => {
 
     return new Promise( (resolve, reject) => {
 
-      SetVisibility(Elem.DomElem, VISIBILITY_ON);
+      SetVisibility(Elem.DomElem, VISIBILITY_OFF);
 
       let text = Elem.Content;
 
-      // <hack>
-      // Setting the content to a space is to ensure text
-      // previously typed on the same line doesn't jump around.  Requires css
-      // `white-space: pre;` to work, which happens to be useful for aesthetics
-      // as well.
-      Elem.DomElem.innerHTML = " ";
-      Elem.DomElem.style["white-space"] = "pre";
-      // </hack>
+      let firstPass = true;
 
       let TextAnimation = setInterval( () => {
-
         if (text.length == 0) {
-          setTimeout( () => { clearInterval(TextAnimation); resolve(); }, finalDelay );
-
-        } else {
-
-          Elem.DomElem.innerHTML = 
-          Elem.DomElem.innerHTML += text.shift();
-          UpdateCursorP(Cursor, Elem);
+          clearInterval(TextAnimation);
+          setTimeout(() => { resolve(); }, finalDelay );
+          return;
         }
+
+
+        if (firstPass) {
+          Elem.DomElem.innerHTML = text.shift();
+          SetVisibility(Elem.DomElem, VISIBILITY_ON);
+          firstPass = false;
+        } else {
+          Elem.DomElem.innerHTML += text.shift();
+        }
+
+        UpdateCursorP(Cursor, Elem);
 
       }, charInterval );
     });

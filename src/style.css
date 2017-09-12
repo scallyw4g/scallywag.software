@@ -12,7 +12,6 @@ a {
 
 .comment {
   color: #ABAA98;
-  padding-left: 0.5em;
 }
 
 p {
@@ -20,7 +19,7 @@ p {
 }
 
 .gets-typed {
-  white-space: pre;
+  white-space: pre-wrap;
   display: inline-block;
 }
 .display-none {
