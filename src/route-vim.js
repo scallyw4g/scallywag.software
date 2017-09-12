@@ -5,7 +5,6 @@ UserCallback( (State) => {
 
   Route.Main = (State) => {
 
-    console.log("main!");
     let Router = State.Router;
     let Cursor = State.Cursor;
     Assert(Router instanceof MakeRouter);

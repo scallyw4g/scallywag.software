@@ -20,8 +20,30 @@ p {
 }
 
 .gets-typed {
-  margin-left: 1px;
   display: inline-block;
+}
+.display-none {
+  display: none;
+}
+
+h2 {
+  font-size: 1.6em;
+  font-weight: 400;
+}
+.h2 {
+  font-size: 1.6em;
+  font-weight: 400;
+}
+
+h1 {
+  margin: 0.5em 0;
+  font-size: 2em;
+  font-weight: 500;
+}
+.h1 {
+  margin: 0.5em 0;
+  font-size: 2em;
+  font-weight: 500;
 }
 
 #cursor {
@@ -37,29 +59,19 @@ p {
 }
 
 #inner {
-  padding-left: 25px;
+  padding-left: 1.5em;
 }
 
-.display-none {
-  display: none;
+#vim {
+  padding-left: 2em;
 }
 
-h2 {
-  font-size: 1.6em;
-  font-weight: 400;
-}
-.h2 {
-  font-size: 1.6em;
-  font-weight: 400;
-}
-
-h1 {
-  margin: 21.5px 1;
-  font-size: 2em;
-  font-weight: 500;
-}
-.h1 {
-  margin: 21.5px 1;
-  font-size: 2em;
-  font-weight: 500;
+#vim #sidebar {
+  background: #FF3D73;
+  /* background: #F7208B; */
+  position: fixed;
+  top: 0;
+  left: 1.9em;
+  width: 0.1em;
+  height: 10000px;
 }
