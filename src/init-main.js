@@ -21,7 +21,6 @@ let Assert = ( expression ) => {
 function AppState() {
   this.Router = null;
   this.Cursor = null;
-  this.elements = [];
 }
 
 let PageLoaded = () => {
@@ -30,7 +29,6 @@ let PageLoaded = () => {
 }
 
 let WaitTillLoaded = setInterval( () => {
-  document.body.style.visibility = VISIBILITY_OFF;
   if ( PageLoaded() ) {
     clearInterval(WaitTillLoaded);
     Init().then ( (State) => Main(State) );
@@ -67,7 +65,6 @@ let SetDisplay = (element, display) => {
   element.style.display = display;
 }
 
-
 let typeText = (Elem, Cursor, finalDelay = 500) => {
   Assert(Cursor instanceof MakeCursor);
   Assert(Elem instanceof TypedElement);
@@ -85,7 +82,14 @@ let typeText = (Elem, Cursor, finalDelay = 500) => {
       SetVisibility(Elem.DomElem, VISIBILITY_ON);
 
       let text = Elem.Content;
-      Elem.DomElem.innerHTML = "";
+
+      // <hack>
+      // Setting the content to a space is to ensure text
+      // previously typed on the same line doesn't jump around.  Requires css
+      // `white-space: pre;` to work.
+      Elem.DomElem.innerHTML = " ";
+      Elem.DomElem.style["white-space"] = "pre";
+      // </hack>
 
       let anim = setInterval( () => {
 
@@ -94,6 +98,7 @@ let typeText = (Elem, Cursor, finalDelay = 500) => {
 
         } else {
           Elem.DomElem.innerHTML += text.shift();
+          Elem.DomElem.style["white-space"] = ""; // Unhack
           UpdateCursorP(Cursor, Elem);
         }
 
@@ -108,59 +113,76 @@ let SetHeight = (DomElem, Bounds) => {
   DomElem.style.height = Bounds.bottom - Bounds.top;;
 }
 
+let PrepareToTypeRouteElements = (DomElem, Cursor) => {
+  Assert(DomElem instanceof HTMLElement);
+  Assert(Cursor instanceof MakeCursor);
+
+  let elementsToType = Array.from(DomElem.getElementsByClassName("gets-typed"));
+
+  let firstElem = new TypedElement(elementsToType[0]);
+  PrepareToType(Cursor, firstElem);
+
+  let Result = [];
+
+  for ( let Index = 0;
+        Index < elementsToType.length;
+        ++Index)
+  {
+    let Elem = elementsToType[Index];
+    Result.push(new TypedElement(Elem));
+
+    SetDisplay(Elem, DISPLAY_NONE);
+  }
+
+  return Result;
+}
+
+
+let Global_State = new AppState();
+let Global_bindUserCallbackData = { State: Global_State, pendingUserCallbacks: 0 };
+
+let UserCallback = ( callback => {
+  ++Global_bindUserCallbackData.pendingUserCallbacks;
+
+  document.addEventListener( "bind-user-callbacks", (Event) => {
+    --Global_bindUserCallbackData.pendingUserCallbacks;
+    callback(Event.detail.State);
+  });
+});
+
 let Init = () => {
   return new Promise ( (resolve) => {
 
-    document.body.onresize = () => UpdateCursorP(Cursor, Elem);
+    // FIXME(Jesse): Reposition cursor on resize
+    // document.body.onresize = () => UpdateCursorP(Cursor, Elem);
 
-    let State = new AppState();
+    let State = Global_State;
 
-    State.Router = new MakeRouter(window.location.pathname);
     State.Cursor = new MakeCursor(document.getElementById("cursor"));
+    State.Router = new MakeRouter();
 
     let Cursor = State.Cursor;
     let Router = State.Router;
 
-    let RouteElements = Array.from(document.getElementsByClassName("route"));
-    let content       = Array.from(document.getElementsByClassName("content"));
-    let typedElements = Array.from(document.getElementsByClassName("gets-typed"));
+    // TODO(Jesse): Polyfill CustomEvent for <IE9 ?
 
-    for ( let RouteIndex = 0;
-          RouteIndex < RouteElements.length;
-          ++RouteIndex)
-    {
-      let RouteElem = RouteElements[RouteIndex];
-      Router.routes[ RouteElem.dataset.route ] = new MakeRoute(RouteElem);
-      SetVisibility(RouteElem, VISIBILITY_OFF);
-    }
+    Router.Initialize();
 
-    // Hack to initialize the cursor
-    let firstElem = new TypedElement(typedElements[0]);
-    PrepareToType(Cursor, firstElem);
-
-    for ( let Index = 0;
-          Index < typedElements.length;
-          ++Index)
-    {
-      let Elem = typedElements[Index];
-      State.elements.push(new TypedElement(Elem));
-
-      SetDisplay(Elem, DISPLAY_NONE);
-    }
-
-    for ( let Index = 0;
-          Index < content.length;
-          ++Index)
-    {
-      let Elem = content[Index];
-      SetDisplay(Elem, DISPLAY_NONE);
-    }
-
-    document.body.style.visibility = VISIBILITY_ON;
-
-    // TODO(Jesse): Polyfill for <IE9 ?
-    let event = new CustomEvent("framework-loaded", {detail: State});
+    let event = new CustomEvent("bind-user-callbacks", {detail: Global_bindUserCallbackData});
+    console.log("dispaching bind-user-callbacks");
     document.dispatchEvent(event);
+
+    SetDisplay(document.body, DISPLAY_BLOCK);
+
+    let WaitForUserCallbacks = setInterval( () => {
+      if (Global_bindUserCallbackData.pendingUserCallbacks === 0) {
+        let event = new CustomEvent("framework-loaded", {detail: State});
+        console.log("dispaching framework-loaded");
+        document.dispatchEvent(event);
+        clearInterval(WaitForUserCallbacks);
+      }
+    }, 500);
+
 
     resolve(State);
   });
@@ -169,13 +191,9 @@ let Init = () => {
 let Main = (State) => {
   let Router = State.Router;
   let Cursor = State.Cursor;
-  let elements = State.elements;
 
   Assert(Router instanceof MakeRouter);
   Assert(Cursor instanceof MakeCursor);
-  Assert(elements);
-
-  Router.navigate("vim", State);
 
   let headings = Array.from(document.getElementsByClassName("heading"));
 

@@ -12,39 +12,37 @@
     <script src="cursor.js"> </script>
   </head>
 
-  <body>
-    <div class="route display-none" data-route="404">
-      Oops, couldn't find that.
+  <body class="display-none">
+    <div class="route display-none" data-route="/">
+      <h1> root </h1>
     </div>
 
-    <div class="route display-none" data-route="console">
+    <div class="route display-none" data-route="/404">
+      <span> Oops, couldn't find that. </span>
     </div>
 
-    <div class="route" data-route="vim">
-      <h1 class="gets-typed"> bare_metal_software() { </h1>
+    <div class="route display-none" data-route="/console">
+      <h2> <span> $ </span> <span class="gets-typed"> hi </span> </h2>
+      <h2> <span> $ </span> <span class="gets-typed"> vim </span> </h2>
+    </div>
+
+    <div class="route" data-route="/vim">
+      <div>
+        <span class="h1 gets-typed">bare_metal_software()</span>
+        <span class="h1 gets-typed">{</span>
+      </div>
       <div id="inner">
 
         <div>
-          <h2 class="heading gets-typed">about() {}</h2>
-          <div class="content">
+          <h2 class="heading gets-typed">about()</h2>
+          <div class="content display-none">
             I'm a believer in minimalism.
           </div>
         </div>
 
         <div>
-          <h2 class="heading gets-typed">say_hi() {}</h2>
-          <div class="content">
-            <p>
-              let Jesse = [ problem_solver,
-                            bug_squasher,
-                            outdoor_adventurer ]
-            </p>
-          </div>
-        </div>
-
-        <div>
-          <h2 class="heading gets-typed">interests() {}</h2>
-          <div class="content">
+          <h2 class="heading gets-typed">interests()</h2>
+          <div class="content display-none">
             <h3> Flatbreads!! </h3>
             <p>
               Recently I've become inspired by the work of Casey Muratori on
@@ -55,22 +53,26 @@
         </div>
 
         <div>
-          <h2 class="heading gets-typed">projects() {}</h2>
-          <div class="content">
+          <h2 class="heading gets-typed">projects()</h2>
+          <div class="content display-none">
             <p>
               Stuff about Projects
             </p>
           </div>
         </div>
 
+        <div>
+          <h2 class="heading gets-typed">say_hi()</h2>
+          <div class="content display-none">
+            <a href="mailto:hi@bare.software">hi@bare.software</a>
+          </div>
+        </div>
+
       </div>
 
-      <h1 class="gets-typed"> } </h1>
-
-      <div id="contact">
-        <a href="mailto:hi@bare.software"><span class="gets-typed">hi@bare.software</span></a>
-        <!-- <span class="gets-typed">:)</span> -->
-      </div>
+      <span class="h1 gets-typed">}</span>
+      <span class="h1 gets-typed comment">//</span>
+      <span class="h1 gets-typed comment">:) </span>
 
       <div id="cursor"> </div>
     </div>
