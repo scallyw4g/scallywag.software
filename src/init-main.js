@@ -160,6 +160,7 @@ let Init = () => {
 
     State.Cursor = new MakeCursor(document.getElementById("cursor"));
     State.Router = new MakeRouter();
+    State.Router.alias("/", "/vim");
 
     let Cursor = State.Cursor;
     let Router = State.Router;

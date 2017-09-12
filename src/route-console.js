@@ -16,7 +16,7 @@ UserCallback( (State) => {
     }).then ( () => {
       return typeText(ElementsToType[1], Cursor);
     }).then ( () => {
-      State.Router.navigate("/vim", State);
+      State.Router.navigate("/", State);
     });
   }
 });

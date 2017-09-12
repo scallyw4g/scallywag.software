@@ -8,16 +8,24 @@ function MakeRoute(DomElem) {
 }
 
 document.addEventListener( "framework-loaded", (Event) => {
-
-  console.log("router framework-loaded");
+  console.log("overriding router.navigate");
 
   let State = Event.detail;
   let Router = State.Router;
 
   // JANKY(Jesse): Replace the navigate function once the framework is loaded
   // and perform all pending navigations.
-  Router.navigate = (targetRoute) => {
-    console.log("Navigating from %s to %s", Router.currentRoute, targetRoute);
+  Router.navigate = (url) => {
+
+    let routeToLookup = url;
+    let alias = Router.aliases[url];
+    if (alias) {
+      console.log("Route %s aliased to %s", url, routeToLookup);
+      routeToLookup = alias;
+    }
+
+    console.log("Navigating from %s to %s", Router.currentRoute, url);
+
 
     let Current = Router.routes[Router.currentRoute];
     if (Current) {
@@ -26,15 +34,16 @@ document.addEventListener( "framework-loaded", (Event) => {
         history.pushState({}, "", Router.currentRoute);
     }
 
-    let Target = Router.routes[targetRoute];
-    if (Target) {
+    let TargetRoute = Router.routes[routeToLookup];
+    if (TargetRoute) {
+      Router.currentRoute = url;
       if (Router.routingMode === RoutingMode_PushState)
-        history.replaceState({}, "", targetRoute);
+        history.replaceState({}, "", url);
       else
-        document.location.hash = targetRoute;
+        document.location.hash = url;
 
-      SetDisplay(Target.DomElem, DISPLAY_BLOCK);
-      if (Target.Main) Target.Main(State);
+      SetDisplay(TargetRoute.DomElem, DISPLAY_BLOCK);
+      if (TargetRoute.Main) TargetRoute.Main(State);
 
     } else { // Invalid route passed in
       Router.navigate("/404", State);
@@ -57,6 +66,8 @@ function MakeRouter() {
   this.routingMode = RoutingMode_Undefined;
 
   this.routes = {};
+
+  this.aliases = {};
 
   // Before the framework is initialized, Router.navigate pushes stuff into
   // this array.  Once the framework loads it is flushed and, at the time of
@@ -110,6 +121,10 @@ function MakeRouter() {
     this.pendingNavigations.push(targetRoute);
 
     return;
+  }
+
+  this.alias = function(targetRoute, aliasName) {
+    this.aliases[targetRoute] = aliasName;
   }
 
 }
