@@ -1,12 +1,5 @@
 "use strict";
 
-let VISIBILITY_OFF = "hidden";
-let VISIBILITY_ON = "visible";
-
-let DISPLAY_INLINE_BLOCK = "inline-block";
-let DISPLAY_BLOCK = "block";
-let DISPLAY_NONE = "none";
-
 let TypingElement = null;
 
 let InvalidCodePath = () => { Assert(!"InvalidCodePath"); }
@@ -86,19 +79,21 @@ let typeText = (Elem, Cursor, finalDelay = 500) => {
       // <hack>
       // Setting the content to a space is to ensure text
       // previously typed on the same line doesn't jump around.  Requires css
-      // `white-space: pre;` to work.
+      // `white-space: pre;` to work, which happens to be useful for aesthetics
+      // as well.
       Elem.DomElem.innerHTML = " ";
       Elem.DomElem.style["white-space"] = "pre";
       // </hack>
 
-      let anim = setInterval( () => {
+      let TextAnimation = setInterval( () => {
 
         if (text.length == 0) {
-          setTimeout( () => { clearInterval(anim); resolve(); }, finalDelay );
+          setTimeout( () => { clearInterval(TextAnimation); resolve(); }, finalDelay );
 
         } else {
+
+          Elem.DomElem.innerHTML = 
           Elem.DomElem.innerHTML += text.shift();
-          Elem.DomElem.style["white-space"] = ""; // Unhack
           UpdateCursorP(Cursor, Elem);
         }
 
@@ -144,7 +139,7 @@ let Global_bindUserCallbackData = { State: Global_State, pendingUserCallbacks: 0
 let UserCallback = ( callback => {
   ++Global_bindUserCallbackData.pendingUserCallbacks;
 
-  document.addEventListener( "bind-user-callbacks", (Event) => {
+  document.addEventListener( USER_CALLBACKS_START, (Event) => {
     --Global_bindUserCallbackData.pendingUserCallbacks;
     callback(Event.detail.State);
   });
@@ -169,16 +164,16 @@ let Init = () => {
 
     Router.Initialize();
 
-    let event = new CustomEvent("bind-user-callbacks", {detail: Global_bindUserCallbackData});
-    console.log("dispaching bind-user-callbacks");
+    let event = new CustomEvent(USER_CALLBACKS_START, {detail: Global_bindUserCallbackData});
+    console.log("dispaching %s", USER_CALLBACKS_START);
     document.dispatchEvent(event);
 
     SetDisplay(document.body, DISPLAY_BLOCK);
 
     let WaitForUserCallbacks = setInterval( () => {
       if (Global_bindUserCallbackData.pendingUserCallbacks === 0) {
-        let event = new CustomEvent("framework-loaded", {detail: State});
-        console.log("dispaching framework-loaded");
+        let event = new CustomEvent(USER_CALLBACKS_COMPLETE, {detail: State});
+        console.log("dispaching %s", USER_CALLBACKS_COMPLETE);
         document.dispatchEvent(event);
         clearInterval(WaitForUserCallbacks);
       }

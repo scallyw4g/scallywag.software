@@ -1,13 +1,9 @@
-let RoutingMode_Undefined = 0;
-let RoutingMode_PushState = 1;
-let RoutingMode_Hash = 2;
-
 function MakeRoute(DomElem) {
   Assert(DomElem instanceof HTMLElement);
   this.DomElem = DomElem
 }
 
-document.addEventListener( "framework-loaded", (Event) => {
+document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
   console.log("overriding router.navigate");
 
   let State = Event.detail;

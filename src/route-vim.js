@@ -1,5 +1,5 @@
 UserCallback( (State) => {
-  console.log("vim callback");
+  console.log("binding vim callback");
 
   let Route = State.Router.routes["/vim"];
 
@@ -13,7 +13,7 @@ UserCallback( (State) => {
     let ElementsToType = PrepareToTypeRouteElements(Route.DomElem, Cursor);
 
 
-    blinkCursor(Cursor, 3).then( () => {
+    blinkCursor(Cursor, 1).then( () => {
       return typeText(ElementsToType[0], Cursor);
     }).then ( () => {
       return typeText(ElementsToType[1], Cursor);
@@ -30,7 +30,7 @@ UserCallback( (State) => {
     }).then( () => {
       return typeText(ElementsToType[7], Cursor);
     }).then( () => {
-      return typeText(ElementsToType[8], Cursor);
+      return typeText(ElementsToType[8], Cursor, 0);
     }).then( () => {
       return blinkCursor(Cursor, 2);
     }).then ( () => {

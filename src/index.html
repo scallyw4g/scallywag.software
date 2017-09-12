@@ -5,6 +5,7 @@
 
     <link rel="stylesheet" type="text/css" href="style.css">
 
+    <script src="constants.js"> </script>
     <script src="router.js"> </script>
     <script src="init-main.js"> </script>
     <script src="route-vim.js"> </script>
@@ -22,13 +23,12 @@
     </div>
 
     <div class="route display-none" data-route="/console">
-      <h2> <span> $ </span> <span class="gets-typed"> hi </span> </h2>
-      <h2> <span> $ </span> <span class="gets-typed"> vim </span> </h2>
+      <h2> <span>~ </span><span class="gets-typed">vim </span> </h2>
     </div>
 
     <div id="vim" class="route" data-route="/vim">
-      <div id="sidebar">
-      </div>
+      <div id="sidebar"></div>
+
       <div>
         <span class="h1 gets-typed">bare_metal_software()</span>
         <span class="h1 gets-typed">{</span>

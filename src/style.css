@@ -20,6 +20,7 @@ p {
 }
 
 .gets-typed {
+  white-space: pre;
   display: inline-block;
 }
 .display-none {
