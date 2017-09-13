@@ -4,7 +4,8 @@ html, body {
   margin: 0;
   padding: 0;
   background: #272822;
-  color: #F9F5C2;
+  color: #F4F0B8;
+  /* color: #FD971F; */
   /* color: #FFF7FB; */
 }
 
@@ -80,7 +81,40 @@ h1 {
   padding-left: 2.2em;
 }
 
-#vim #sidebar {
+#vim #bottom-bar {
+  background: #313226; /* Lighter background color */
+  position: fixed;
+  top: 95%;
+  left: 1.7em;
+  width: 100%;
+}
+
+#vim #bottom-bar div {
+  padding: 0 0.5em;
+  display: inline-block;
+}
+
+#vim #bottom-bar .ele-1 {
+  background: #FF3D73;
+}
+
+#vim #bottom-bar .ele-2 {
+  background: #F7208B;
+}
+
+#vim #bottom-bar .ele-3 {
+  background: #A5E22E;
+}
+
+#vim #bottom-bar .ele-4 {
+  background: #FD971F;
+}
+
+#vim #bottom-bar .ele-5 {
+  background: #66D9EF;
+}
+
+#vim #left-bar {
   background: #FF3D73;
   /* background: #F7208B; */
   position: fixed;
@@ -94,7 +128,7 @@ h1 {
   position: fixed;
   left: 800px;
   width: 0.75em;
-  height: 100%;
+  height: 95%;
   background: #313226; /* Lighter background color */
 
 }
