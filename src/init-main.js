@@ -18,7 +18,8 @@ function AppState() {
 function TypedElement(Dom) {
   Assert(Dom instanceof HTMLElement);
   this.Content = Dom.innerHTML.split("");
-  this.FinalBounds = Dom.getBoundingClientRect();
+  Dom.innerHTML = "";
+
   this.Dom = Dom;
 }
 
@@ -33,6 +34,12 @@ let WaitTillLoaded = setInterval( () => {
     Init().then ( (State) => Main(State) );
   }
 }, 5);
+
+let wait = (ms) => {
+  return new Promise( (resolve) => {
+    setTimeout( () => { resolve(); }, ms);
+  });
+}
 
 let SetVisibility = (element, vis) => {
   Assert(element instanceof HTMLElement);

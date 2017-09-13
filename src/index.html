@@ -15,7 +15,6 @@
 
   <body class="display-none">
     <div id="mount"></div>
-    <div id="cursor"> </div>
 
     <div class="route display-none" data-route="/">
       <h1> root </h1>
@@ -25,15 +24,16 @@
       <span> Oops, couldn't find that. </span>
     </div>
 
-    <div class="route display-none" data-route="/console">
-      <h2> <span>~ </span><span class="gets-typed">vim </span> </h2>
+    <div id="console" class="route display-none" data-route="/console">
+      <span class="h2">~ </span><span class="h2 gets-typed">vim </span>
+      <div><span class="h2 gets-typed"> </span></div>
     </div>
 
     <div id="vim" class="route" data-route="/vim">
+      <div id="eighty-col-bar"></div>
       <div id="sidebar"></div>
-
       <div>
-        <span class="h1 gets-typed">bare_metal_software()</span><span class="h1 gets-typed"> {</span>
+        <span class="h1 gets-typed">bare_metal_software() </span><span class="h1 gets-typed">{</span>
       </div>
       <div id="inner">
 

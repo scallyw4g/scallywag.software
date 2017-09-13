@@ -1,20 +1,27 @@
+let InitCursor = (CursorElement) => {
+  Assert(CursorElement instanceof TypedElement);
+
+  CursorElement.Dom.classList.add("typing-active");
+  SetDisplay(CursorElement.Dom, DISPLAY_INLINE_BLOCK);
+}
+
 
 let blink = (Cursor, RenderDom) => {
   Assert(Cursor instanceof HTMLElement);
   Assert(RenderDom instanceof HTMLElement);
 
-  let blinkTime = 750;
+  let blinkTime = 650;
   let blinkTick = blinkTime/3;
 
   return new Promise( (resolve, reject) => {
 
     // Blink off
-    Cursor.classList.add("off");
+    Cursor.classList.add("cursor-off");
     Render(RenderDom);
 
     // Blink on
     setTimeout( () => {
-      Cursor.classList.remove("off");
+      Cursor.classList.remove("cursor-off");
       Render(RenderDom);
     }, blinkTick );
 
