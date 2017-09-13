@@ -21,6 +21,10 @@ p {
 .typing-active::after{
   content: " ";
   background: #F7208B;
+  visibility: visible;
+}
+.off::after {
+  visibility: hidden;
 }
 
 .gets-typed {

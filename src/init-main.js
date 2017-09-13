@@ -57,31 +57,37 @@ let SetDisplay = (element, display) => {
   element.style.display = display;
 }
 
+let PurgeCursors = (Dom) => {
+  Assert(Dom instanceof HTMLElement);
+  Array.from(Dom.getElementsByClassName("typing-active"))
+    .forEach( Element => Element.classList.remove("typing-active") );
+}
+
 let typeText = (Elem, RenderDom, finalDelay = 500) => {
   Assert(Elem instanceof TypedElement);
   Assert(RenderDom instanceof HTMLElement);
 
   let charAnimInterval = 50;
 
+  PurgeCursors(RenderDom);
   Elem.Dom.classList.add("typing-active");
 
   return new Promise( (resolve, reject) => {
 
+    let firstPass = true;
     let text = Elem.Content;
 
-    let firstPass = true;
 
     let TextAnimation = setInterval( () => {
       if (text.length == 0) {
         clearInterval(TextAnimation);
-        Elem.Dom.classList.remove("typing-active");
         setTimeout(() => { resolve(); }, finalDelay );
         return;
       }
 
 
       if (firstPass) {
-        Elem.Dom.innerHTML = text.shift();
+        Elem.Dom.innerHTML = "";
         SetDisplay(Elem.Dom, DISPLAY_INLINE_BLOCK);
         firstPass = false;
       } else {
