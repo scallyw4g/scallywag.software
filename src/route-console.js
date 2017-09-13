@@ -2,17 +2,21 @@
 UserCallback( (State) => {
   console.log("binding console callback");
   let Route = State.Router.routes["/console"];
+  Assert(Route instanceof MakeRoute);
 
   Route.Main = (State) => {
+    console.log("console main");
+
     let Router = State.Router;
-    let Cursor = State.Cursor;
     Assert(Router instanceof MakeRouter);
-    Assert(Cursor instanceof MakeCursor);
 
-    let ElementsToType = PrepareToTypeRouteElements(Route.DomElem, Cursor);
+    let ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
+      .map((Dom) => { return new TypedElement(Dom); });
 
-    blinkCursor(Cursor, 3).then( () => {
-      return typeText(ElementsToType[0], Cursor);
+    Render(Route.Dom);
+
+    blinkCursor(3).then( () => {
+      return typeText(ElementsToType[0], Route.Dom);
     }).then ( () => {
       State.Router.navigate("/", State);
     });

@@ -5,37 +5,37 @@ UserCallback( (State) => {
 
   Route.Main = (State) => {
 
+    console.log("vim callback firing");
+
     let Router = State.Router;
-    let Cursor = State.Cursor;
     Assert(Router instanceof MakeRouter);
-    Assert(Cursor instanceof MakeCursor);
 
-    let ElementsToType = PrepareToTypeRouteElements(Route.DomElem, Cursor);
+    let ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
+      .map((Dom) => { return new TypedElement(Dom); });
 
-
-    blinkCursor(Cursor, 1).then( () => {
-      return typeText(ElementsToType[0], Cursor);
+    blinkCursor(1).then( () => {
+      return typeText(ElementsToType[0], Route.Dom);
     }).then ( () => {
-      return typeText(ElementsToType[1], Cursor);
+      return typeText(ElementsToType[1], Route.Dom);
     }).then( () => {
-      return typeText(ElementsToType[2], Cursor);
+      return typeText(ElementsToType[2], Route.Dom);
     }).then ( () => {
-      return typeText(ElementsToType[3], Cursor);
+      return typeText(ElementsToType[3], Route.Dom);
     }).then ( () => {
-      return typeText(ElementsToType[4], Cursor);
+      return typeText(ElementsToType[4], Route.Dom);
     }).then ( () => {
-      return typeText(ElementsToType[5], Cursor, 500);
+      return typeText(ElementsToType[5], Route.Dom, 500);
     }).then( () => {
-      return typeText(ElementsToType[6], Cursor);
+      return typeText(ElementsToType[6], Route.Dom);
     }).then( () => {
-      return typeText(ElementsToType[7], Cursor);
+      return typeText(ElementsToType[7], Route.Dom);
     }).then( () => {
-      return typeText(ElementsToType[8], Cursor, 0);
+      return typeText(ElementsToType[8], Route.Dom, 0);
     }).then( () => {
-      return blinkCursor(Cursor, 2);
+      return blinkCursor(2);
     }).then ( () => {
-      SetDisplay(Cursor.DomElem, DISPLAY_NONE);
-      // return typeText(ElementsToType[7], Cursor, 300);
+      // SetDisplay(Cursor.Dom, DISPLAY_NONE);
+      // return typeText(ElementsToType[7], 300);
     })
   }
 

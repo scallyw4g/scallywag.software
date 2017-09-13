@@ -1,8 +1,3 @@
-function MakeRoute(DomElem) {
-  Assert(DomElem instanceof HTMLElement);
-  this.DomElem = DomElem
-}
-
 document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
   console.log("overriding router.navigate");
 
@@ -22,10 +17,9 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
     console.log("Navigating from %s to %s", Router.currentRoute, url);
 
-
     let Current = Router.routes[Router.currentRoute];
     if (Current) {
-      SetDisplay(Current.DomElem, DISPLAY_NONE);
+      SetDisplay(Current.Dom, DISPLAY_NONE);
       if (Router.routingMode === RoutingMode_PushState)
         history.pushState({}, "", Router.currentRoute);
     }
@@ -38,8 +32,10 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       else
         document.location.hash = url;
 
-      SetDisplay(TargetRoute.DomElem, DISPLAY_BLOCK);
+      SetDisplay(TargetRoute.Dom, DISPLAY_BLOCK);
       if (TargetRoute.Main) TargetRoute.Main(State);
+
+      Render(TargetRoute.Dom);
 
     } else { // Invalid route passed in
       Router.navigate("/404", State);
@@ -81,15 +77,12 @@ function MakeRouter() {
   }
 
   this.Initialize = function(State) {
-    let RouteElements = Array.from(document.getElementsByClassName("route"));
-    for ( let RouteIndex = 0;
-          RouteIndex < RouteElements.length;
-          ++RouteIndex)
-    {
-      let RouteElem = RouteElements[RouteIndex];
-      this.routes[ RouteElem.dataset.route ] = new MakeRoute(RouteElem);
-      SetDisplay(RouteElem, DISPLAY_NONE);
-    }
+    let RouteElements = Array.from(document.getElementsByClassName("route"))
+      .map( (Dom) => {
+        let Route = new MakeRoute(Dom.cloneNode(true));
+        this.routes[Route.Name] = Route;
+        SetDisplay(Route.Dom, DISPLAY_NONE);
+      });
 
     let initialNav = "/";
 

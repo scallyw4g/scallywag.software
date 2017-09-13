@@ -18,9 +18,14 @@ p {
   width: 800px;
 }
 
+.typing-active::after{
+  content: " ";
+  background: #F7208B;
+}
+
 .gets-typed {
   white-space: pre-wrap;
-  display: inline-block;
+  display: none;
 }
 .display-none {
   display: none;

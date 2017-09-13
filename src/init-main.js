@@ -1,19 +1,25 @@
 "use strict";
 
-let TypingElement = null;
+let Assert = expression => { if (!(expression)) debugger; }
+let InvalidCodePath = () => { Assert(false); }
 
-let InvalidCodePath = () => { Assert(!"InvalidCodePath"); }
+function MakeRoute(Dom) {
+  Assert(Dom instanceof HTMLElement);
 
-let Assert = ( expression ) => {
-  if (!(expression)) {
-    throw new Error("Failed Assertion").stack;
-
-  }
+  this.Dom = Dom;
+  this.Name = Dom.dataset.route;
 }
 
 function AppState() {
   this.Router = null;
-  this.Cursor = null;
+  this.Doc = null;
+}
+
+function TypedElement(Dom) {
+  Assert(Dom instanceof HTMLElement);
+  this.Content = Dom.innerHTML.split("");
+  this.FinalBounds = Dom.getBoundingClientRect();
+  this.Dom = Dom;
 }
 
 let PageLoaded = () => {
@@ -27,13 +33,6 @@ let WaitTillLoaded = setInterval( () => {
     Init().then ( (State) => Main(State) );
   }
 }, 5);
-
-function TypedElement(Elem) {
-  this.Content = Elem.innerHTML.split("");
-  this.FinalBounds = Elem.getBoundingClientRect();
-
-  this.DomElem = Elem;
-}
 
 let SetVisibility = (element, vis) => {
   Assert(element instanceof HTMLElement);
@@ -58,79 +57,48 @@ let SetDisplay = (element, display) => {
   element.style.display = display;
 }
 
-let typeText = (Elem, Cursor, finalDelay = 500) => {
-  Assert(Cursor instanceof MakeCursor);
+let typeText = (Elem, RenderDom, finalDelay = 500) => {
   Assert(Elem instanceof TypedElement);
-  let charInterval = 50;
+  Assert(RenderDom instanceof HTMLElement);
+
+  let charAnimInterval = 50;
+
+  Elem.Dom.classList.add("typing-active");
 
   return new Promise( (resolve, reject) => {
 
-      PrepareToType(Cursor, Elem);
-      setTimeout( () => { resolve(); }, charInterval );
+    let text = Elem.Content;
 
-  }).then( () => {
+    let firstPass = true;
 
-    return new Promise( (resolve, reject) => {
-
-      SetVisibility(Elem.DomElem, VISIBILITY_OFF);
-
-      let text = Elem.Content;
-
-      let firstPass = true;
-
-      let TextAnimation = setInterval( () => {
-        if (text.length == 0) {
-          clearInterval(TextAnimation);
-          setTimeout(() => { resolve(); }, finalDelay );
-          return;
-        }
+    let TextAnimation = setInterval( () => {
+      if (text.length == 0) {
+        clearInterval(TextAnimation);
+        Elem.Dom.classList.remove("typing-active");
+        setTimeout(() => { resolve(); }, finalDelay );
+        return;
+      }
 
 
-        if (firstPass) {
-          Elem.DomElem.innerHTML = text.shift();
-          SetVisibility(Elem.DomElem, VISIBILITY_ON);
-          firstPass = false;
-        } else {
-          Elem.DomElem.innerHTML += text.shift();
-        }
+      if (firstPass) {
+        Elem.Dom.innerHTML = text.shift();
+        SetDisplay(Elem.Dom, DISPLAY_INLINE_BLOCK);
+        firstPass = false;
+      } else {
+        Elem.Dom.innerHTML += text.shift();
+      }
 
-        UpdateCursorP(Cursor, Elem);
+      Render(RenderDom);
 
-      }, charInterval );
-    });
+    }, charAnimInterval );
 
   });
 }
 
-let SetHeight = (DomElem, Bounds) => {
-  Assert(DomElem instanceof HTMLElement);
-  DomElem.style.height = Bounds.bottom - Bounds.top;;
+let SetHeight = (Dom, Bounds) => {
+  Assert(Dom instanceof HTMLElement);
+  Dom.style.height = Bounds.bottom - Bounds.top;;
 }
-
-let PrepareToTypeRouteElements = (DomElem, Cursor) => {
-  Assert(DomElem instanceof HTMLElement);
-  Assert(Cursor instanceof MakeCursor);
-
-  let elementsToType = Array.from(DomElem.getElementsByClassName("gets-typed"));
-
-  let firstElem = new TypedElement(elementsToType[0]);
-  PrepareToType(Cursor, firstElem);
-
-  let Result = [];
-
-  for ( let Index = 0;
-        Index < elementsToType.length;
-        ++Index)
-  {
-    let Elem = elementsToType[Index];
-    Result.push(new TypedElement(Elem));
-
-    SetDisplay(Elem, DISPLAY_NONE);
-  }
-
-  return Result;
-}
-
 
 let Global_State = new AppState();
 let Global_bindUserCallbackData = { State: Global_State, pendingUserCallbacks: 0 };
@@ -144,30 +112,37 @@ let UserCallback = ( callback => {
   });
 });
 
+let SetStateDom = (State) => {
+  Assert(State instanceof AppState);
+  State.Dom = document.getElementById("mount").cloneNode(true);
+}
+
+let Render = (Element) => {
+  Assert(Element instanceof HTMLElement);
+
+  let mount = new DocumentFragment();
+  mount.appendChild(Element.cloneNode(true))
+
+  document.body.innerHTML = "";
+  document.body.appendChild(mount);
+}
+
 let Init = () => {
   return new Promise ( (resolve) => {
-
-    // FIXME(Jesse): Reposition cursor on resize
-    // document.body.onresize = () => UpdateCursorP(Cursor, Elem);
-
     let State = Global_State;
+    SetStateDom(State);
 
-    State.Cursor = new MakeCursor(document.getElementById("cursor"));
     State.Router = new MakeRouter();
     State.Router.alias("/", "/vim");
 
-    let Cursor = State.Cursor;
     let Router = State.Router;
 
+    Router.Initialize(State);
+
     // TODO(Jesse): Polyfill CustomEvent for <IE9 ?
-
-    Router.Initialize();
-
     let event = new CustomEvent(USER_CALLBACKS_START, {detail: Global_bindUserCallbackData});
     console.log("dispaching %s", USER_CALLBACKS_START);
     document.dispatchEvent(event);
-
-    SetDisplay(document.body, DISPLAY_BLOCK);
 
     let WaitForUserCallbacks = setInterval( () => {
       if (Global_bindUserCallbackData.pendingUserCallbacks === 0) {
@@ -185,10 +160,8 @@ let Init = () => {
 
 let Main = (State) => {
   let Router = State.Router;
-  let Cursor = State.Cursor;
 
   Assert(Router instanceof MakeRouter);
-  Assert(Cursor instanceof MakeCursor);
 
   let headings = Array.from(document.getElementsByClassName("heading"));
 
@@ -204,4 +177,8 @@ let Main = (State) => {
     }
 
   }
+
+  document.body.innerHTML = "";
+  SetDisplay(document.body, DISPLAY_BLOCK);
+
 }
