@@ -81,10 +81,7 @@ let typeText = (Elem, RenderDom, finalDelay = 500) => {
   Elem.Dom.classList.add("typing-active");
 
   return new Promise( (resolve, reject) => {
-
-    let firstPass = true;
     let text = Elem.Content;
-
 
     let TextAnimation = setInterval( () => {
       if (text.length == 0) {
@@ -93,17 +90,8 @@ let typeText = (Elem, RenderDom, finalDelay = 500) => {
         return;
       }
 
-
-      if (firstPass) {
-        Elem.Dom.innerHTML = "";
-        SetDisplay(Elem.Dom, DISPLAY_INLINE_BLOCK);
-        firstPass = false;
-      } else {
-        Elem.Dom.innerHTML += text.shift();
-      }
-
+      Elem.Dom.innerHTML += text.shift();
       Render(RenderDom);
-
     }, charAnimInterval );
 
   });
@@ -130,6 +118,13 @@ let SetStateDom = (State) => {
   Assert(State instanceof AppState);
 }
 
+/*
+ *  FIXME(Jesse): This swaps out the entire view each Render tick, which seems
+ *  to be blocking the main thread for quite some time.  This has the effect of
+ *  user input event handlers to be missed sometimes.  I think the solution
+ *  would be to implement an _actual_ virtual dom with diffing applied inside
+ *  requestAnimationFrame()
+ */
 let Render = (Element) => {
   Assert(Element instanceof HTMLElement);
 
@@ -137,7 +132,6 @@ let Render = (Element) => {
   MountPoint.innerHTML = "";
 
   let Clone = MountPoint.appendChild(Element.cloneNode(true))
-  // Clone.onclick = Element.onclick;
 
   Array.from(document.body.children).forEach( (Child) => {
     document.body.removeChild(Child);

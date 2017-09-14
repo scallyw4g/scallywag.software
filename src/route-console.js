@@ -23,7 +23,7 @@ UserCallback( (State) => {
       .then(() => { return wait(60) } )
       .then(() => { return new Promise( (resolve) => {
         PurgeCursors(Route.Dom);
-        InitCursor(ElementsToType[1]);
+        InitCursor(ElementsToType[2]);
         Render(Route.Dom);
         resolve();
       }) })
