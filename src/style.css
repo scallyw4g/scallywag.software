@@ -15,18 +15,31 @@ a {
   text-decoration: none;
 }
 
+.right {
+  float: right;
+}
+.arrow-left {
+  float: right;
+}
+
+.arrow-left:before,
 .arrow-right:before {
   content: " ";
   width: 0;
   height: 0;
 
-  border-left: solid black 1.2em;
   border-top:  solid transparent 0.67em;
   border-bottom: solid transparent 0.67em;
-  border-right: solid transparent 0.1em;
   display: inline-block;
-  margin-left: -0.5em;
-  margin-bottom: -0.32em;
+  margin-bottom: -0.33em;
+}
+
+.arrow-left:before {
+  border-right: solid black 1.2em;
+}
+
+.arrow-right:before {
+  border-left: solid black 1.2em;
 }
 
 .comment {
@@ -117,9 +130,19 @@ h1 {
 }
 
 #vim #bottom-bar li {
-  padding: 0 0.5em;
   display: inline-block;
+  font-size: 1.2em;
 }
+
+#vim #bottom-bar .ele-inner,
+#vim #bottom-bar .ele-inner {
+  padding: 0 1em 0 0;
+}
+
+#vim #bottom-bar .em-left-pad.ele-inner {
+  padding-left: 1em;
+}
+
 
 #vim #bottom-bar .ele-1 {
   background: #FF3D73;
@@ -127,7 +150,7 @@ h1 {
 
 
 #vim #bottom-bar .ele-2 {
-  background: #F7208B;
+  background: #66D9EF;
 }
 #vim #bottom-bar .ele-2.arrow-right:before {
   border-left-color: #FF3D73;
@@ -150,20 +173,14 @@ h1 {
 }
 
 
-#vim #bottom-bar .ele-5 {
-  background: #66D9EF;
-}
-#vim #bottom-bar .ele-5.arrow-right:before {
-  border-left-color: #FD971F;
-}
-
-
 #vim #bottom-bar .ele-final {
   background: transparent;
 }
 #vim #bottom-bar .ele-final.arrow-right:before {
   border-left-color: #66D9EF;
 }
+#vim #bottom-bar .ele-final.arrow-left:before {
+  border-right-color: #A5E22E;
 
 
 #vim #eighty-col-bar {
