@@ -7,6 +7,14 @@ UserCallback( (State) => {
 
     console.log("vim callback firing");
 
+    let MainBounds = document.querySelector("#vim-inner").getBoundingClientRect();
+    let width = MainBounds.right - MainBounds.left;
+
+    let BottomBar = Route.Dom.querySelector("#bottom-bar");
+    BottomBar.style.width = width;
+    console.log(width);
+
+
     let Router = State.Router;
     Assert(Router instanceof MakeRouter);
 

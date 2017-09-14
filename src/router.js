@@ -32,10 +32,12 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       else
         document.location.hash = url;
 
+      // It's important to render the route initially before firing the Routes
+      // Main() because then the route can query the rendered Dom
       SetDisplay(TargetRoute.Dom, DISPLAY_BLOCK);
-      if (TargetRoute.Main) TargetRoute.Main(State);
-
       Render(TargetRoute.Dom);
+
+      if (TargetRoute.Main) TargetRoute.Main(State);
 
     } else { // Invalid route passed in
       Router.navigate("/404", State);

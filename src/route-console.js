@@ -17,9 +17,9 @@ UserCallback( (State) => {
 
     blinkCursor(Route.Dom, 5)
       .then(() => { return typeText(ElementsToType[0], Route.Dom) } )
-      .then(() => { return wait(100) } )
+      .then(() => { return wait(60) } )
       .then(() => { return blinkCursor(Route.Dom, 1) } )
-      .then(() => { return wait(100) } )
+      .then(() => { return wait(60) } )
       .then(() => { return new Promise( (resolve) => {
         PurgeCursors(Route.Dom);
         InitCursor(ElementsToType[1]);
