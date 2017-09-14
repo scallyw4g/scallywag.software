@@ -44,14 +44,10 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
     }
   }
 
-  for ( let NavigationIndex = 0;
-        NavigationIndex < Router.pendingNavigations.length;
-        ++NavigationIndex)
-  {
-    let Nav = Router.pendingNavigations[NavigationIndex];
-    Router.navigate(Nav, State);
-  }
 
+  Router.pendingNavigations.forEach( (Nav) => {
+    Router.navigate(Nav, State);
+  });
 });
 
 function MakeRouter() {

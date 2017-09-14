@@ -1,6 +1,8 @@
+// Event Names
 let USER_CALLBACKS_START = "user-callbacks-start";
 let USER_CALLBACKS_COMPLETE = "user-callbacks-complete";
 
+// Constants
 let VISIBILITY_OFF = "hidden";
 let VISIBILITY_ON = "visible";
 

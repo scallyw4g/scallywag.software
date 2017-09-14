@@ -2,9 +2,7 @@ UserCallback( (State) => {
   console.log("binding vim callback");
 
   let Route = State.Router.routes["/vim"];
-
   Route.Main = (State) => {
-
     console.log("vim callback firing");
 
     let MainBounds = document.querySelector("#vim-inner").getBoundingClientRect();
