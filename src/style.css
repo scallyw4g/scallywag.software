@@ -18,29 +18,6 @@ a {
 .right {
   float: right;
 }
-.arrow-left {
-  float: right;
-}
-
-.arrow-left:before,
-.arrow-right:before {
-  content: " ";
-  width: 0;
-  height: 0;
-
-  border-top:  solid transparent 0.67em;
-  border-bottom: solid transparent 0.67em;
-  display: inline-block;
-  margin-bottom: -0.33em;
-}
-
-.arrow-left:before {
-  border-right: solid black 1.2em;
-}
-
-.arrow-right:before {
-  border-left: solid black 1.2em;
-}
 
 .comment {
   color: #ABAA98;
@@ -62,48 +39,24 @@ p {
   white-space: pre-wrap;
   display: none;
 }
+
 .display-none {
   display: none;
 }
 
-h2 {
-  font-size: 1.6em;
-  font-weight: 400;
-}
-.h2 {
+h2, .h2 {
   font-size: 1.6em;
   font-weight: 400;
 }
 
-h1 {
-  margin: 0.5em 0;
-  font-size: 2em;
-  font-weight: 500;
-}
-.h1 {
+h1, .h1 {
   margin: 0.5em 0;
   font-size: 2em;
   font-weight: 500;
 }
 
-.heading {
+.indented {
   padding-left: 1.2em;
-}
-
-#cursor {
-  position: fixed;
-  /* background: #FF3D73; */
-  background: #F7208B;
-
-  height: 0;
-  width: 0;
-
-  left: 0;
-  top: 0;
-}
-
-#inner {
-  padding-left: 1.5em;
 }
 
 #console {
@@ -144,44 +97,56 @@ h1 {
 }
 
 
+/* LHS */
 #vim #bottom-bar .ele-1 {
   background: #FF3D73;
-}
-
-
-#vim #bottom-bar .ele-2 {
-  background: #66D9EF;
 }
 #vim #bottom-bar .ele-2.arrow-right:before {
   border-left-color: #FF3D73;
 }
-
-
-#vim #bottom-bar .ele-3 {
-  background: #A5E22E;
-}
-#vim #bottom-bar .ele-3.arrow-right:before {
-  border-left-color: #F7208B;
-}
-
-
-#vim #bottom-bar .ele-4 {
-  background: #FD971F;
-}
-#vim #bottom-bar .ele-4.arrow-right:before {
-  border-left-color: #A5E22E;
-}
-
-
-#vim #bottom-bar .ele-final {
-  background: transparent;
+#vim #bottom-bar .ele-2 {
+  background: #66D9EF;
 }
 #vim #bottom-bar .ele-final.arrow-right:before {
   border-left-color: #66D9EF;
 }
+
+
+/* RHS */
+#vim #bottom-bar .ele-3 {
+  background: #A5E22E;
+}
 #vim #bottom-bar .ele-final.arrow-left:before {
   border-right-color: #A5E22E;
+}
 
+#vim #bottom-bar .ele-final {
+  background: transparent;
+}
+
+.arrow-left {
+  float: right;
+}
+
+.arrow-left:before,
+.arrow-right:before {
+  content: " ";
+  width: 0;
+  height: 0;
+
+  border-top:  solid transparent 0.67em;
+  border-bottom: solid transparent 0.67em;
+  display: inline-block;
+  margin-bottom: -0.33em;
+}
+
+.arrow-left:before {
+  border-right: solid black 1.2em;
+}
+
+.arrow-right:before {
+  border-left: solid black 1.2em;
+}
 
 #vim #eighty-col-bar {
   position: fixed;
