@@ -1,17 +1,23 @@
 UserCallback( (State) => {
+  document.body.onclick = () => { console.log('hi') }
+  document.onkeydown = () => { console.log('key') }
+});
+
+UserCallback( (State) => {
   console.log("binding vim callback");
 
   let Route = State.Router.routes["/vim"];
   Route.Main = (State) => {
     console.log("vim callback firing");
 
+    let Vim = document.querySelector("#vim");
+    // document.body.onclick = () => {console.log('click')}
+
     let MainBounds = document.querySelector("#vim-inner").getBoundingClientRect();
     let width = MainBounds.right - MainBounds.left;
 
     let BottomBar = Route.Dom.querySelector("#bottom-bar");
     BottomBar.style.width = width;
-    console.log(width);
-
 
     let Router = State.Router;
     Assert(Router instanceof MakeRouter);

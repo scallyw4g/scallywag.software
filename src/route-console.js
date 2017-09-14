@@ -17,6 +17,7 @@ UserCallback( (State) => {
 
     blinkCursor(Route.Dom, 5)
       .then(() => { return typeText(ElementsToType[0], Route.Dom) } )
+      .then(() => { return typeText(ElementsToType[1], Route.Dom) } )
       .then(() => { return wait(60) } )
       .then(() => { return blinkCursor(Route.Dom, 1) } )
       .then(() => { return wait(60) } )

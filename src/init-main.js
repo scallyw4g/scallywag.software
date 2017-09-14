@@ -8,11 +8,12 @@ function MakeRoute(Dom) {
 
   this.Dom = Dom;
   this.Name = Dom.dataset.route;
+
+  this.Main = null;
 }
 
 function AppState() {
   this.Router = null;
-  this.Doc = null;
 }
 
 function TypedElement(Dom) {
@@ -127,23 +128,33 @@ let UserCallback = ( callback => {
 
 let SetStateDom = (State) => {
   Assert(State instanceof AppState);
-  State.Dom = document.getElementById("mount").cloneNode(true);
 }
 
 let Render = (Element) => {
   Assert(Element instanceof HTMLElement);
 
-  let mount = new DocumentFragment();
-  mount.appendChild(Element.cloneNode(true))
+  let MountPoint = Global_State.MountPoint;
+  MountPoint.innerHTML = "";
 
-  document.body.innerHTML = "";
-  document.body.appendChild(mount);
+  let Clone = MountPoint.appendChild(Element.cloneNode(true))
+  // Clone.onclick = Element.onclick;
+
+  Array.from(document.body.children).forEach( (Child) => {
+    document.body.removeChild(Child);
+  });
+
+  document.body.appendChild(MountPoint);
 }
 
 let Init = () => {
   return new Promise ( (resolve) => {
     let State = Global_State;
-    SetStateDom(State);
+
+    let MountPoint = document.createElement("div");
+    MountPoint.id = "mount-point";
+    document.body.appendChild(MountPoint);
+
+    Global_State.MountPoint = MountPoint;
 
     State.Router = new MakeRouter();
     State.Router.alias("/", "/vim");
