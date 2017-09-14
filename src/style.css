@@ -57,6 +57,10 @@ h1 {
   font-weight: 500;
 }
 
+.heading {
+  padding-left: 1.2em;
+}
+
 #cursor {
   position: fixed;
   /* background: #FF3D73; */
@@ -75,10 +79,6 @@ h1 {
 
 #console {
   padding: 1em;
-}
-
-#vim {
-  padding-left: 2.2em;
 }
 
 #vim #bottom-bar {
@@ -115,13 +115,13 @@ h1 {
 }
 
 #vim #left-bar {
-  background: #FF3D73;
+  border-right: 0.1em solid #FF3D73;
+  margin-right: 0.4em;
   /* background: #F7208B; */
-  position: fixed;
   top: 0;
-  left: 1.7em;
-  width: 0.1em;
-  height: 10000px;
+  left: 0;
+  width: 1.6em;
+  height: 100%;
 }
 
 #vim #eighty-col-bar {
@@ -131,4 +131,8 @@ h1 {
   height: 95%;
   background: #313226; /* Lighter background color */
 
+}
+
+#vim-inner > div {
+  float: left;
 }
