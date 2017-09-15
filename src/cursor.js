@@ -6,9 +6,8 @@ let InitCursor = (CursorElement) => {
 }
 
 
-let blink = (Cursor, RenderDom) => {
+let blink = (Cursor) => {
   Assert(Cursor instanceof HTMLElement);
-  Assert(RenderDom instanceof HTMLElement);
 
   let blinkTime = 650;
   let blinkTick = blinkTime/3;
@@ -17,17 +16,14 @@ let blink = (Cursor, RenderDom) => {
 
     // Blink off
     Cursor.classList.add("cursor-off");
-    Render(RenderDom);
 
     // Blink on
     setTimeout( () => {
       Cursor.classList.remove("cursor-off");
-      Render(RenderDom);
     }, blinkTick );
 
     // Fin
     setTimeout( () => {
-      Render(RenderDom);
       resolve();
     }, blinkTick*3 );
   });

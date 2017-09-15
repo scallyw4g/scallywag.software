@@ -13,7 +13,6 @@ UserCallback( (State) => {
       .map((Dom) => { return new TypedElement(Dom); });
 
     InitCursor(ElementsToType[0]);
-    Render(Route.Dom);
 
     blinkCursor(Route.Dom, 5)
       .then(() => { return typeText(ElementsToType[0], Route.Dom) } )
@@ -24,7 +23,6 @@ UserCallback( (State) => {
       .then(() => { return new Promise( (resolve) => {
         PurgeCursors(Route.Dom);
         InitCursor(ElementsToType[2]);
-        Render(Route.Dom);
         resolve();
       }) })
       .then(() => { return wait(140) } )

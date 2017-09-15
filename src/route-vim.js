@@ -11,7 +11,6 @@ UserCallback( (State) => {
     console.log("vim callback firing");
 
     let Vim = document.querySelector("#vim");
-    // document.body.onclick = () => {console.log('click')}
 
     let MainBounds = document.querySelector("#vim-inner").getBoundingClientRect();
     let width = MainBounds.right - MainBounds.left;
@@ -26,7 +25,6 @@ UserCallback( (State) => {
       .map((Dom) => { return new TypedElement(Dom); });
 
     InitCursor(ElementsToType[0]);
-    Render(Route.Dom);
 
     wait(200)
       .then(() => { return blinkCursor(Route.Dom, 1) })
@@ -42,10 +40,7 @@ UserCallback( (State) => {
       .then(() => { return typeText(ElementsToType[8], Route.Dom, 0) })
       .then(() => { return wait(200) })
       .then(() => { return blinkCursor(Route.Dom, 2) })
-      .then(() => {
-        PurgeCursors(Route.Dom);
-        Render(Route.Dom);
-    });
+      .then(() => { PurgeCursors(Route.Dom); })
   }
 
 });

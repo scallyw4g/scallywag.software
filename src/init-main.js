@@ -91,7 +91,6 @@ let typeText = (Elem, RenderDom, finalDelay = 500) => {
       }
 
       Elem.Dom.innerHTML += text.shift();
-      Render(RenderDom);
     }, charAnimInterval );
 
   });
@@ -118,20 +117,13 @@ let SetStateDom = (State) => {
   Assert(State instanceof AppState);
 }
 
-/*
- *  FIXME(Jesse): This swaps out the entire view each Render tick, which seems
- *  to be blocking the main thread for quite some time.  This has the effect of
- *  user input event handlers to be missed sometimes.  I think the solution
- *  would be to implement an _actual_ virtual dom with diffing applied inside
- *  requestAnimationFrame()
- */
 let Render = (Element) => {
   Assert(Element instanceof HTMLElement);
 
   let MountPoint = Global_State.MountPoint;
   MountPoint.innerHTML = "";
 
-  let Clone = MountPoint.appendChild(Element.cloneNode(true))
+  MountPoint.appendChild(Element)
 
   Array.from(document.body.children).forEach( (Child) => {
     document.body.removeChild(Child);
