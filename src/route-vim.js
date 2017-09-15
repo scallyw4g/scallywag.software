@@ -29,19 +29,19 @@ UserCallback( (State) => {
     Render(Route.Dom);
 
     wait(200)
-      .then( blinkCursor.bind(this, Route.Dom, 1) )
-      .then( wait.bind(this, 100) )
-      .then( typeText.bind(this, ElementsToType[0], Route.Dom, 150) )
-      .then( typeText.bind(this, ElementsToType[1], Route.Dom) )
-      .then( typeText.bind(this, ElementsToType[2], Route.Dom) )
-      .then( typeText.bind(this, ElementsToType[3], Route.Dom) )
-      .then( typeText.bind(this, ElementsToType[4], Route.Dom) )
-      .then( typeText.bind(this, ElementsToType[5], Route.Dom) )
-      .then( typeText.bind(this, ElementsToType[6], Route.Dom) )
-      .then( typeText.bind(this, ElementsToType[7], Route.Dom) )
-      .then( typeText.bind(this, ElementsToType[8], Route.Dom, 0) )
-      .then( wait.bind(this, 200) )
-      .then( blinkCursor.bind(this, Route.Dom, 2) )
+      .then(() => { return blinkCursor(Route.Dom, 1) })
+      .then(() => { return wait(100) })
+      .then(() => { return typeText(ElementsToType[0], Route.Dom, 150) })
+      .then(() => { return typeText(ElementsToType[1], Route.Dom) })
+      .then(() => { return typeText(ElementsToType[2], Route.Dom) })
+      .then(() => { return typeText(ElementsToType[3], Route.Dom) })
+      .then(() => { return typeText(ElementsToType[4], Route.Dom) })
+      .then(() => { return typeText(ElementsToType[5], Route.Dom) })
+      .then(() => { return typeText(ElementsToType[6], Route.Dom) })
+      .then(() => { return typeText(ElementsToType[7], Route.Dom) })
+      .then(() => { return typeText(ElementsToType[8], Route.Dom, 0) })
+      .then(() => { return wait(200) })
+      .then(() => { return blinkCursor(Route.Dom, 2) })
       .then(() => {
         PurgeCursors(Route.Dom);
         Render(Route.Dom);
