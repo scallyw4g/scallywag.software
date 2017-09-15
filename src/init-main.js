@@ -120,27 +120,23 @@ let SetStateDom = (State) => {
 let Render = (Element) => {
   Assert(Element instanceof HTMLElement);
 
-  let MountPoint = Global_State.MountPoint;
-  MountPoint.innerHTML = "";
+  let Dom = Global_State.Dom;
+  Dom.innerHTML = "";
+  document.body.innerHTML = "";
 
-  MountPoint.appendChild(Element)
-
-  Array.from(document.body.children).forEach( (Child) => {
-    document.body.removeChild(Child);
-  });
-
-  document.body.appendChild(MountPoint);
+  Dom.appendChild(Element)
+  console.log("render");
+  document.body.appendChild(Dom);
 }
 
 let Init = () => {
   return new Promise ( (resolve) => {
     let State = Global_State;
 
-    let MountPoint = document.createElement("div");
-    MountPoint.id = "mount-point";
-    document.body.appendChild(MountPoint);
+    let Dom = document.createElement("div");
+    document.body.appendChild(Dom);
 
-    Global_State.MountPoint = MountPoint;
+    Global_State.Dom = Dom;
 
     State.Router = new MakeRouter();
     State.Router.alias("/", "/vim");

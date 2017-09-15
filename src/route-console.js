@@ -1,6 +1,6 @@
 UserCallback( (State) => {
   console.log("binding console callback");
-  let Route = State.Router.routes["/console"];
+  let Route = State.Router.routes["/intro"];
   Assert(Route instanceof MakeRoute);
 
   Route.Main = (State) => {

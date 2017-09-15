@@ -35,8 +35,10 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       // It's important to render the route initially before firing the Routes
       // Main() because then the route can query the rendered Dom
       SetDisplay(TargetRoute.Dom, DISPLAY_BLOCK);
+      PurgeCursors(TargetRoute.Dom);
       Render(TargetRoute.Dom);
 
+      if (TargetRoute.Callbacks) TargetRoute.Callbacks(State);
       if (TargetRoute.Main) TargetRoute.Main(State);
 
     } else { // Invalid route passed in

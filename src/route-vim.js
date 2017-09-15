@@ -1,10 +1,19 @@
 UserCallback( (State) => {
-  document.body.onclick = () => { console.log('hi') }
-  document.onkeydown = () => { console.log('key') }
+  console.log("binding vim Dom Callbacks");
+
+  let Route = State.Router.routes["/vim"];
+
+  Route.Callbacks = () => {
+    let Credits = State.Dom.querySelector("#credits-link");
+    Credits.onclick = e => {State.Router.navigate("/credits");}
+
+    let Intro = State.Dom.querySelector("#intro-link");
+    Intro.onclick = e => {State.Router.navigate("/intro");}
+  }
 });
 
 UserCallback( (State) => {
-  console.log("binding vim callback");
+  console.log("binding vim Main");
 
   let Route = State.Router.routes["/vim"];
   Route.Main = (State) => {
