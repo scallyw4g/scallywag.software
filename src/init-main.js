@@ -3,6 +3,10 @@
 let Assert = expression => { if (!(expression)) debugger; }
 let InvalidCodePath = () => { Assert(false); }
 
+function AnimationStatus() {
+  this.cancelled = false;
+}
+
 function MakeRoute(Dom) {
   Assert(Dom instanceof HTMLElement);
 
@@ -10,6 +14,8 @@ function MakeRoute(Dom) {
   this.Name = Dom.dataset.route;
 
   this.Main = null;
+  this.Callbacks = null;
+  this.AnimationStatus = new AnimationStatus();
 }
 
 function AppState() {
@@ -18,7 +24,8 @@ function AppState() {
 
 function TypedElement(Dom) {
   Assert(Dom instanceof HTMLElement);
-  this.Content = Dom.innerHTML.split("");
+  const Content = Dom.innerHTML.split("");
+  this.Content = Content;
   Dom.innerHTML = "";
 
   this.Dom = Dom;
@@ -36,8 +43,11 @@ let WaitTillLoaded = setInterval( () => {
   }
 }, 5);
 
-let wait = (ms) => {
-  return new Promise( (resolve) => {
+let wait = (ms, Route) => {
+  Assert(Route instanceof MakeRoute);
+
+  return new Promise( (resolve, reject) => {
+    if (Route.AnimationStatus.cancelled) { reject("rejecting in wait"); }
     setTimeout( () => { resolve(); }, ms);
   });
 }
@@ -71,19 +81,27 @@ let PurgeCursors = (Dom) => {
     .forEach( Element => Element.classList.remove("typing-active") );
 }
 
-let typeText = (Elem, RenderDom, finalDelay = 500) => {
+let typeText = (Elem, Route, finalDelay = 500) => {
   Assert(Elem instanceof TypedElement);
-  Assert(RenderDom instanceof HTMLElement);
+  Assert(Route instanceof MakeRoute);
+  Assert(Route.AnimationStatus instanceof AnimationStatus);
 
   let charAnimInterval = 50;
 
-  PurgeCursors(RenderDom);
+  PurgeCursors(Route.Dom);
   Elem.Dom.classList.add("typing-active");
 
   return new Promise( (resolve, reject) => {
-    let text = Elem.Content;
+    if (Route.AnimationStatus.cancelled) {
+      reject("rejecting in typeText");
+    }
+
+    // Make a copy so we can re-use the cached Elem.Content if we re-navigate
+    // through this route.
+    let text = Array.from(Elem.Content);
 
     let TextAnimation = setInterval( () => {
+
       if (text.length == 0) {
         clearInterval(TextAnimation);
         setTimeout(() => { resolve(); }, finalDelay );
@@ -138,8 +156,7 @@ let Init = () => {
 
     Global_State.Dom = Dom;
 
-    State.Router = new MakeRouter();
-    State.Router.alias("/", "/vim");
+    State.Router = new MakeRouter("/vim");
 
     let Router = State.Router;
 
@@ -157,8 +174,7 @@ let Init = () => {
         document.dispatchEvent(event);
         clearInterval(WaitForUserCallbacks);
       }
-    }, 500);
-
+    }, 50);
 
     resolve(State);
   });
