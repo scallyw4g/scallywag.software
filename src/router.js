@@ -14,6 +14,12 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
     if (Current) {
       Current.AnimationStatus.cancelled = true;
+
+      if (Current.UserData.Animation && Current.Teardown)
+        Current.UserData.Animation.then( () => {
+          Current.Teardown(Current);
+        });
+
       SetDisplay(Current.Dom, DISPLAY_NONE);
       if (Router.routingMode === RoutingMode_PushState)
         history.pushState({}, "", Router.currentRoute);
@@ -39,8 +45,7 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       PurgeCursors(TargetRoute.Dom);
       Render(TargetRoute.Dom);
 
-      if (TargetRoute.Callbacks) TargetRoute.Callbacks(State);
-      if (TargetRoute.Main) TargetRoute.Main(State);
+      if (TargetRoute.Main) console.log(TargetRoute.Name, " Running Main"); TargetRoute.Main(State);
 
       Assert(TargetRoute.AnimationStatus instanceof AnimationStatus);
 
@@ -60,7 +65,7 @@ function MakeRouter(Root) {
 
   this.root = Root;
 
-  this.currentRoute = '/';
+  this.currentRoute = null;
   this.routingMode = RoutingMode_Undefined;
 
   this.routes = {};
@@ -106,6 +111,7 @@ function MakeRouter(Root) {
 
   this.Initialize = function(State) {
 
+    console.log("Router.Initialize");
     if ( history.pushState && document.location.protocol != "file:") {
       this.routingMode = RoutingMode_PushState;
     } else {

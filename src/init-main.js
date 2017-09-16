@@ -16,6 +16,10 @@ function MakeRoute(Dom) {
   this.Main = null;
   this.Callbacks = null;
   this.AnimationStatus = new AnimationStatus();
+  this.UserData = {};
+
+  this.uninitialized = true;
+
 }
 
 function AppState() {
@@ -24,10 +28,11 @@ function AppState() {
 
 function TypedElement(Dom) {
   Assert(Dom instanceof HTMLElement);
+
   const Content = Dom.innerHTML.split("");
-  this.Content = Content;
   Dom.innerHTML = "";
 
+  this.Content = Content;
   this.Dom = Dom;
 }
 
@@ -47,7 +52,8 @@ let wait = (ms, Route) => {
   Assert(Route instanceof MakeRoute);
 
   return new Promise( (resolve, reject) => {
-    if (Route.AnimationStatus.cancelled) { reject("rejecting in wait"); }
+    if (Route.AnimationStatus.cancelled) { resolve(); }
+
     setTimeout( () => { resolve(); }, ms);
   });
 }
@@ -93,7 +99,8 @@ let typeText = (Elem, Route, finalDelay = 500) => {
 
   return new Promise( (resolve, reject) => {
     if (Route.AnimationStatus.cancelled) {
-      reject("rejecting in typeText");
+      charAnimInterval = 0;
+      finalDelay = 0;
     }
 
     // Make a copy so we can re-use the cached Elem.Content if we re-navigate
@@ -147,6 +154,25 @@ let Render = (Element) => {
   document.body.appendChild(Dom);
 }
 
+
+// TODO(Jesse): Polyfill CustomEvent for <IE9 ?
+let BindUserCallbacks = (State) => {
+
+  return new Promise( (resolve) => {
+
+    let event = new CustomEvent(USER_CALLBACKS_START, {detail: Global_bindUserCallbackData});
+    document.dispatchEvent(event);
+
+    let WaitForUserCallbacks = setInterval( () => {
+      if (Global_bindUserCallbackData.pendingUserCallbacks === 0) {
+        clearInterval(WaitForUserCallbacks);
+        resolve();
+      }
+    }, 25);
+
+  });
+}
+
 let Init = () => {
   return new Promise ( (resolve) => {
     let State = Global_State;
@@ -162,19 +188,12 @@ let Init = () => {
 
     Router.Initialize(State);
 
-    // TODO(Jesse): Polyfill CustomEvent for <IE9 ?
-    let event = new CustomEvent(USER_CALLBACKS_START, {detail: Global_bindUserCallbackData});
-    console.log("dispaching %s", USER_CALLBACKS_START);
-    document.dispatchEvent(event);
-
-    let WaitForUserCallbacks = setInterval( () => {
-      if (Global_bindUserCallbackData.pendingUserCallbacks === 0) {
-        let event = new CustomEvent(USER_CALLBACKS_COMPLETE, {detail: State});
-        console.log("dispaching %s", USER_CALLBACKS_COMPLETE);
-        document.dispatchEvent(event);
-        clearInterval(WaitForUserCallbacks);
-      }
-    }, 50);
+    console.log("Start: BindUserCallbacks");
+    BindUserCallbacks(State).then( () => {
+      console.log("Finish: Bind User Callbacks");
+      let event = new CustomEvent(USER_CALLBACKS_COMPLETE, {detail: State});
+      document.dispatchEvent(event);
+    });
 
     resolve(State);
   });

@@ -1,15 +1,51 @@
-UserCallback( (State) => {
-  console.log("binding vim Dom Callbacks");
 
-  let Route = State.Router.routes["/vim"];
+UserCallback( (StateIn) => {
+  console.log("binding vim Init/Teardown callbacks");
 
-  Route.Callbacks = () => {
-    let Credits = State.Dom.querySelector("#credits-link");
+  let Route = StateIn.Router.routes["/vim"];
+
+  Route.Teardown = () => {
+    Assert(Route instanceof MakeRoute);
+    console.log("Tearing down /vim");
+
+    Route.UserData.ElementsToType
+      .forEach( Element => {
+        Assert(Element instanceof TypedElement);
+        Assert(Element.Dom instanceof HTMLElement);
+        Element.Dom.innerHTML = "";
+      });
+  }
+
+  Route.FitBottomBar = (Route) => {
+    let MainBounds = document.querySelector("#vim-inner").getBoundingClientRect();
+    let width = MainBounds.right - MainBounds.left;
+
+    let BottomBar = Route.Dom.querySelector("#bottom-bar");
+    BottomBar.style.width = width;
+  }
+
+  Route.Initialize = (State) => {
+    Assert(Route instanceof MakeRoute);
+
+    Route.UserData.ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
+      .map((Dom) => { return new TypedElement(Dom); });
+
+    let Credits = Route.Dom.querySelector("#credits-link");
     Credits.onclick = e => {State.Router.navigate("/credits");}
 
-    let Intro = State.Dom.querySelector("#intro-link");
+    let Intro = Route.Dom.querySelector("#intro-link");
     Intro.onclick = e => {State.Router.navigate("/intro");}
+
+    Route.uninitialized = false;
   }
+
+  // <piggy>
+  // This is bad on memory and should..? could..? be refactored
+  document.body.onresize = Route.FitBottomBar.bind(null, Route);
+  // </piggy>
+
+
+  Route.Initialize(StateIn);
 });
 
 UserCallback( (State) => {
@@ -17,21 +53,12 @@ UserCallback( (State) => {
 
   let Route = State.Router.routes["/vim"];
   Route.Main = (State) => {
-    console.log("vim callback firing");
-
     let Vim = document.querySelector("#vim");
-
-    let MainBounds = document.querySelector("#vim-inner").getBoundingClientRect();
-    let width = MainBounds.right - MainBounds.left;
-
-    let BottomBar = Route.Dom.querySelector("#bottom-bar");
-    BottomBar.style.width = width;
 
     let Router = State.Router;
     Assert(Router instanceof MakeRouter);
 
-    let ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
-      .map((Dom) => { return new TypedElement(Dom); });
+    let ElementsToType = Route.UserData.ElementsToType;
 
     InitCursor(ElementsToType[0]);
 
@@ -39,22 +66,24 @@ UserCallback( (State) => {
       return new Promise( (_, reject) => { reject(e); });
     }
 
-    wait(5000, Route)
-      .then(() => { console.log("fulfilling1"); return blinkCursor(Route, 1)                    }, (e) => { console.log("rejected1",  e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling2"); return wait(100, Route)                         }, (e) => { console.log("rejected2",  e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling3"); return typeText(ElementsToType[0], Route, 150)  }, (e) => { console.log("rejected3",  e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling4"); return typeText(ElementsToType[1], Route)       }, (e) => { console.log("rejected4",  e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling5"); return typeText(ElementsToType[2], Route)       }, (e) => { console.log("rejected5",  e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling6"); return typeText(ElementsToType[3], Route)       }, (e) => { console.log("rejected6",  e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling7"); return typeText(ElementsToType[4], Route)       }, (e) => { console.log("rejected7",  e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling8"); return typeText(ElementsToType[5], Route)       }, (e) => { console.log("rejected8",  e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling9"); return typeText(ElementsToType[6], Route)       }, (e) => { console.log("rejected9",  e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling10"); return typeText(ElementsToType[7], Route)      }, (e) => { console.log("rejected10", e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling11"); return typeText(ElementsToType[8], Route, 0)   }, (e) => { console.log("rejected11", e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling12"); return wait(200, Route)                        }, (e) => { console.log("rejected12", e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling13"); return blinkCursor(Route, 2)                   }, (e) => { console.log("rejected13", e); return ChainReject(e) })
-      .then(() => { console.log("fulfilling14"); PurgeCursors(Route.Dom);                       }, (e) => { console.log("rejected14", e); return ChainReject(e) })
-      .catch((e) => { console.log("cancelled", e) })
+    Route.FitBottomBar(Route);
+
+    Route.UserData.Animation = wait(200, Route)
+      .then(() => { return blinkCursor(Route, 1)                   })
+      .then(() => { return wait(100, Route)                        })
+      .then(() => { return typeText(ElementsToType[0], Route, 150) })
+      .then(() => { return typeText(ElementsToType[1], Route)      })
+      .then(() => { return typeText(ElementsToType[2], Route)      })
+      .then(() => { return typeText(ElementsToType[3], Route)      })
+      .then(() => { return typeText(ElementsToType[4], Route)      })
+      .then(() => { return typeText(ElementsToType[5], Route)      })
+      .then(() => { return typeText(ElementsToType[6], Route)      })
+      .then(() => { return typeText(ElementsToType[7], Route)      })
+      .then(() => { return typeText(ElementsToType[8], Route, 0)   })
+      .then(() => { return wait(200, Route)                        })
+      .then(() => { return blinkCursor(Route, 2)                   })
+      .then(() => { PurgeCursors(Route.Dom);                       })
   }
+
 });
 
