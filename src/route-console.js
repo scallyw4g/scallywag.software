@@ -14,19 +14,19 @@ UserCallback( (State) => {
 
     InitCursor(ElementsToType[0]);
 
-    blinkCursor(Route, 5)
-      .then(() => { return typeText(ElementsToType[0], Route) } )
-      .then(() => { return typeText(ElementsToType[1], Route) } )
-      .then(() => { return wait(60, Route) } )
-      .then(() => { return blinkCursor(Route, 1) } )
-      .then(() => { return wait(60, Route) } )
+    blinkCursor(Route, 4)
+      .then(() => { return typeText(ElementsToType[0], Route) })
+      .then(() => { return typeText(ElementsToType[1], Route) })
+      .then(() => { return wait(60, Route)                    })
+      .then(() => { return blinkCursor(Route, 1)              })
+      .then(() => { return wait(60, Route)                    })
       .then(() => { return new Promise( (resolve) => {
         PurgeCursors(Route.Dom);
         InitCursor(ElementsToType[2]);
         resolve();
-      }) })
-      .then(() => { return wait(140, Route) } )
-      .then(() => { return State.Router.navigate("/", State) } );
+      })                                                      })
+      .then(() => { return wait(140, Route)                   })
+      .then(() => { return State.Router.navigate("/", State)  });
   }
 
 });

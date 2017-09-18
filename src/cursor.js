@@ -15,10 +15,7 @@ let blink = (Cursor, Route) => {
 
   return new Promise( (resolve, reject) => {
 
-    if (Route.AnimationStatus.cancelled) {
-      let blinkTime = 0;
-      let blinkTick = 0;
-    }
+    if (Route.AnimationStatus.cancelled) { reject("Blink"); return; }
 
     // Blink off
     Cursor.classList.add("cursor-off");

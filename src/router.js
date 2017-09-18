@@ -14,13 +14,12 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
     if (Current) {
       Current.AnimationStatus.cancelled = true;
-
-      if (Current.UserData.Animation && Current.Teardown)
+      if (Current.UserData.Animation && Current.Teardown) {
         Current.UserData.Animation.then( () => {
           Current.Teardown(Current);
         });
+      }
 
-      SetDisplay(Current.Dom, DISPLAY_NONE);
       if (Router.routingMode === RoutingMode_PushState)
         history.pushState({}, "", Router.currentRoute);
     }
@@ -28,6 +27,7 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
     let targetLookup = Router.CheckRootAlias(url);
     let TargetRoute = Router.routes[targetLookup];
     if (TargetRoute) {
+
       TargetRoute.AnimationStatus.cancelled = false;
       Router.currentRoute = url;
       if (Router.routingMode === RoutingMode_PushState)
@@ -41,7 +41,6 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
       // It's important to render the route initially before firing the Routes
       // Main() because then the route can query the rendered Dom
-      SetDisplay(TargetRoute.Dom, DISPLAY_BLOCK);
       PurgeCursors(TargetRoute.Dom);
       Render(TargetRoute.Dom);
 
@@ -124,6 +123,7 @@ function MakeRouter(Root) {
       .map( (Dom) => {
         let Route = new MakeRoute(Dom.cloneNode(true));
         this.routes[Route.Name] = Route;
+        SetDisplay(Route.Dom, DISPLAY_BLOCK);
       });
 
     let Url = this.GetUrl();

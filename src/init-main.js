@@ -19,7 +19,6 @@ function MakeRoute(Dom) {
   this.UserData = {};
 
   this.uninitialized = true;
-
 }
 
 function AppState() {
@@ -52,9 +51,8 @@ let wait = (ms, Route) => {
   Assert(Route instanceof MakeRoute);
 
   return new Promise( (resolve, reject) => {
-    if (Route.AnimationStatus.cancelled) { resolve(); }
-
-    setTimeout( () => { resolve(); }, ms);
+    if (Route.AnimationStatus.cancelled) reject("Wait")
+    else setTimeout( () => { resolve(); }, ms)
   });
 }
 
@@ -98,20 +96,26 @@ let typeText = (Elem, Route, finalDelay = 500) => {
   Elem.Dom.classList.add("typing-active");
 
   return new Promise( (resolve, reject) => {
-    if (Route.AnimationStatus.cancelled) {
-      charAnimInterval = 0;
-      finalDelay = 0;
-    }
 
-    // Make a copy so we can re-use the cached Elem.Content if we re-navigate
-    // through this route.
+    // Copy so we can re-use Elem.Content if we re-navigate through this route
     let text = Array.from(Elem.Content);
 
     let TextAnimation = setInterval( () => {
 
+      if (Route.AnimationStatus.cancelled) {
+        clearInterval(TextAnimation);
+        reject( "typeText " + Elem.Content.join(""));
+        return;
+      }
+
       if (text.length == 0) {
         clearInterval(TextAnimation);
-        setTimeout(() => { resolve(); }, finalDelay );
+
+        setTimeout(() => {
+          resolve();
+        },
+        finalDelay );
+
         return;
       }
 
@@ -200,26 +204,11 @@ let Init = () => {
 }
 
 let Main = (State) => {
-  let Router = State.Router;
+  Assert(State instanceof AppState);
 
+  let Router = State.Router;
   Assert(Router instanceof MakeRouter);
 
-  let headings = Array.from(document.getElementsByClassName("heading"));
-
-  for ( let headingIndex = 0;
-        headingIndex < headings.length;
-        ++headingIndex )
-  {
-    let Elem = headings[headingIndex];
-
-    Elem.onclick = (event) => {
-      let sibling = event.target.nextElementSibling;
-      ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
-    }
-
-  }
-
-  document.body.innerHTML = "";
   SetDisplay(document.body, DISPLAY_BLOCK);
 
 }
