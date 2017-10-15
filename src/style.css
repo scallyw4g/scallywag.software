@@ -23,10 +23,6 @@ a {
   color: #ABAA98;
 }
 
-p {
-  width: 800px;
-}
-
 .typing-active::after{
   content: " ";
   background: #F7208B;
@@ -61,6 +57,12 @@ h1, .h1 {
 
 #intro {
   padding: 1em;
+}
+
+#vim-inner {
+  border-right: 0.8em solid #313226; /* Lighter background color */
+  width: 800px;
+  height: 96%;
 }
 
 #vim {
@@ -147,13 +149,4 @@ h1, .h1 {
 
 .arrow-right:before {
   border-left: solid black 1.2em;
-}
-
-#vim #eighty-col-bar {
-  position: fixed;
-  left: 800px;
-  width: 0.75em;
-  height: 95%;
-  background: #313226; /* Lighter background color */
-
 }

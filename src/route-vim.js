@@ -17,11 +17,11 @@ UserCallback( (StateIn) => {
   }
 
   Route.FitBottomBar = (Route) => {
-    let MainBounds = Route.Dom.querySelector("#vim-inner").getBoundingClientRect();
-    let width = MainBounds.right - MainBounds.left;
+    let RouteBounds = Route.Dom.getBoundingClientRect();
+    let RouteWidth = RouteBounds.right - RouteBounds.left;
 
     let BottomBar = Route.Dom.querySelector("#bottom-bar");
-    BottomBar.style.width = width;
+    BottomBar.style.width = RouteWidth;
   }
 
   Route.Initialize = (State) => {
