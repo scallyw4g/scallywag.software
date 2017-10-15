@@ -11,7 +11,7 @@ font-family:  'Oxygen Mono', monospace;
 }
 
 a {
-  color: #F4F0B8;
+  color: #ED971F;
   text-decoration: none;
 }
 
@@ -90,6 +90,7 @@ h1, .h1 {
 #vim #bottom-bar .ele-inner,
 #vim #bottom-bar .ele-inner {
   padding: 0 1em 0 0;
+  color: #313226; /* Lighter background color */
 }
 
 #vim #bottom-bar .em-left-pad.ele-inner {

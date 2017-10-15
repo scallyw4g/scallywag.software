@@ -16,16 +16,6 @@ UserCallback( (StateIn) => {
       });
   }
 
-  let headings = Array.from(Route.Dom.getElementsByClassName("heading"));
-
-  headings.forEach( (Elem) => {
-    Elem.onclick = (event) => {
-      console.log('click');
-      let sibling = event.target.nextElementSibling;
-      ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
-    }
-  });
-
   Route.FitBottomBar = (Route) => {
     let MainBounds = Route.Dom.querySelector("#vim-inner").getBoundingClientRect();
     let width = MainBounds.right - MainBounds.left;
@@ -39,6 +29,15 @@ UserCallback( (StateIn) => {
 
     Route.UserData.ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
       .map((Dom) => { return new TypedElement(Dom); });
+
+    let headings = Array.from(Route.Dom.getElementsByClassName("click-expand"));
+    headings.forEach( (Elem) => {
+      Elem.onclick = (event) => {
+        console.log('click');
+        let sibling = event.target.nextElementSibling;
+        ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
+      }
+    });
 
     let Credits = Route.Dom.querySelector("#credits-link");
     Credits.onclick = e => {State.Router.navigate("/credits");}
