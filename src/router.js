@@ -49,18 +49,26 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       Assert(TargetRoute.AnimationStatus instanceof AnimationStatus);
 
     } else { // Invalid route passed in
-      Router.navigate("/404", State);
+      Router.navigate("/404");
     }
   }
 
 
   Router.pendingNavigations.forEach( (Nav) => {
-    Router.navigate(Nav, State);
+    Router.navigate(Nav);
   });
 
+  delete Router.pendingNavigations;
 });
 
 function MakeRouter(Root) {
+
+  /* Data Properties
+   * **********************************************************************/
+
+  // Before the framework is initialized, Router.navigate pushes stuff into
+  // this array.  Once the framework loads it is flushed and deleted.
+  this.pendingNavigations = [];
 
   this.root = Root;
 
@@ -69,12 +77,8 @@ function MakeRouter(Root) {
 
   this.routes = {};
 
-  // Before the framework is initialized, Router.navigate pushes stuff into
-  // this array.  Once the framework loads it is flushed and, at the time of
-  // this writing, never used again.
-  this.pendingNavigations = [];
-
-  /***********************************************************************/
+  /* Namespaced Functions
+   * **********************************************************************/
 
   this.CheckRootAlias = function(Route) {
     let Lookup = Route;
@@ -108,30 +112,8 @@ function MakeRouter(Root) {
     return Url;
   }
 
-  this.Initialize = function(State) {
-
-    console.log("Router.Initialize");
-    if ( history.pushState && document.location.protocol != "file:") {
-      this.routingMode = RoutingMode_PushState;
-    } else {
-      this.routingMode = RoutingMode_Hash;
-      document.body.onhashchange = this.OnHashChange;
-    }
-
-    // Init Route Dom objects
-    let RouteElements = Array.from(document.getElementsByClassName("route"))
-      .map( (Dom) => {
-        let Route = new MakeRoute(Dom.cloneNode(true));
-        this.routes[Route.Name] = Route;
-        SetDisplay(Route.Dom, DISPLAY_BLOCK);
-      });
-
-    let Url = this.GetUrl();
-    this.navigate(Url, State);
-  }
-
   // Stub method to cache navigations before the framework is fully loaded
-  this.navigate = function(targetRoute, State) {
+  this.navigate = function(targetRoute) {
     console.log("Caching nav to ", targetRoute);
     this.pendingNavigations.push(targetRoute);
   }
@@ -140,6 +122,30 @@ function MakeRouter(Root) {
     let Url = this.GetUrl();
     this.navigate(Url, State);
   }
+
+
+
+  /* Initialization
+   * **********************************************************************/
+  console.log("Router.Initialize");
+
+  if ( history.pushState && document.location.protocol != "file:") {
+    this.routingMode = RoutingMode_PushState;
+  } else {
+    this.routingMode = RoutingMode_Hash;
+    document.body.onhashchange = this.OnHashChange;
+  }
+
+  // Init Route Dom objects
+  let RouteElements = Array.from(document.getElementsByClassName("route"))
+    .map( (Dom) => {
+      let Route = new MakeRoute(Dom.cloneNode(true));
+      this.routes[Route.Name] = Route;
+      SetDisplay(Route.Dom, DISPLAY_BLOCK);
+    });
+
+  let Url = this.GetUrl();
+  this.navigate(Url);
 
 
 }

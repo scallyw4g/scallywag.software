@@ -1,4 +1,3 @@
-
 UserCallback( (StateIn) => {
   console.log("binding vim Init/Teardown callbacks");
 
@@ -45,7 +44,11 @@ UserCallback( (StateIn) => {
     let Intro = Route.Dom.querySelector("#intro-link");
     Intro.onclick = e => {State.Router.navigate("/intro");}
 
-    Route.uninitialized = false;
+    Route.Dom.onclick = e => {
+      Route.AnimationStatus.cancelled = true
+      delete Route.Dom;
+      Route.Dom = Route.InitialDom.cloneNode(true);
+    }
   }
 
   // <piggy>

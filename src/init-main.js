@@ -10,15 +10,15 @@ function AnimationStatus() {
 function MakeRoute(Dom) {
   Assert(Dom instanceof HTMLElement);
 
-  this.Dom = Dom;
   this.Name = Dom.dataset.route;
+
+  this.Dom = Dom;
+  this.InitialDom = Dom.cloneNode();
 
   this.Main = null;
   this.Callbacks = null;
   this.AnimationStatus = new AnimationStatus();
   this.UserData = {};
-
-  this.uninitialized = true;
 }
 
 function AppState() {
@@ -187,10 +187,6 @@ let Init = () => {
     Global_State.Dom = Dom;
 
     State.Router = new MakeRouter("/vim");
-
-    let Router = State.Router;
-
-    Router.Initialize(State);
 
     console.log("Start: BindUserCallbacks");
     BindUserCallbacks(State).then( () => {
