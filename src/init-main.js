@@ -13,7 +13,7 @@ function MakeRoute(Dom) {
   this.Name = Dom.dataset.route;
 
   this.Dom = Dom;
-  this.InitialDom = Dom.cloneNode();
+  this.InitialDom = Dom.cloneNode(true);
 
   this.Main = null;
   this.Callbacks = null;

@@ -1,5 +1,28 @@
+
 UserCallback( (StateIn) => {
   console.log("binding vim Init/Teardown callbacks");
+
+  /*
+   * Inline helper to show click-expand headings
+   */
+  let DisplayHeadings = function (Route) {
+    let headings = Array.from(Route.Dom.getElementsByClassName("click-expand"));
+    headings.forEach( (Elem) => {
+      Elem.onclick = (event) => {
+        let sibling = event.target.nextElementSibling;
+        ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
+      }
+    });
+  }
+
+  let BindClickCallbacks = function (Route, State) {
+    let Credits = Route.Dom.querySelector("#credits-link");
+    Credits.onclick = e => {State.Router.navigate("/credits");}
+
+    let Intro = Route.Dom.querySelector("#intro-link");
+    Intro.onclick = e => {State.Router.navigate("/intro");}
+  }
+
 
   let Route = StateIn.Router.routes["/vim"];
 
@@ -23,33 +46,6 @@ UserCallback( (StateIn) => {
     BottomBar.style.width = RouteWidth;
   }
 
-  Route.Initialize = (State) => {
-    Assert(Route instanceof MakeRoute);
-
-    Route.UserData.ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
-      .map((Dom) => { return new TypedElement(Dom); });
-
-    let headings = Array.from(Route.Dom.getElementsByClassName("click-expand"));
-    headings.forEach( (Elem) => {
-      Elem.onclick = (event) => {
-        console.log('click');
-        let sibling = event.target.nextElementSibling;
-        ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
-      }
-    });
-
-    let Credits = Route.Dom.querySelector("#credits-link");
-    Credits.onclick = e => {State.Router.navigate("/credits");}
-
-    let Intro = Route.Dom.querySelector("#intro-link");
-    Intro.onclick = e => {State.Router.navigate("/intro");}
-
-    Route.Dom.onclick = e => {
-      Route.AnimationStatus.cancelled = true
-      delete Route.Dom;
-      Route.Dom = Route.InitialDom.cloneNode(true);
-    }
-  }
 
   // <piggy>
   // This is bad on memory and should..? could..? be refactored
@@ -57,7 +53,31 @@ UserCallback( (StateIn) => {
   // </piggy>
 
 
-  Route.Initialize(StateIn);
+
+  /* Initialize the route
+   * ************************************************************************/
+
+  Assert(Route instanceof MakeRoute);
+
+  Route.UserData.ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
+    .map((Dom) => { return new TypedElement(Dom); });
+
+  DisplayHeadings(Route);
+  BindClickCallbacks(Route, StateIn);
+
+  Route.Dom.onclick = e => {
+    Route.AnimationStatus.cancelled = true
+    delete Route.Dom;
+    Route.Dom = Route.InitialDom.cloneNode(true);
+    Render(Route.Dom);
+
+    DisplayHeadings(Route);
+    BindClickCallbacks(Route, StateIn);
+
+    ToggleDisplay(Route.Dom, DISPLAY_NONE, DISPLAY_BLOCK);
+    Route.FitBottomBar(Route);
+  }
+
 });
 
 UserCallback( (State) => {

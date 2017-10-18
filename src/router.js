@@ -7,50 +7,46 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
   // JANKY(Jesse): Replace the navigate function once the framework is loaded
   // and perform all pending navigations.
   Router.navigate = (url) => {
-    console.log("Navigating from %s to %s", Router.currentRoute, url);
 
-    let currentLookup = Router.CheckRootAlias(Router.currentRoute);
-    let Current = Router.routes[currentLookup];
+    if ( Router.currentRoute ) {
+      console.log("Navigating from %s to %s", Router.currentRoute, url);
 
-    if (Current) {
-      Current.AnimationStatus.cancelled = true;
-      if (Current.UserData.Animation && Current.Teardown) {
-        Current.UserData.Animation.then( () => {
-          Current.Teardown(Current);
-        });
+      let currentLookup = Router.ResolveRootRouteAlias(Router.currentRoute);
+      let Current = Router.routes[currentLookup];
+
+      if (Current) {
+        Current.AnimationStatus.cancelled = true;
+        if (Current.UserData.Animation && Current.Teardown) {
+          Current.UserData.Animation.then( () => {
+            Current.Teardown(Current);
+          });
+        }
+
+        if (Router.routingMode === RoutingMode_PushState)
+          history.pushState({}, "", Router.currentRoute);
       }
-
-      if (Router.routingMode === RoutingMode_PushState)
-        history.pushState({}, "", Router.currentRoute);
     }
 
-    let targetLookup = Router.CheckRootAlias(url);
+    let targetLookup = Router.ResolveRootRouteAlias(url);
     let TargetRoute = Router.routes[targetLookup];
     if (TargetRoute) {
+      Assert(TargetRoute.AnimationStatus instanceof AnimationStatus);
 
       TargetRoute.AnimationStatus.cancelled = false;
-      Router.currentRoute = url;
-      if (Router.routingMode === RoutingMode_PushState)
-        history.replaceState({}, "", url);
-      else
-      {
-        document.body.onhashchange = null;
-        document.location.hash = url;
-        document.body.onhashchange = this.OnHashChange;
-      }
-
+      Router.UpdateBrowserUrl(url);
       // It's important to render the route initially before firing the Routes
       // Main() because then the route can query the rendered Dom
       PurgeCursors(TargetRoute.Dom);
       Render(TargetRoute.Dom);
 
-      if (TargetRoute.Main) console.log(TargetRoute.Name, " Running Main"); TargetRoute.Main(State);
-
-      Assert(TargetRoute.AnimationStatus instanceof AnimationStatus);
-
-    } else { // Invalid route passed in
-      Router.navigate("/404");
+      if (TargetRoute.Main) {
+          console.log(TargetRoute.Name, " Running Main");
+          TargetRoute.Main(State);
+      }
     }
+
+    if (!TargetRoute)
+      Router.navigate("/404");
   }
 
 
@@ -80,12 +76,24 @@ function MakeRouter(Root) {
   /* Namespaced Functions
    * **********************************************************************/
 
-  this.CheckRootAlias = function(Route) {
+  this.ResolveRootRouteAlias = function(Route) {
     let Lookup = Route;
     if (Lookup === "/") Lookup = this.root;
     return Lookup;
   }
 
+  this.UpdateBrowserUrl = function (url) {
+    this.currentRoute = url;
+    if (this.routingMode === RoutingMode_PushState)
+      history.replaceState({}, "", url);
+    else
+    {
+      document.body.onhashchange = null;
+      document.location.hash = url;
+      document.body.onhashchange = this.OnHashChange;
+    }
+    return;
+  }
 
   this.GetUrl = function() {
     let Url = null;
@@ -124,28 +132,27 @@ function MakeRouter(Root) {
   }
 
 
-
   /* Initialization
    * **********************************************************************/
-  console.log("Router.Initialize");
+  {
+    console.log("Router.Initialize");
 
-  if ( history.pushState && document.location.protocol != "file:") {
-    this.routingMode = RoutingMode_PushState;
-  } else {
-    this.routingMode = RoutingMode_Hash;
-    document.body.onhashchange = this.OnHashChange;
+    if ( history.pushState && document.location.protocol != "file:") {
+      this.routingMode = RoutingMode_PushState;
+    } else {
+      this.routingMode = RoutingMode_Hash;
+      document.body.onhashchange = this.OnHashChange;
+    }
+
+    // Init Route Dom objects
+    let RouteElements = Array.from(document.getElementsByClassName("route"))
+      .map( (Dom) => {
+        let Route = new MakeRoute(Dom.cloneNode(true));
+        this.routes[Route.Name] = Route;
+        SetDisplay(Route.Dom, DISPLAY_BLOCK);
+      });
+
+    let Url = this.GetUrl();
+    this.navigate(Url);
   }
-
-  // Init Route Dom objects
-  let RouteElements = Array.from(document.getElementsByClassName("route"))
-    .map( (Dom) => {
-      let Route = new MakeRoute(Dom.cloneNode(true));
-      this.routes[Route.Name] = Route;
-      SetDisplay(Route.Dom, DISPLAY_BLOCK);
-    });
-
-  let Url = this.GetUrl();
-  this.navigate(Url);
-
-
 }
