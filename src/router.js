@@ -16,12 +16,6 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
       if (Current) {
         Current.AnimationStatus.cancelled = true;
-        if (Current.UserData.Animation && Current.Teardown) {
-          Current.UserData.Animation.then( () => {
-            Current.Teardown(Current);
-          });
-        }
-
         if (Router.routingMode === RoutingMode_PushState)
           history.pushState({}, "", Router.currentRoute);
       }

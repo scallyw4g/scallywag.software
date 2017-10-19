@@ -26,18 +26,6 @@ UserCallback( (StateIn) => {
 
   let Route = StateIn.Router.routes["/vim"];
 
-  Route.Teardown = () => {
-    Assert(Route instanceof MakeRoute);
-    console.log("Tearing down /vim");
-
-    Route.UserData.ElementsToType
-      .forEach( Element => {
-        Assert(Element instanceof TypedElement);
-        Assert(Element.Dom instanceof HTMLElement);
-        Element.Dom.innerHTML = "";
-      });
-  }
-
   Route.FitBottomBar = (Route) => {
     let RouteBounds = Route.Dom.getBoundingClientRect();
     let RouteWidth = RouteBounds.right - RouteBounds.left;
