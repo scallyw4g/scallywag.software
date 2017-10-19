@@ -37,7 +37,14 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       // It's important to render the route initially before firing the Routes
       // Main() because then the route can query the rendered Dom
       PurgeCursors(TargetRoute.Dom);
+
+      delete TargetRoute.Dom;
+      TargetRoute.Dom = TargetRoute.InitialDom.cloneNode(true);
       Render(TargetRoute.Dom);
+      if (TargetRoute.Init) {
+        console.log(TargetRoute.Name, " Running Init");
+        TargetRoute.Init();
+      }
 
       if (TargetRoute.Main) {
           console.log(TargetRoute.Name, " Running Main");
@@ -82,7 +89,7 @@ function MakeRouter(Root) {
     return Lookup;
   }
 
-  this.UpdateBrowserUrl = function (url) {
+  this.UpdateBrowserUrl = (url) => {
     this.currentRoute = url;
     if (this.routingMode === RoutingMode_PushState)
       history.replaceState({}, "", url);
@@ -126,9 +133,9 @@ function MakeRouter(Root) {
     this.pendingNavigations.push(targetRoute);
   }
 
-  this.OnHashChange = function() {
+  this.OnHashChange = () => {
     let Url = this.GetUrl();
-    this.navigate(Url, State);
+    this.navigate(Url);
   }
 
 
@@ -152,6 +159,7 @@ function MakeRouter(Root) {
         SetDisplay(Route.Dom, DISPLAY_BLOCK);
       });
 
+    console.log("init GetUrl");
     let Url = this.GetUrl();
     this.navigate(Url);
   }

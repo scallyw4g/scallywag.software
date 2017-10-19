@@ -1,6 +1,6 @@
 "use strict";
 
-let Assert = expression => { if (!(expression)) debugger; }
+let Assert = expression => { if (!(expression)) { console.error("Assertion Failed"); debugger; } }
 let InvalidCodePath = () => { Assert(false); }
 
 function AnimationStatus() {
@@ -156,6 +156,7 @@ let Render = (Element) => {
   Dom.appendChild(Element)
   console.log("render");
   document.body.appendChild(Dom);
+  SetDisplay(Element, DISPLAY_BLOCK);
 }
 
 

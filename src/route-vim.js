@@ -59,23 +59,22 @@ UserCallback( (StateIn) => {
 
   Assert(Route instanceof MakeRoute);
 
-  Route.UserData.ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
-    .map((Dom) => { return new TypedElement(Dom); });
-
   DisplayHeadings(Route);
   BindClickCallbacks(Route, StateIn);
+
+  Route.Init = () => {
+    DisplayHeadings(Route);
+    BindClickCallbacks(Route, StateIn);
+
+    Route.FitBottomBar(Route);
+  }
 
   Route.Dom.onclick = e => {
     Route.AnimationStatus.cancelled = true
     delete Route.Dom;
     Route.Dom = Route.InitialDom.cloneNode(true);
     Render(Route.Dom);
-
-    DisplayHeadings(Route);
-    BindClickCallbacks(Route, StateIn);
-
-    ToggleDisplay(Route.Dom, DISPLAY_NONE, DISPLAY_BLOCK);
-    Route.FitBottomBar(Route);
+    Route.Init();
   }
 
 });
@@ -84,7 +83,12 @@ UserCallback( (State) => {
   console.log("binding vim Main");
 
   let Route = State.Router.routes["/vim"];
+
   Route.Main = (State) => {
+
+    Route.UserData.ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
+      .map((Dom) => { return new TypedElement(Dom); });
+
     Assert(State instanceof AppState);
 
     let Router = State.Router;
@@ -101,21 +105,21 @@ UserCallback( (State) => {
     Route.FitBottomBar(Route);
 
     Route.UserData.Animation = wait(200, Route)
-      .then(() => { return blinkCursor(Route, 1)                   }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return wait(100, Route)                        }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[0], Route, 150) }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[1], Route)      }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[2], Route)      }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[3], Route)      }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[4], Route)      }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[5], Route)      }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[6], Route)      }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[7], Route)      }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[8], Route, 0)   }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return wait(200, Route)                        }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return blinkCursor(Route, 2)                   }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { PurgeCursors(Route.Dom);                       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .catch( (Location) => { console.log("Animation cancelled in %s", Location) });
+      .then(() => { return blinkCursor(Route, 1)                    }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return wait(100, Route)                         }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return typeText(ElementsToType[0], Route, 150)  }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return typeText(ElementsToType[1], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return typeText(ElementsToType[2], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return typeText(ElementsToType[3], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return typeText(ElementsToType[4], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return typeText(ElementsToType[5], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return typeText(ElementsToType[6], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return typeText(ElementsToType[7], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return typeText(ElementsToType[8], Route, 0)    }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return wait(200, Route)                         }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return blinkCursor(Route, 2)                    }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { PurgeCursors(Route.Dom); Route.Dom.onclick=null }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .catch( (Location) => { Route.Dom.onclick = null });
   }
 
 });
