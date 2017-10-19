@@ -58,7 +58,7 @@ UserCallback( (StateIn) => {
   }
 
   Route.Dom.onclick = e => {
-    Route.AnimationStatus.cancelled = true
+    Route.AnimationStatus.cancelled = true;
     delete Route.Dom;
     Route.Dom = Route.InitialDom.cloneNode(true);
     Render(Route.Dom);

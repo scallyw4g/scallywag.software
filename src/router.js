@@ -30,11 +30,11 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       Router.UpdateBrowserUrl(url);
       // It's important to render the route initially before firing the Routes
       // Main() because then the route can query the rendered Dom
-      PurgeCursors(TargetRoute.Dom);
 
       delete TargetRoute.Dom;
       TargetRoute.Dom = TargetRoute.InitialDom.cloneNode(true);
       Render(TargetRoute.Dom);
+
       if (TargetRoute.Init) {
         console.log(TargetRoute.Name, " Running Init");
         TargetRoute.Init();
@@ -91,7 +91,7 @@ function MakeRouter(Root) {
     {
       document.body.onhashchange = null;
       document.location.hash = url;
-      document.body.onhashchange = this.OnHashChange;
+      document.body.onhashchange = this.OnNavEvent;
     }
     return;
   }
@@ -127,7 +127,7 @@ function MakeRouter(Root) {
     this.pendingNavigations.push(targetRoute);
   }
 
-  this.OnHashChange = () => {
+  this.OnNavEvent = () => {
     let Url = this.GetUrl();
     this.navigate(Url);
   }
@@ -140,9 +140,10 @@ function MakeRouter(Root) {
 
     if ( history.pushState && document.location.protocol != "file:") {
       this.routingMode = RoutingMode_PushState;
+      document.body.onpopstate = this.OnNavEvent;
     } else {
       this.routingMode = RoutingMode_Hash;
-      document.body.onhashchange = this.OnHashChange;
+      document.body.onhashchange = this.OnNavEvent;
     }
 
     // Init Route Dom objects
