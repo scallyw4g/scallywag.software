@@ -200,6 +200,42 @@ let Init = () => {
   });
 }
 
+let SetCookie = (Cookie) => {
+  document.cookie = `${Cookie.name}=${Cookie.value};`
+}
+
+let ReadCookie  = (Needle) => {
+  let Result = false;
+
+  document.cookie.split(";").forEach( (cookie) => {
+    var eqPos = cookie.indexOf("=");
+    var Name = cookie.substr(0, eqPos).trim();
+    if (Name === Needle) {
+      Result = cookie.substr(eqPos+1, cookie.length);
+    }
+  });
+
+  switch (Result) {
+    case "true":
+      Result = true;
+    break;
+
+    case "false":
+      Result = false;
+    break;
+  }
+
+  return Result;
+}
+
+let ClearAllCookies = () => {
+  document.cookie.split(";").forEach( (cookie) => {
+    var eqPos = cookie.indexOf("=");
+    var name = cookie.substr(0, eqPos).trim();
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  });
+}
+
 let Main = (State) => {
   Assert(State instanceof AppState);
 
@@ -207,5 +243,10 @@ let Main = (State) => {
   Assert(Router instanceof MakeRouter);
 
   SetDisplay(document.body, DISPLAY_BLOCK);
+
+  let IntroComplete = ReadCookie("IntroCompleted");
+  if (IntroComplete === false) {
+    Router.navigate("/intro");
+  }
 
 }

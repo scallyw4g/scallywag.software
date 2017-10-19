@@ -26,7 +26,10 @@ UserCallback( (State) => {
         resolve();
       })                                                      })
       .then(() => { return wait(140, Route)                   })
-      .then(() => { return State.Router.navigate("/", State)  });
+      .then(() => {
+        SetCookie({name: 'IntroCompleted', value: true});
+        return State.Router.navigate("/", State)
+      });
   }
 
 });
