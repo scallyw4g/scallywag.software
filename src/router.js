@@ -1,11 +1,14 @@
-function LookupRoute(Router, RouteName)
+function LookupRoute(Router, RouteNameOrUrl)
 {
   Assert(Router instanceof MakeRouter);
-  Assert(typeof RouteName === "string");
+  Assert(typeof RouteNameOrUrl === "string");
 
-  Assert(RouteName[0] !== "/");
+  let RouteName = RouteNameOrUrl;
+  if (RouteNameOrUrl[0] === "/") {
+    RouteName = RouteNameOrUrl.substring(1);
+  }
 
-  let Lookup = Router.ResolveRootRouteAlias(RouteName);
+  let Lookup = Router.ResolveRootUrlAlias(RouteName);
   let LookupPath = Lookup.split("/");
 
   for ( let PathIndex = 0; PathIndex < Lookup.length; ++ PathIndex )
@@ -27,7 +30,7 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
   let Router = State.Router;
 
   Router.navigate = (url) => {
-
+    debugger;
 
     if ( Router.currentRoute ) {
 
@@ -40,15 +43,14 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       }
     }
 
-    let RouteName = Router.ParseRouteFromUrl(url);
-    console.log("Navigating from %s to %s", Router.currentRoute, RouteName);
-    let targetLookup = Router.ResolveRootRouteAlias(RouteName);
-    let TargetRoute = Router.routes[targetLookup];
+    console.log("Navigating from %s to %s", Router.currentRoute, url);
+    let UrlRootResolved = Router.ResolveRootUrlAlias(url);
+    let TargetRoute = LookupRoute(Router, UrlRootResolved)
     if (TargetRoute) {
       Assert(TargetRoute.AnimationStatus instanceof AnimationStatus);
 
       TargetRoute.AnimationStatus.cancelled = false;
-      Router.UpdateBrowserUrl(RouteName);
+      Router.UpdateBrowserUrl(url);
       // It's important to render the route initially before firing the Routes
       // Main() because then the route can query the rendered Dom
 
@@ -98,20 +100,22 @@ function MakeRouter(Root) {
   /* Namespaced Functions
    * **********************************************************************/
 
-  this.ResolveRootRouteAlias = function(Route) {
+  this.ResolveRootUrlAlias = function(Route) {
     let Lookup = Route;
-    if (Lookup === "") Lookup = this.root;
+    if (Lookup === "/") Lookup = this.root;
     return Lookup;
   }
 
   this.UpdateBrowserUrl = (url) => {
     this.currentRoute = url;
     if (this.routingMode === RoutingMode_PushState)
-      history.replaceState({}, "", `/${url}`);
+      history.replaceState({}, "", `${url}`);
     else
     {
+      // FIXME(Jesse): for some reason OnNavEvent still fires when we take this
+      // path so we end up navigating twice when calling Router.navigate
       document.body.onhashchange = null;
-      document.location.hash = `/${url}`;
+      document.location.hash = `${url}`;
       document.body.onhashchange = this.OnNavEvent;
     }
     return;
@@ -136,13 +140,6 @@ function MakeRouter(Root) {
     {
       Route = "/";
     }
-
-    return Route;
-  }
-
-  this.ParseRouteFromUrl = function(url) {
-    Assert(url[0] === '/');
-    let Route = url.substring(1);
 
     return Route;
   }

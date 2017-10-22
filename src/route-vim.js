@@ -2,7 +2,7 @@
 UserCallback( (StateIn) => {
   console.log("Binding vim/main callbacks");
 
-  let Route = StateIn.Router.routes[ROUTE_VIM];
+  let Route = LookupRoute(StateIn.Router, ROUTE_VIM);
 
   let BindBottomBarClickCallbacks = function (Route, State) {
     let Credits = Route.Dom.querySelector("#credits-link");
@@ -43,7 +43,7 @@ UserCallback( (StateIn) => {
 UserCallback( (State) => {
   console.log("binding vim Main");
 
-  let Route = State.Router.routes[ROUTE_VIM];
+  let Route = LookupRoute(State.Router, ROUTE_VIM);
 
   Route.Main = (State) => {
 

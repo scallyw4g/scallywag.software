@@ -3,9 +3,9 @@
 let Assert = expression => { if (!(expression)) { console.error("Assertion Failed"); debugger; } }
 let InvalidCodePath = () => { Assert(false); }
 
-let ROUTE_VIM = "vim";
-let ROUTE_INTRO = "intro";
-let ROUTE_404 = "404";
+let ROUTE_VIM = "/vim";
+let ROUTE_INTRO = "/intro";
+let ROUTE_404 = "/404";
 
 function AnimationStatus() {
   this.cancelled = false;
