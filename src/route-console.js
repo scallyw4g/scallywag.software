@@ -28,7 +28,6 @@ UserCallback( (State) => {
       .then(() => { return wait(140, Route)                   })
       .then(() => {
         SetCookie({name: 'IntroCompleted', value: true});
-        Assert(false); // What do we do here?
         return State.Router.navigate("/", State)
       });
   }
