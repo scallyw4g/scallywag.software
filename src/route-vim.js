@@ -1,30 +1,16 @@
 
 UserCallback( (StateIn) => {
-  console.log("binding vim Init/Teardown callbacks");
+  console.log("Binding vim/main callbacks");
 
-  /*
-   * Inline helper to show click-expand headings
-   */
-  let DisplayHeadings = function (Route) {
-    let headings = Array.from(Route.Dom.getElementsByClassName("click-expand"));
-    headings.forEach( (Elem) => {
-      Elem.onclick = (event) => {
-        let sibling = event.target.nextElementSibling;
-        ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
-      }
-    });
-  }
+  let Route = StateIn.Router.routes[ROUTE_VIM];
 
-  let BindClickCallbacks = function (Route, State) {
+  let BindBottomBarClickCallbacks = function (Route, State) {
     let Credits = Route.Dom.querySelector("#credits-link");
-    Credits.onclick = e => {State.Router.navigate("/credits");}
+    Credits.onclick = e => {State.Router.navigate(ROUTE_CREDITS);}
 
     let Intro = Route.Dom.querySelector("#intro-link");
-    Intro.onclick = e => {State.Router.navigate("/intro");}
+    Intro.onclick = e => {State.Router.navigate(ROUTE_INTRO);}
   }
-
-
-  let Route = StateIn.Router.routes["/vim"];
 
   Route.FitBottomBar = (Route) => {
     let RouteBounds = Route.Dom.getBoundingClientRect();
@@ -47,22 +33,9 @@ UserCallback( (StateIn) => {
 
   Assert(Route instanceof MakeRoute);
 
-  DisplayHeadings(Route);
-  BindClickCallbacks(Route, StateIn);
-
   Route.Init = () => {
-    DisplayHeadings(Route);
-    BindClickCallbacks(Route, StateIn);
-
+    BindBottomBarClickCallbacks(Route, StateIn);
     Route.FitBottomBar(Route);
-  }
-
-  Route.Dom.onclick = e => {
-    Route.AnimationStatus.cancelled = true;
-    delete Route.Dom;
-    Route.Dom = Route.InitialDom.cloneNode(true);
-    Render(Route.Dom);
-    Route.Init();
   }
 
 });
@@ -70,7 +43,7 @@ UserCallback( (StateIn) => {
 UserCallback( (State) => {
   console.log("binding vim Main");
 
-  let Route = State.Router.routes["/vim"];
+  let Route = State.Router.routes[ROUTE_VIM];
 
   Route.Main = (State) => {
 
@@ -90,8 +63,6 @@ UserCallback( (State) => {
       return new Promise( (_, reject) => { reject(Location); });
     }
 
-    Route.FitBottomBar(Route);
-
     Route.UserData.Animation = wait(200, Route)
       .then(() => { return blinkCursor(Route, 1)                    }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
       .then(() => { return wait(100, Route)                         }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
@@ -108,6 +79,29 @@ UserCallback( (State) => {
       .then(() => { return blinkCursor(Route, 2)                    }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
       .then(() => { PurgeCursors(Route.Dom); Route.Dom.onclick=null }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
       .catch( (Location) => { Route.Dom.onclick = null });
+
+  }
+
+  // TODO(Jesse): Re-enable this
+  // Route.Dom.onclick = e => {
+  //   Route.AnimationStatus.cancelled = true;
+  //   delete Route.Dom;
+  //   Route.Dom = Route.InitialDom.cloneNode(true);
+  //   Render(Route.Dom);
+  //   Route.Init();
+  // }
+
+
+  Route.Init = () => {
+    // Route.FitBottomBar(Route);
+
+    let headings = Array.from(Route.Dom.getElementsByClassName("click-expand"));
+    headings.forEach( (Elem) => {
+      Elem.onclick = (event) => {
+        let sibling = event.target.nextElementSibling;
+        ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
+      }
+    });
   }
 
 });

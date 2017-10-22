@@ -1,6 +1,6 @@
 UserCallback( (State) => {
   console.log("binding console callback");
-  let Route = State.Router.routes["/intro"];
+  let Route = State.Router.routes["intro"];
   Assert(Route instanceof MakeRoute);
 
   Route.Main = (State) => {
@@ -28,6 +28,7 @@ UserCallback( (State) => {
       .then(() => { return wait(140, Route)                   })
       .then(() => {
         SetCookie({name: 'IntroCompleted', value: true});
+        Assert(false); // What do we do here?
         return State.Router.navigate("/", State)
       });
   }

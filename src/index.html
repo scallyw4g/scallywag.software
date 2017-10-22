@@ -20,11 +20,6 @@
       <span> Oops, couldn't find that. </span>
     </div>
 
-    <div id="credits" class="route" data-route="/credits">
-      <ul>
-        <li> Font: <a href="http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL_web"> Oxygen Mono </a> </li>
-      </ul>
-    </div>
 
     <div id="intro" class="route" data-route="/intro">
       <span class="h2">~ </span><span class="h2 gets-typed">vim </span><span class="h2 gets-typed">bare.software </span>
@@ -33,54 +28,66 @@
 
     <div id="vim" class="route" data-route="/vim">
 
-      <div id="vim-inner">
+      <div id="credits" class="route" data-route="/vim/credits">
+        <ul>
+          <li> Font: <a href="http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL_web"> Oxygen Mono </a> </li>
+        </ul>
+      </div>
+
+      <div id="vim-inner" class="route" data-route="/vim/main">
+
         <div>
-          <div>
-            <span class="h1 gets-typed">bare_metal_software() </span><span class="h1 gets-typed">{</span>
-          </div>
-
-          <div class="indented ">
-            <h2 class="gets-typed click-expand">about()</h2>
-            <div class="indented display-none">
-              I'm a minimalist at heart.  I think software should favor
-              simplicity and reliability where possible.
-            </div>
-          </div>
-
-          <div class="indented ">
-            <h2 class="gets-typed click-expand">interests()</h2>
-            <div class="indented display-none">
-              <h3> Flatbreads!! </h3>
-              <p>
-                Recently I've become inspired by the work of Casey Muratori on
-                <a href=http://handmadehero.org>Handmade Hero</a> and decided
-                to write a 3D game engine in C.  It's called
-                <a href=https://github.com/jjbandit/bonsai>Bonsai</a>, and I'm
-                writing about it in the Projects section.
-              </p>
-            </div>
-          </div>
-
-          <div class="indented ">
-            <h2 class="gets-typed click-expand">projects()</h2>
-            <div class="indented display-none">
-              <p>
-                <a href=https://github.com/jjbandit/bonsai>Bonsai</a>
-              </p>
-            </div>
-          </div>
-
-          <div class="indented ">
-            <h2 class="gets-typed click-expand">say_hi()</h2>
-            <div class="indented display-none">
-              <a href="mailto:hi@bare.software">hi@bare.software</a>
-            </div>
-          </div>
-
-          <span class="h1 gets-typed">} </span><span class="h1 gets-typed comment">// </span><span class="h1 gets-typed comment">:) </span>
-
+          <span class="h1 gets-typed">bare_metal_software() </span><span class="h1 gets-typed">{</span>
         </div>
-      </div> <!-- #vim-inner -->
+
+        <div class="indented ">
+          <h2 class="gets-typed click-expand">about()</h2>
+          <div class="indented display-none">
+            I'm a minimalist at heart.  I think software should favor
+            simplicity and reliability, and any given piece of software should
+            do the bare minimum to satisfy its requirements.  No more, and
+            certainly no less.
+
+            I enjoy building stuff from scratch.
+          </div>
+        </div>
+
+        <div class="indented ">
+          <h2 class="gets-typed click-expand">interests()</h2>
+          <div class="indented display-none">
+            <p>
+              I have a burning fiery passion for loving my
+              <strong>flatbread</strong>!
+            </p>
+            <p>
+              Recently I've become inspired by the work of Casey Muratori on
+              <a href=http://handmadehero.org>Handmade Hero</a> and decided
+              to write a 3D game engine in C.  It's called
+              <a href=https://github.com/jjbandit/bonsai>Bonsai</a>, and I'm
+              writing about it in the Projects section.
+            </p>
+          </div>
+        </div>
+
+        <div class="indented ">
+          <h2 class="gets-typed click-expand">projects()</h2>
+          <div class="indented display-none">
+            <p>
+              <a href=https://github.com/jjbandit/bonsai>Bonsai</a>
+            </p>
+          </div>
+        </div>
+
+        <div class="indented ">
+          <h2 class="gets-typed click-expand">say_hi()</h2>
+          <div class="indented display-none">
+            <a href="mailto:hi@bare.software">hi@bare.software</a>
+          </div>
+        </div>
+
+        <span class="h1 gets-typed">} </span><span class="h1 gets-typed comment">// </span><span class="h1 gets-typed comment">:) </span>
+
+    </div> <!-- #vim-inner -->
 
       <ul id="bottom-bar">
 
@@ -102,7 +109,6 @@
         --><li class="arrow-left ele-final"></li>
 
       </ul> <!-- #bottom-bar -->
-
 
     </div> <!-- #vim -->
 

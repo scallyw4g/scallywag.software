@@ -47,7 +47,7 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
     }
 
     if (!TargetRoute)
-      Router.navigate("/404");
+      Router.navigate(ROUTE_404);
   }
 
 
@@ -147,14 +147,39 @@ function MakeRouter(Root) {
     }
 
     // Init Route Dom objects
-    let RouteElements = Array.from(document.getElementsByClassName("route"))
-      .map( (Dom) => {
-        let Route = new MakeRoute(Dom.cloneNode(true));
-        this.routes[Route.Name] = Route;
-        SetDisplay(Route.Dom, DISPLAY_BLOCK);
-      });
+    let DomElements = Array.from(document.getElementsByClassName("route"));
+    let RouteElements = DomElements.map( (Dom) => {
 
-    console.log("init GetUrl");
+      let Route = new MakeRoute(Dom);
+      SetDisplay(Route.InitialDom, DISPLAY_BLOCK);
+
+      let RoutePath = Dom.dataset.route.split("/");
+      // Routes must begin with a / therefore the first element must be ""
+      Assert(RoutePath[0] === "");
+      Assert(RoutePath.length > 1);
+      RoutePath.shift();
+
+      let RoutePathRoot = RoutePath[0];
+
+      let RouteTreeRef = this.routes;
+
+      for ( let PathIndex = 0; PathIndex < RoutePath.length; ++ PathIndex )
+      {
+        let PathSeg = RoutePath[PathIndex];
+
+        if ( PathIndex === RoutePath.length-1 )
+          RouteTreeRef[PathSeg] = Route;
+
+        else if (!RouteTreeRef[PathSeg])
+          RouteTreeRef[PathSeg] = {}
+
+        else
+          RouteTreeRef = RouteTreeRef[PathSeg]
+      }
+
+    });
+
+    console.log(this.routes);
     let Url = this.GetUrl();
     this.navigate(Url);
   }

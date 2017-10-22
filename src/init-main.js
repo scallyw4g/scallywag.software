@@ -3,17 +3,21 @@
 let Assert = expression => { if (!(expression)) { console.error("Assertion Failed"); debugger; } }
 let InvalidCodePath = () => { Assert(false); }
 
+let ROUTE_VIM = "vim";
+let ROUTE_INTRO = "intro";
+let ROUTE_404 = "404";
+
 function AnimationStatus() {
   this.cancelled = false;
 }
 
-function MakeRoute(Dom) {
-  Assert(Dom instanceof HTMLElement);
+function MakeRoute(DomRef) {
+  Assert(DomRef instanceof HTMLElement);
 
-  this.Name = Dom.dataset.route;
+  this.Name = DomRef.dataset.route;
 
-  this.Dom = Dom;
-  this.InitialDom = Dom.cloneNode(true);
+  this.InitialDom = DomRef.cloneNode(true);
+  this.Dom = null;
 
   this.Main = null;
   this.Callbacks = null;
@@ -187,7 +191,7 @@ let Init = () => {
 
     Global_State.Dom = Dom;
 
-    State.Router = new MakeRouter("/vim");
+    State.Router = new MakeRouter(ROUTE_VIM);
 
     console.log("Start: BindUserCallbacks");
     BindUserCallbacks(State).then( () => {
@@ -246,7 +250,7 @@ let Main = (State) => {
 
   let IntroComplete = ReadCookie("IntroCompleted");
   if (IntroComplete === false) {
-    Router.navigate("/intro");
+    Router.navigate(ROUTE_INTRO);
   }
 
 }
