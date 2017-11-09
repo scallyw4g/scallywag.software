@@ -8,17 +8,33 @@ function LookupRoute(Router, RouteNameOrUrl)
     RouteName = RouteNameOrUrl.substring(1);
   }
 
-  let Lookup = Router.ResolveRootUrlAlias(RouteName);
-  let LookupPath = Lookup.split("/");
+  let ResolvedRoute = Router.ResolveRootUrlAlias(RouteName);
+  let Path = ResolvedRoute.split("/");
 
-  for ( let PathIndex = 0; PathIndex < Lookup.length; ++ PathIndex )
+  console.log(`Looking up ${ResolvedRoute}`);
+
+  let Result = null;
+  let Table = Router.routes;
+  for ( let PathIndex = 0;
+        PathIndex < Path.length;
+        ++PathIndex )
   {
-    let PathSeg = LookupPath[PathIndex];
+    let PathSeg = Path[PathIndex];
+    Result = Table[PathSeg];
+    console.log(`Looking up ${PathIndex} -> ${PathSeg}`);
+
+    if (Result) {
+      Table = Result;
+      continue;
+    } else {
+      break;
+    }
+
   }
 
-  let Route = Router.routes[Lookup];
+  console.log(Result);
 
-  return Route;
+  return Result;
 }
 
 document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
@@ -30,8 +46,6 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
   let Router = State.Router;
 
   Router.navigate = (url) => {
-    debugger;
-
     if ( Router.currentRoute ) {
 
       let Current = LookupRoute(Router, Router.currentRoute);
@@ -60,7 +74,7 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
       if (TargetRoute.Init) {
         console.log(TargetRoute.Name, " Running Init");
-        TargetRoute.Init();
+        TargetRoute.Init(State, TargetRoute);
       }
 
       if (TargetRoute.Main) {
@@ -114,9 +128,9 @@ function MakeRouter(Root) {
     {
       // FIXME(Jesse): for some reason OnNavEvent still fires when we take this
       // path so we end up navigating twice when calling Router.navigate
-      document.body.onhashchange = null;
+      // document.body.onhashchange = null;
       document.location.hash = `${url}`;
-      document.body.onhashchange = this.OnNavEvent;
+      // document.body.onhashchange = this.OnNavEvent;
     }
     return;
   }
@@ -150,7 +164,7 @@ function MakeRouter(Root) {
     this.pendingNavigations.push(targetRoute);
   }
 
-  this.OnNavEvent = () => {
+  this.OnNavEvent = (e) => {
     let url = this.PullUrlFromDocument();
     this.navigate(url);
   }
@@ -166,7 +180,7 @@ function MakeRouter(Root) {
       document.body.onpopstate = this.OnNavEvent;
     } else {
       this.routingMode = RoutingMode_Hash;
-      document.body.onhashchange = this.OnNavEvent;
+      // document.body.onhashchange = this.OnNavEvent;
     }
 
     // Init Route Dom objects

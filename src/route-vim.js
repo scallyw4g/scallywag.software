@@ -2,17 +2,9 @@
 UserCallback( (StateIn) => {
   console.log("Binding vim/main callbacks");
 
-  let Route = LookupRoute(StateIn.Router, ROUTE_VIM);
+  let Route = LookupRoute(StateIn.Router, ROUTE_VIM_MAIN);
 
-  let BindBottomBarClickCallbacks = function (Route, State) {
-    let Credits = Route.Dom.querySelector("#credits-link");
-    Credits.onclick = e => {State.Router.navigate(ROUTE_CREDITS);}
-
-    let Intro = Route.Dom.querySelector("#intro-link");
-    Intro.onclick = e => {State.Router.navigate(ROUTE_INTRO);}
-  }
-
-  Route.FitBottomBar = (Route) => {
+  Route.FitBottomBar = () => {
     let RouteBounds = Route.Dom.getBoundingClientRect();
     let RouteWidth = RouteBounds.right - RouteBounds.left;
 
@@ -27,15 +19,31 @@ UserCallback( (StateIn) => {
   // </piggy>
 
 
-
   /* Initialize the route
    * ************************************************************************/
 
   Assert(Route instanceof MakeRoute);
 
-  Route.Init = () => {
-    BindBottomBarClickCallbacks(Route, StateIn);
-    Route.FitBottomBar(Route);
+  Route.Init = (State, Route) => {
+    Assert(Route instanceof MakeRoute);
+    Assert(State instanceof AppState);
+
+    console.log(" ------ Initializing Vim Route");
+    let Credits = Route.Dom.querySelector("#credits-link");
+    Credits.onclick = e => {State.Router.navigate(ROUTE_CREDITS);}
+
+    let Intro = Route.Dom.querySelector("#intro-link");
+    Intro.onclick = e => {State.Router.navigate(ROUTE_INTRO);}
+
+    let headings = Array.from(Route.Dom.getElementsByClassName("click-expand"));
+    headings.forEach( (Elem) => {
+      Elem.onclick = (event) => {
+        let sibling = event.target.nextElementSibling;
+        ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
+      }
+    });
+
+    Route.FitBottomBar();
   }
 
 });
@@ -43,9 +51,11 @@ UserCallback( (StateIn) => {
 UserCallback( (State) => {
   console.log("binding vim Main");
 
-  let Route = LookupRoute(State.Router, ROUTE_VIM);
+  let Route = LookupRoute(State.Router, ROUTE_VIM_MAIN);
 
   Route.Main = (State) => {
+
+    console.log(" ---------------- Vim Main", Route);
 
     Route.UserData.ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
       .map((Dom) => { return new TypedElement(Dom); });
@@ -60,24 +70,24 @@ UserCallback( (State) => {
     InitCursor(ElementsToType[0]);
 
     let ChainRejection = (Location) => {
-      return new Promise( (_, reject) => { reject(Location); });
+      return Promise.reject(Location);
     }
 
     Route.UserData.Animation = wait(200, Route)
-      .then(() => { return blinkCursor(Route, 1)                    }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return wait(100, Route)                         }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[0], Route, 150)  }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[1], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[2], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[3], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[4], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[5], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[6], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[7], Route)       }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return typeText(ElementsToType[8], Route, 0)    }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return wait(200, Route)                         }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { return blinkCursor(Route, 2)                    }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
-      .then(() => { PurgeCursors(Route.Dom); Route.Dom.onclick=null }, (RejectionLocation) => { return ChainRejection(RejectionLocation) })
+      .then(() => { return blinkCursor(Route, 1)                    }, ChainRejection )
+      .then(() => { return wait(100, Route)                         }, ChainRejection )
+      .then(() => { return typeText(ElementsToType[0], Route, 150)  }, ChainRejection )
+      .then(() => { return typeText(ElementsToType[1], Route)       }, ChainRejection )
+      .then(() => { return typeText(ElementsToType[2], Route)       }, ChainRejection )
+      .then(() => { return typeText(ElementsToType[3], Route)       }, ChainRejection )
+      .then(() => { return typeText(ElementsToType[4], Route)       }, ChainRejection )
+      .then(() => { return typeText(ElementsToType[5], Route)       }, ChainRejection )
+      .then(() => { return typeText(ElementsToType[6], Route)       }, ChainRejection )
+      .then(() => { return typeText(ElementsToType[7], Route)       }, ChainRejection )
+      .then(() => { return typeText(ElementsToType[8], Route, 0)    }, ChainRejection )
+      .then(() => { return wait(200, Route)                         }, ChainRejection )
+      .then(() => { return blinkCursor(Route, 2)                    }, ChainRejection )
+      .then(() => { PurgeCursors(Route.Dom); Route.Dom.onclick=null }, ChainRejection )
       .catch( (Location) => { Route.Dom.onclick = null });
 
   }
@@ -91,18 +101,6 @@ UserCallback( (State) => {
   //   Route.Init();
   // }
 
-
-  Route.Init = () => {
-    // Route.FitBottomBar(Route);
-
-    let headings = Array.from(Route.Dom.getElementsByClassName("click-expand"));
-    headings.forEach( (Elem) => {
-      Elem.onclick = (event) => {
-        let sibling = event.target.nextElementSibling;
-        ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
-      }
-    });
-  }
 
 });
 
