@@ -83,8 +83,6 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       }
     }
 
-    // if (!TargetRoute)
-    //   Router.navigate(ROUTE_404);
   }
 
 

@@ -176,7 +176,7 @@ let Render = (RoutePath, Router) => {
 
       let Yield = Dom.getElementsByClassName("yield")[0];
       if (Yield) {
-        Yield.innerHTML = RenderRoute.InitialDom.innerHTML;
+        Yield.outerHTML = RenderRoute.InitialDom.outerHTML;
       } else {
         Dom.appendChild(RenderRoute.InitialDom);
       }

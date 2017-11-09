@@ -5,10 +5,10 @@ UserCallback( (StateIn) => {
   let Route = LookupRoute(StateIn.Router, ROUTE_VIM_INDEX);
 
   Route.FitBottomBar = () => {
-    let RouteBounds = Route.Dom.getBoundingClientRect();
+    let RouteBounds = document.body.querySelector("#vim").getBoundingClientRect();
     let RouteWidth = RouteBounds.right - RouteBounds.left;
 
-    let BottomBar = Route.Dom.querySelector("#bottom-bar");
+    let BottomBar = document.body.querySelector("#bottom-bar");
     BottomBar.style.width = RouteWidth;
   }
 
@@ -29,10 +29,10 @@ UserCallback( (StateIn) => {
     Assert(State instanceof AppState);
 
     console.log(" ------ Initializing Vim Route");
-    let Credits = Route.Dom.querySelector("#credits-link");
+    let Credits = document.body.querySelector("#credits-link");
     Credits.onclick = e => {State.Router.navigate(ROUTE_CREDITS);}
 
-    let Intro = Route.Dom.querySelector("#intro-link");
+    let Intro = document.body.querySelector("#intro-link");
     Intro.onclick = e => {State.Router.navigate(ROUTE_INTRO);}
 
     let headings = Array.from(Route.Dom.getElementsByClassName("click-expand"));
