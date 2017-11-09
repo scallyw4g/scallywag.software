@@ -1,8 +1,8 @@
 
 UserCallback( (StateIn) => {
-  console.log("Binding vim/main callbacks");
+  console.log("Binding vim/index callbacks");
 
-  let Route = LookupRoute(StateIn.Router, ROUTE_VIM_MAIN);
+  let Route = LookupRoute(StateIn.Router, ROUTE_VIM_INDEX);
 
   Route.FitBottomBar = () => {
     let RouteBounds = Route.Dom.getBoundingClientRect();
@@ -51,7 +51,7 @@ UserCallback( (StateIn) => {
 UserCallback( (State) => {
   console.log("binding vim Main");
 
-  let Route = LookupRoute(State.Router, ROUTE_VIM_MAIN);
+  let Route = LookupRoute(State.Router, ROUTE_VIM_INDEX);
 
   Route.Main = (State) => {
 

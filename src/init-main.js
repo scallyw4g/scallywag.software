@@ -3,10 +3,12 @@
 let Assert = expression => { if (!(expression)) { console.error("Assertion Failed"); debugger; } }
 let InvalidCodePath = () => { Assert(false); }
 
+// This is used to directly look up into Router.routes so it CANNOT have a leading slash
+let ROUTE_404     = "404";
+
 let ROUTE_INTRO   = "/intro";
-let ROUTE_404     = "/404";
 let ROUTE_VIM_CREDITS = "/vim/credits";
-let ROUTE_VIM_MAIN = "/vim/main";
+let ROUTE_VIM_INDEX = "/vim/index";
 
 function AnimationStatus() {
   this.cancelled = false;
@@ -151,17 +153,37 @@ let SetStateDom = (State) => {
   Assert(State instanceof AppState);
 }
 
-let Render = (Element) => {
-  Assert(Element instanceof HTMLElement);
-
-  let Dom = Global_State.Dom;
-  Dom.innerHTML = "";
-  document.body.innerHTML = "";
-
-  Dom.appendChild(Element)
+let Render = (RoutePath, Router) => {
+  Assert(Router instanceof MakeRouter);
   console.log("render");
-  document.body.appendChild(Dom);
-  SetDisplay(Element, DISPLAY_BLOCK);
+
+  let Dom = document.createElement("div");
+
+  let Path = RoutePath.split('/');
+  Assert(Path[0] === "");
+  Path.shift();
+
+  let Table = Router.routes;
+  for ( let PathIndex = 0;
+        PathIndex < Path.length;
+        ++PathIndex )
+  {
+    let PathSeg = Path[PathIndex];
+    let RenderRoute = Table[PathSeg];
+
+    if (RenderRoute) {
+      Table = RenderRoute;
+
+      let Yield = Dom.getElementsByClassName("yield")[0];
+      if (Yield) {
+        Yield.innerHTML = RenderRoute.InitialDom.innerHTML;
+      } else {
+        Dom.appendChild(RenderRoute.InitialDom);
+      }
+    }
+  }
+
+  document.body.innerHTML = Dom.innerHTML;
 }
 
 
@@ -192,7 +214,7 @@ let Init = () => {
 
     Global_State.Dom = Dom;
 
-    State.Router = new MakeRouter(ROUTE_VIM_MAIN);
+    State.Router = new MakeRouter(ROUTE_VIM_INDEX);
 
     console.log("Start: BindUserCallbacks");
     BindUserCallbacks(State).then( () => {

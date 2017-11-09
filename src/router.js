@@ -21,18 +21,18 @@ function LookupRoute(Router, RouteNameOrUrl)
   {
     let PathSeg = Path[PathIndex];
     Result = Table[PathSeg];
-    console.log(`Looking up ${PathIndex} -> ${PathSeg}`);
 
     if (Result) {
       Table = Result;
       continue;
     } else {
+      Result = Router.routes[ROUTE_404];
       break;
     }
-
   }
 
   console.log(Result);
+  Assert(Result);
 
   return Result;
 }
@@ -70,7 +70,7 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
       delete TargetRoute.Dom;
       TargetRoute.Dom = TargetRoute.InitialDom.cloneNode(true);
-      Render(TargetRoute.Dom);
+      Render(UrlRootResolved, Router);
 
       if (TargetRoute.Init) {
         console.log(TargetRoute.Name, " Running Init");
@@ -83,8 +83,8 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       }
     }
 
-    if (!TargetRoute)
-      Router.navigate(ROUTE_404);
+    // if (!TargetRoute)
+    //   Router.navigate(ROUTE_404);
   }
 
 
