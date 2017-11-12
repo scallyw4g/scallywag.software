@@ -142,6 +142,19 @@ let UserCallback = callback => {
   });
 }
 
+let MainCallback = (RouteName, callback) => {
+  Assert(typeof RouteName === "string");
+  Assert(typeof callback === "function");
+
+  UserCallback( (State) => {
+    console.log(`Binding ${RouteName} callbacks`);
+
+    let Route = LookupRoute(State.Router, RouteName);
+    Assert(Route instanceof MakeRoute);
+    Route.Main = callback.bind(null, Route);
+  });
+}
+
 let SetStateDom = (State) => {
   Assert(State instanceof AppState);
 }

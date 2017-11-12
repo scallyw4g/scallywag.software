@@ -68,7 +68,7 @@ h1, .h1 {
   padding: 1em;
 }
 
-#vim-inner {
+#vim-inner, #vim-credits {
   border-right: 0.8em solid #313226; /* Lighter background color */
   width: 800px;
   height: 96%;
