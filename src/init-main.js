@@ -1,22 +1,22 @@
 "use strict";
 
-let ChainRejection = (Location) => { return Promise.reject(Location) }
+const ChainRejection = (Location) => { return Promise.reject(Location) }
 
-let Assert = expression => { if (!(expression)) { console.error("Assertion Failed"); debugger; } }
-let InvalidCodePath = () => { Assert(false); }
+const Assert = expression => { if (!(expression)) { console.error("Assertion Failed"); debugger; } }
+const InvalidCodePath = () => { Assert(false); }
 
 // This is used to directly look up into Router.routes so it CANNOT have a leading slash
-let ROUTE_404     = "404";
+const ROUTE_404     = "404";
 
-let ROUTE_INTRO   = "/intro";
-let ROUTE_VIM_CREDITS = "/vim/credits";
-let ROUTE_VIM_INDEX = "/vim/index";
+const ROUTE_INTRO   = "/intro";
+const ROUTE_VIM_CREDITS = "/vim/credits";
+const ROUTE_VIM_INDEX = "/vim/index";
 
-let INTRO_ANIM_COMPLETE = "IntroAnimationComplete"
-let INDEX_ANIM_COMPLETE = "IndexAnimationComplete"
+const INTRO_ANIM_COMPLETE = "IntroAnimationComplete"
+const INDEX_ANIM_COMPLETE = "IndexAnimationComplete"
 
-let FUNC_INIT = "Init";
-let FUNC_MAIN = "Main";
+const FUNC_INIT = "Init";
+const FUNC_MAIN = "Main";
 
 function AnimationStatus() {
   this.cancelled = false;
@@ -48,19 +48,19 @@ function TypedElement(Dom) {
   this.Dom = Dom;
 }
 
-let PageLoaded = () => {
-  let Result = document.readyState === 'complete';
+const PageLoaded = () => {
+  const Result = document.readyState === 'complete';
   return Result;
 }
 
-let WaitTillLoaded = setInterval( () => {
+const WaitTillLoaded = setInterval( () => {
   if ( PageLoaded() ) {
     clearInterval(WaitTillLoaded);
     Init().then ( (State) => Main(State) );
   }
 }, 5);
 
-let wait = (ms, Route) => {
+const wait = (ms, Route) => {
   Assert(Route instanceof MakeRoute);
 
   return new Promise( (resolve, reject) => {
@@ -69,14 +69,14 @@ let wait = (ms, Route) => {
   });
 }
 
-let SetVisibility = (element, vis) => {
+const SetVisibility = (element, vis) => {
   Assert(element instanceof HTMLElement);
   element.style.visibility = vis;
 }
 
-let ToggleDisplay = (element, d1, d2) => {
+const ToggleDisplay = (element, d1, d2) => {
   Assert(element instanceof HTMLElement);
-  let display = window.getComputedStyle(element).display;
+  const display = window.getComputedStyle(element).display;
 
   if (display === d1) {
     element.style.display = d2;
@@ -87,17 +87,17 @@ let ToggleDisplay = (element, d1, d2) => {
   } else { InvalidCodePath() }
 }
 
-let SetDisplay = (element, display) => {
+const SetDisplay = (element, display) => {
   Assert(element instanceof HTMLElement);
   element.style.display = display;
 }
 
-let typeText = (Elem, Route, finalDelay = 500) => {
+const typeText = (Elem, Route, finalDelay = 500) => {
   Assert(Elem instanceof TypedElement);
   Assert(Route instanceof MakeRoute);
   Assert(Route.AnimationStatus instanceof AnimationStatus);
 
-  let charAnimInterval = 50;
+  const charAnimInterval = 50;
 
   PurgeCursors(document.body);
   Elem.Dom.classList.add("typing-active");
@@ -105,9 +105,9 @@ let typeText = (Elem, Route, finalDelay = 500) => {
   return new Promise( (resolve, reject) => {
 
     // Copy so we can re-use Elem.Content if we re-navigate through this route
-    let text = Array.from(Elem.Content);
+    const text = Array.from(Elem.Content);
 
-    let TextAnimation = setInterval( () => {
+    const TextAnimation = setInterval( () => {
 
       if (Route.AnimationStatus.cancelled) {
         clearInterval(TextAnimation);
@@ -132,7 +132,7 @@ let typeText = (Elem, Route, finalDelay = 500) => {
   });
 }
 
-let SetHeight = (Dom, Bounds) => {
+const SetHeight = (Dom, Bounds) => {
   Assert(Dom instanceof HTMLElement);
   Dom.style.height = Bounds.bottom - Bounds.top;;
 }
@@ -140,7 +140,7 @@ let SetHeight = (Dom, Bounds) => {
 let Global_State = new AppState();
 let Global_bindUserCallbackData = { State: Global_State, pendingUserCallbacks: 0 };
 
-let UserCallback = callback => {
+const UserCallback = callback => {
   ++Global_bindUserCallbackData.pendingUserCallbacks;
 
   document.addEventListener( USER_CALLBACKS_START, (Event) => {
@@ -149,7 +149,7 @@ let UserCallback = callback => {
   });
 }
 
-let BindRouteCallback = (RouteName, callback, FuncName) => {
+const BindRouteCallback = (RouteName, callback, FuncName) => {
   Assert(typeof RouteName === "string");
   Assert(typeof callback === "function");
   Assert(FuncName === FUNC_INIT || FuncName === FUNC_MAIN);
@@ -157,27 +157,27 @@ let BindRouteCallback = (RouteName, callback, FuncName) => {
   UserCallback( (State) => {
     console.log(`Binding ${RouteName} ${FuncName}`);
 
-    let Route = LookupRoute(State.Router, RouteName);
+    const Route = LookupRoute(State.Router, RouteName);
     Assert(Route instanceof MakeRoute);
     Route[FuncName] = callback.bind(null, State, Route);
   });
 }
 
-let InitCallback = (RouteName, callback) => {
+const InitCallback = (RouteName, callback) => {
   BindRouteCallback(RouteName, callback, FUNC_INIT);
 }
 
-let MainCallback = (RouteName, callback) => {
+const MainCallback = (RouteName, callback) => {
   BindRouteCallback(RouteName, callback, FUNC_MAIN);
 }
 
-let Render = (RoutePath, Router) => {
+const Render = (RoutePath, Router) => {
   Assert(Router instanceof MakeRouter);
   console.log(" -- Render");
 
-  let Dom = document.createElement("div");
+  const Dom = document.createElement("div");
 
-  let Path = RoutePath.split('/');
+  const Path = RoutePath.split('/');
   Assert(Path[0] === "");
   Path.shift();
 
@@ -186,13 +186,13 @@ let Render = (RoutePath, Router) => {
         PathIndex < Path.length;
         ++PathIndex )
   {
-    let PathSeg = Path[PathIndex];
-    let RenderRoute = Table[PathSeg];
+    const PathSeg = Path[PathIndex];
+    const RenderRoute = Table[PathSeg];
 
     if (RenderRoute) {
       Table = RenderRoute;
 
-      let Yield = Dom.getElementsByClassName("yield")[0];
+      const Yield = Dom.getElementsByClassName("yield")[0];
       if (Yield) {
         // TODO(Jesse): Is cloning necessary here?
         Yield.outerHTML = RenderRoute.InitialDom.cloneNode(true).outerHTML;
@@ -207,14 +207,14 @@ let Render = (RoutePath, Router) => {
 
 
 // TODO(Jesse): Polyfill CustomEvent for <IE9 ?
-let BindUserCallbacks = (State) => {
+const BindUserCallbacks = (State) => {
 
   return new Promise( (resolve) => {
 
-    let event = new CustomEvent(USER_CALLBACKS_START, {detail: Global_bindUserCallbackData});
+    const event = new CustomEvent(USER_CALLBACKS_START, {detail: Global_bindUserCallbackData});
     document.dispatchEvent(event);
 
-    let WaitForUserCallbacks = setInterval( () => {
+    const WaitForUserCallbacks = setInterval( () => {
       if (Global_bindUserCallbackData.pendingUserCallbacks === 0) {
         clearInterval(WaitForUserCallbacks);
         resolve();
@@ -224,11 +224,11 @@ let BindUserCallbacks = (State) => {
   });
 }
 
-let Init = () => {
+const Init = () => {
   return new Promise ( (resolve) => {
-    let State = Global_State;
+    const State = Global_State;
 
-    let Dom = document.createElement("div");
+    const Dom = document.createElement("div");
     document.body.appendChild(Dom);
 
     Global_State.Dom = Dom;
@@ -238,7 +238,7 @@ let Init = () => {
     console.log("Start: BindUserCallbacks");
     BindUserCallbacks(State).then( () => {
       console.log("Finish: Bind User Callbacks");
-      let event = new CustomEvent(USER_CALLBACKS_COMPLETE, {detail: State});
+      const event = new CustomEvent(USER_CALLBACKS_COMPLETE, {detail: State});
       document.dispatchEvent(event);
     });
 
@@ -246,11 +246,11 @@ let Init = () => {
   });
 }
 
-let SetCookie = (Cookie) => {
+const SetCookie = (Cookie) => {
   document.cookie = `${Cookie.name}=${Cookie.value};`
 }
 
-let ReadCookie  = (Needle) => {
+const ReadCookie  = (Needle) => {
   let Result = false;
 
   document.cookie.split(";").forEach( (cookie) => {
@@ -274,7 +274,7 @@ let ReadCookie  = (Needle) => {
   return Result;
 }
 
-let ClearAllCookies = () => {
+const ClearAllCookies = () => {
   document.cookie.split(";").forEach( (cookie) => {
     var eqPos = cookie.indexOf("=");
     var name = cookie.substr(0, eqPos).trim();
@@ -282,15 +282,15 @@ let ClearAllCookies = () => {
   });
 }
 
-let Main = (State) => {
+const Main = (State) => {
   Assert(State instanceof AppState);
 
-  let Router = State.Router;
+  const Router = State.Router;
   Assert(Router instanceof MakeRouter);
 
   SetDisplay(document.body, DISPLAY_BLOCK);
 
-  let IntroComplete = ReadCookie(INTRO_ANIM_COMPLETE);
+  const IntroComplete = ReadCookie(INTRO_ANIM_COMPLETE);
   if (IntroComplete === false) {
     Router.navigate(ROUTE_INTRO);
   }

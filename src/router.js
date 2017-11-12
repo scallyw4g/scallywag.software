@@ -39,43 +39,45 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
   // all pending navigations.
   console.log("overriding router.navigate");
 
-  let State = Event.detail;
-  let Router = State.Router;
+  const State = Event.detail;
+  const Router = State.Router;
+  const PushState = Router.routingMode === RoutingMode_PushState;
 
   Router.navigate = (url) => {
-    if ( Router.currentRoute ) {
-
-      let Current = LookupRoute(Router, Router.currentRoute);
-
-      if (Current) {
-        Current.AnimationStatus.cancelled = true;
-        if (Router.routingMode === RoutingMode_PushState)
-          history.pushState({}, "", Router.currentRoute);
-      }
+    if (this.Current) {
+      this.Current.AnimationStatus.cancelled = true;
+      if (PushState) history.pushState({}, "", this.Current.Name);
     }
 
-    console.log("Navigating from %s to %s", Router.currentRoute, url);
-    let UrlRootResolved = Router.ResolveRootUrlAlias(url);
-    let TargetRoute = LookupRoute(Router, UrlRootResolved)
-    if (TargetRoute) {
-      Assert(TargetRoute.AnimationStatus instanceof AnimationStatus);
+    const UrlRootResolved = Router.ResolveRootUrlAlias(url);
+    const TargetRoute = LookupRoute(Router, UrlRootResolved)
+    Assert(TargetRoute);
+    Assert(TargetRoute.AnimationStatus instanceof AnimationStatus);
 
-      TargetRoute.AnimationStatus.cancelled = false;
+    if (TargetRoute.Name === "/404")
+      Router.UpdateBrowserUrl("/404");
+    else
       Router.UpdateBrowserUrl(url);
-      // It's important to render the route initially before firing the Routes
-      // Main() because then the route can query the rendered Dom
 
-      Render(UrlRootResolved, Router);
+    if (this.Current)
+      console.log("Navigating from %s to %s", this.Current.Name, TargetRoute.Name);
 
-      if (TargetRoute.Init) {
-        console.log(TargetRoute.Name, " Running Init");
-        TargetRoute.Init(State, TargetRoute);
-      }
+    this.Current = TargetRoute;
 
-      if (TargetRoute.Main) {
-          console.log(TargetRoute.Name, " Running Main");
-          TargetRoute.Main(State);
-      }
+    TargetRoute.AnimationStatus.cancelled = false;
+    // It's important to render the route initially before firing the Routes
+    // Main() because then the route can query the rendered Dom
+
+    Render(TargetRoute.Name, Router);
+
+    if (TargetRoute.Init) {
+      console.log(TargetRoute.Name, " Running Init");
+      TargetRoute.Init(State, TargetRoute);
+    }
+
+    if (TargetRoute.Main) {
+        console.log(TargetRoute.Name, " Running Main");
+        TargetRoute.Main(State);
     }
 
   }
@@ -99,7 +101,7 @@ function MakeRouter(Root) {
 
   this.root = Root;
 
-  this.currentRoute = null;
+  this.Current = null;
   this.routingMode = RoutingMode_Undefined;
 
   this.routes = {};
@@ -114,7 +116,6 @@ function MakeRouter(Root) {
   }
 
   this.UpdateBrowserUrl = (url) => {
-    this.currentRoute = url;
     if (this.routingMode === RoutingMode_PushState)
       history.replaceState({}, "", `${url}`);
     else
