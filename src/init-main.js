@@ -1,5 +1,7 @@
 "use strict";
 
+let ChainRejection = (Location) => { return Promise.reject(Location) }
+
 let Assert = expression => { if (!(expression)) { console.error("Assertion Failed"); debugger; } }
 let InvalidCodePath = () => { Assert(false); }
 
@@ -9,6 +11,9 @@ let ROUTE_404     = "404";
 let ROUTE_INTRO   = "/intro";
 let ROUTE_VIM_CREDITS = "/vim/credits";
 let ROUTE_VIM_INDEX = "/vim/index";
+
+let INTRO_ANIM_COMPLETE = "IntroAnimationComplete"
+let INDEX_ANIM_COMPLETE = "IndexAnimationComplete"
 
 function AnimationStatus() {
   this.cancelled = false;
@@ -24,7 +29,6 @@ function MakeRoute(DomRef) {
   this.Main = null;
   this.Callbacks = null;
   this.AnimationStatus = new AnimationStatus();
-  this.UserData = {};
 }
 
 function AppState() {
@@ -142,6 +146,19 @@ let UserCallback = callback => {
   });
 }
 
+let InitCallback = (RouteName, callback) => {
+  Assert(typeof RouteName === "string");
+  Assert(typeof callback === "function");
+
+  UserCallback( (State) => {
+    console.log(`Binding ${RouteName} callbacks`);
+
+    let Route = LookupRoute(State.Router, RouteName);
+    Assert(Route instanceof MakeRoute);
+    Route.Init = callback.bind(null, State, Route);
+  });
+}
+
 let MainCallback = (RouteName, callback) => {
   Assert(typeof RouteName === "string");
   Assert(typeof callback === "function");
@@ -151,7 +168,7 @@ let MainCallback = (RouteName, callback) => {
 
     let Route = LookupRoute(State.Router, RouteName);
     Assert(Route instanceof MakeRoute);
-    Route.Main = callback.bind(null, Route);
+    Route.Main = callback.bind(null, State, Route);
   });
 }
 
@@ -161,7 +178,7 @@ let SetStateDom = (State) => {
 
 let Render = (RoutePath, Router) => {
   Assert(Router instanceof MakeRouter);
-  console.log("render");
+  console.log(" -- Render");
 
   let Dom = document.createElement("div");
 
@@ -278,7 +295,7 @@ let Main = (State) => {
 
   SetDisplay(document.body, DISPLAY_BLOCK);
 
-  let IntroComplete = ReadCookie("IntroCompleted");
+  let IntroComplete = ReadCookie(INTRO_ANIM_COMPLETE);
   if (IntroComplete === false) {
     Router.navigate(ROUTE_INTRO);
   }
