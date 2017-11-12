@@ -31,7 +31,15 @@ InitCallback(ROUTE_VIM_INDEX, (State, Route) => {
   headings.forEach( (Elem) => {
     Elem.onclick = (event) => {
       let sibling = event.target.nextElementSibling;
-      ToggleDisplay(sibling, DISPLAY_NONE, DISPLAY_BLOCK);
+      if (sibling.classList.contains("slide-down")) {
+        sibling.classList.remove("slide-down");
+        sibling.classList.add("slide-up");
+      }
+      else
+      {
+        sibling.classList.add("slide-down");
+        sibling.classList.remove("slide-up");
+      }
     }
   });
 
