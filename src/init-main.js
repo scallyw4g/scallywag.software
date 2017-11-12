@@ -86,12 +86,6 @@ let SetDisplay = (element, display) => {
   element.style.display = display;
 }
 
-let PurgeCursors = (Dom) => {
-  Assert(Dom instanceof HTMLElement);
-  Array.from(Dom.getElementsByClassName("typing-active"))
-    .forEach( Element => Element.classList.remove("typing-active") );
-}
-
 let typeText = (Elem, Route, finalDelay = 500) => {
   Assert(Elem instanceof TypedElement);
   Assert(Route instanceof MakeRoute);
@@ -99,7 +93,7 @@ let typeText = (Elem, Route, finalDelay = 500) => {
 
   let charAnimInterval = 50;
 
-  PurgeCursors(Route.Dom);
+  PurgeCursors(document.body);
   Elem.Dom.classList.add("typing-active");
 
   return new Promise( (resolve, reject) => {

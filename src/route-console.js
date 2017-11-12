@@ -9,9 +9,10 @@ UserCallback( (State) => {
     let Router = State.Router;
     Assert(Router instanceof MakeRouter);
 
-    let ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
+    let ElementsToType = Array.from(document.body.getElementsByClassName("gets-typed"))
       .map((Dom) => { return new TypedElement(Dom); });
 
+    PurgeCursors(document.body);
     InitCursor(ElementsToType[0]);
 
     blinkCursor(Route, 4)
@@ -21,7 +22,7 @@ UserCallback( (State) => {
       .then(() => { return blinkCursor(Route, 1)              })
       .then(() => { return wait(60, Route)                    })
       .then(() => { return new Promise( (resolve) => {
-        PurgeCursors(Route.Dom);
+        PurgeCursors(document.body);
         InitCursor(ElementsToType[2]);
         resolve();
       })                                                      })

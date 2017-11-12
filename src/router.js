@@ -11,8 +11,6 @@ function LookupRoute(Router, RouteNameOrUrl)
   let ResolvedRoute = Router.ResolveRootUrlAlias(RouteName);
   let Path = ResolvedRoute.split("/");
 
-  console.log(`Looking up ${ResolvedRoute}`);
-
   let Result = null;
   let Table = Router.routes;
   for ( let PathIndex = 0;
@@ -31,7 +29,6 @@ function LookupRoute(Router, RouteNameOrUrl)
     }
   }
 
-  console.log(Result);
   Assert(Result);
 
   return Result;
@@ -214,7 +211,6 @@ function MakeRouter(Root) {
 
     });
 
-    console.log(this.routes);
     this.OnNavEvent();
   }
 }

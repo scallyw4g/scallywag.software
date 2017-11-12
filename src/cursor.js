@@ -5,6 +5,11 @@ let InitCursor = (CursorElement) => {
   SetDisplay(CursorElement.Dom, DISPLAY_INLINE_BLOCK);
 }
 
+let PurgeCursors = (Dom) => {
+  Assert(Dom instanceof HTMLElement);
+  Array.from(Dom.getElementsByClassName("typing-active"))
+    .forEach( Element => Element.classList.remove("typing-active") );
+}
 
 let blink = (Cursor, Route) => {
   Assert(Cursor instanceof HTMLElement);
@@ -36,7 +41,7 @@ let blinkCursor = (Route, count) => {
   Assert(Route instanceof MakeRoute);
   Assert(Route.Dom instanceof HTMLElement);
 
-  let Cursor = Route.Dom.querySelector(".typing-active");
+  let Cursor = document.body.querySelector(".typing-active");
   Assert(Cursor instanceof HTMLElement);
 
   // TODO(Jesse): Is there a better way to do this?

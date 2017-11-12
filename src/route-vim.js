@@ -1,21 +1,20 @@
+FitBottomBar = () => {
+  let RouteBounds = document.body.querySelector("#vim").getBoundingClientRect();
+  let RouteWidth = RouteBounds.right - RouteBounds.left;
+  let BottomBar = document.body.querySelector("#bottom-bar");
+  BottomBar.style.width = RouteWidth;
+}
+
 
 UserCallback( (StateIn) => {
   console.log("Binding vim/index callbacks");
 
   let Route = LookupRoute(StateIn.Router, ROUTE_VIM_INDEX);
 
-  Route.FitBottomBar = () => {
-    let RouteBounds = document.body.querySelector("#vim").getBoundingClientRect();
-    let RouteWidth = RouteBounds.right - RouteBounds.left;
-
-    let BottomBar = document.body.querySelector("#bottom-bar");
-    BottomBar.style.width = RouteWidth;
-  }
-
 
   // <piggy>
   // This is bad on memory and should..? could..? be refactored
-  document.body.onresize = Route.FitBottomBar.bind(null, Route);
+  document.body.onresize = FitBottomBar.bind(null, Route);
   // </piggy>
 
 
@@ -35,7 +34,7 @@ UserCallback( (StateIn) => {
     let Intro = document.body.querySelector("#intro-link");
     Intro.onclick = e => {State.Router.navigate(ROUTE_INTRO);}
 
-    let headings = Array.from(Route.Dom.getElementsByClassName("click-expand"));
+    let headings = Array.from(document.body.getElementsByClassName("click-expand"));
     headings.forEach( (Elem) => {
       Elem.onclick = (event) => {
         let sibling = event.target.nextElementSibling;
@@ -43,7 +42,7 @@ UserCallback( (StateIn) => {
       }
     });
 
-    Route.FitBottomBar();
+    FitBottomBar();
   }
 
 });
@@ -55,9 +54,9 @@ UserCallback( (State) => {
 
   Route.Main = (State) => {
 
-    console.log(" ---------------- Vim Main", Route);
+    console.log(" ---------------- Vim Main");
 
-    Route.UserData.ElementsToType = Array.from(Route.Dom.getElementsByClassName("gets-typed"))
+    Route.UserData.ElementsToType = Array.from(document.body.getElementsByClassName("gets-typed"))
       .map((Dom) => { return new TypedElement(Dom); });
 
     Assert(State instanceof AppState);
@@ -87,20 +86,19 @@ UserCallback( (State) => {
       .then(() => { return typeText(ElementsToType[8], Route, 0)    }, ChainRejection )
       .then(() => { return wait(200, Route)                         }, ChainRejection )
       .then(() => { return blinkCursor(Route, 2)                    }, ChainRejection )
-      .then(() => { PurgeCursors(Route.Dom); Route.Dom.onclick=null }, ChainRejection )
-      .catch( (Location) => { Route.Dom.onclick = null });
+      .then(() => { PurgeCursors(document.body); document.body.onclick=null }, ChainRejection )
+      .catch( (Location) => { console.log("Animation Cancelled"); document.body.onclick = null });
+
+    // TODO(Jesse): Re-enable this
+    document.body.onclick = e => {
+      Route.AnimationStatus.cancelled = true;
+      delete Route.Dom;
+      Route.Dom = Route.InitialDom.cloneNode(true);
+      Render(ROUTE_VIM_INDEX, Router);
+      Route.Init(State, Route);
+    }
 
   }
-
-  // TODO(Jesse): Re-enable this
-  // Route.Dom.onclick = e => {
-  //   Route.AnimationStatus.cancelled = true;
-  //   delete Route.Dom;
-  //   Route.Dom = Route.InitialDom.cloneNode(true);
-  //   Render(Route.Dom);
-  //   Route.Init();
-  // }
-
 
 });
 
