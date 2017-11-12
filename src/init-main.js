@@ -15,6 +15,9 @@ let ROUTE_VIM_INDEX = "/vim/index";
 let INTRO_ANIM_COMPLETE = "IntroAnimationComplete"
 let INDEX_ANIM_COMPLETE = "IndexAnimationComplete"
 
+let FUNC_INIT = "Init";
+let FUNC_MAIN = "Main";
+
 function AnimationStatus() {
   this.cancelled = false;
 }
@@ -146,34 +149,26 @@ let UserCallback = callback => {
   });
 }
 
-let InitCallback = (RouteName, callback) => {
+let BindRouteCallback = (RouteName, callback, FuncName) => {
   Assert(typeof RouteName === "string");
   Assert(typeof callback === "function");
+  Assert(FuncName === FUNC_INIT || FuncName === FUNC_MAIN);
 
   UserCallback( (State) => {
-    console.log(`Binding ${RouteName} callbacks`);
+    console.log(`Binding ${RouteName} ${FuncName}`);
 
     let Route = LookupRoute(State.Router, RouteName);
     Assert(Route instanceof MakeRoute);
-    Route.Init = callback.bind(null, State, Route);
+    Route[FuncName] = callback.bind(null, State, Route);
   });
+}
+
+let InitCallback = (RouteName, callback) => {
+  BindRouteCallback(RouteName, callback, FUNC_INIT);
 }
 
 let MainCallback = (RouteName, callback) => {
-  Assert(typeof RouteName === "string");
-  Assert(typeof callback === "function");
-
-  UserCallback( (State) => {
-    console.log(`Binding ${RouteName} callbacks`);
-
-    let Route = LookupRoute(State.Router, RouteName);
-    Assert(Route instanceof MakeRoute);
-    Route.Main = callback.bind(null, State, Route);
-  });
-}
-
-let SetStateDom = (State) => {
-  Assert(State instanceof AppState);
+  BindRouteCallback(RouteName, callback, FUNC_MAIN);
 }
 
 let Render = (RoutePath, Router) => {
