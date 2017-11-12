@@ -65,8 +65,6 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
       // It's important to render the route initially before firing the Routes
       // Main() because then the route can query the rendered Dom
 
-      delete TargetRoute.Dom;
-      TargetRoute.Dom = TargetRoute.InitialDom.cloneNode(true);
       Render(UrlRootResolved, Router);
 
       if (TargetRoute.Init) {

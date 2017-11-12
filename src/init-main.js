@@ -20,7 +20,6 @@ function MakeRoute(DomRef) {
   this.Name = DomRef.dataset.route;
 
   this.InitialDom = DomRef.cloneNode(true);
-  this.Dom = null;
 
   this.Main = null;
   this.Callbacks = null;
@@ -134,14 +133,14 @@ let SetHeight = (Dom, Bounds) => {
 let Global_State = new AppState();
 let Global_bindUserCallbackData = { State: Global_State, pendingUserCallbacks: 0 };
 
-let UserCallback = ( callback => {
+let UserCallback = callback => {
   ++Global_bindUserCallbackData.pendingUserCallbacks;
 
   document.addEventListener( USER_CALLBACKS_START, (Event) => {
     --Global_bindUserCallbackData.pendingUserCallbacks;
     callback(Event.detail.State);
   });
-});
+}
 
 let SetStateDom = (State) => {
   Assert(State instanceof AppState);
@@ -170,9 +169,10 @@ let Render = (RoutePath, Router) => {
 
       let Yield = Dom.getElementsByClassName("yield")[0];
       if (Yield) {
-        Yield.outerHTML = RenderRoute.InitialDom.outerHTML;
+        // TODO(Jesse): Is cloning necessary here?
+        Yield.outerHTML = RenderRoute.InitialDom.cloneNode(true).outerHTML;
       } else {
-        Dom.appendChild(RenderRoute.InitialDom);
+        Dom.appendChild(RenderRoute.InitialDom.cloneNode(true));
       }
     }
   }

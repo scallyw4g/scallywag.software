@@ -39,7 +39,6 @@ let blink = (Cursor, Route) => {
 
 let blinkCursor = (Route, count) => {
   Assert(Route instanceof MakeRoute);
-  Assert(Route.Dom instanceof HTMLElement);
 
   let Cursor = document.body.querySelector(".typing-active");
   Assert(Cursor instanceof HTMLElement);

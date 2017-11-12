@@ -29,7 +29,7 @@ UserCallback( (StateIn) => {
 
     console.log(" ------ Initializing Vim Route");
     let Credits = document.body.querySelector("#credits-link");
-    Credits.onclick = e => {State.Router.navigate(ROUTE_CREDITS);}
+    Credits.onclick = e => {State.Router.navigate(ROUTE_VIM_CREDITS);}
 
     let Intro = document.body.querySelector("#intro-link");
     Intro.onclick = e => {State.Router.navigate(ROUTE_INTRO);}
@@ -92,8 +92,6 @@ UserCallback( (State) => {
     // TODO(Jesse): Re-enable this
     document.body.onclick = e => {
       Route.AnimationStatus.cancelled = true;
-      delete Route.Dom;
-      Route.Dom = Route.InitialDom.cloneNode(true);
       Render(ROUTE_VIM_INDEX, Router);
       Route.Init(State, Route);
     }
