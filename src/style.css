@@ -23,10 +23,6 @@ a {
   float: right;
 }
 
-.comment {
-  color: #ABAA98;
-}
-
 .typing-active::after{
   content: " ";
   background: #F7208B;
@@ -98,16 +94,20 @@ h1, .h1 {
   font-size: 1.2em;
 }
 
-#vim #bottom-bar .ele-inner,
-#vim #bottom-bar .ele-inner {
-  padding: 0 1em 0 0;
+.ele-inner {
+  transition: padding 0.2s;
+  padding: 0 0.8em;
   color: #313226; /* Lighter background color */
 }
 
-#vim #bottom-bar .em-left-pad.ele-inner {
-  padding-left: 1em;
+#home-link.ele-inner {
+  padding-left: 1.3em;
 }
 
+.ele-inner:hover {
+  padding: 0 1.2em;
+  transition: padding 0.2s;
+}
 
 /* LHS */
 #vim #bottom-bar .ele-1 {
@@ -134,6 +134,10 @@ h1, .h1 {
 
 #vim #bottom-bar .ele-final {
   background: transparent;
+}
+
+#vim #bottom-bar a {
+  cursor: pointer;
 }
 
 #vim-credits div {
@@ -165,12 +169,12 @@ h1, .h1 {
 }
 
 @keyframes slide-up {
-  from {max-height: 150px;}
+  from {max-height: 200px;}
   to {max-height: 0px;}
 }
 @keyframes slide-down {
   from {max-height: 0px;}
-  to {max-height: 150px;}
+  to {max-height: 200px;}
 }
 
 .slide-up {
@@ -180,7 +184,7 @@ h1, .h1 {
 }
 
 .slide-down {
-  max-height: 150px;
+  max-height: 200px;
   animation-name: slide-down;
   overflow: hidden;
 }
@@ -189,5 +193,9 @@ h1, .h1 {
   animation-timing-function: linear;
   animation-duration: 0.1s;
   display: block;
+}
+
+.comment {
+  color: #ABAA98;
 }
 

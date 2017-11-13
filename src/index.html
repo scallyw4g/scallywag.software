@@ -8,11 +8,12 @@
 
     <script src="constants.js"> </script>
     <script src="router.js"> </script>
+    <script src="cursor.js"> </script>
+
     <script src="init-main.js"> </script>
     <script src="route-vim.js"> </script>
     <script src="route-credits.js"> </script>
     <script src="route-console.js"> </script>
-    <script src="cursor.js"> </script>
   </head>
 
   <body class="display-none">
@@ -31,21 +32,13 @@
 
       <ul id="bottom-bar">
 
-           <li class="ele-1">
-             <a id="home-link" class="em-left-pad ele-inner">Home</a>
-           </li><!--
-        --><li class="arrow-right ele-2">
-             <a id="credits-link" class="ele-inner">Credits</a>
-           </li><!--
+           <li class="ele-1"><a id="home-link" class="ele-inner">Home</a></li><!--
+        --><li class="arrow-right ele-2"><a id="credits-link" class="ele-inner">Credits</a></li><!--
         --><li class="arrow-right ele-final"></li><!--
-        --><li>
-             <span class="em-left-pad ele-inner comment">bare.software</span>
-           </li><!--
+        --><li><span class="ele-inner comment">bare.software</span></li><!--
 
 
-        --><li class="right ele-3">
-             <a id="intro-link" class="em-left-pad ele-inner">Replay Intro</a>
-           </li><!--
+        --><li class="right ele-3"><a id="intro-link" class="ele-inner">Replay Intro</a></li><!--
         --><li class="arrow-left ele-final"></li>
 
       </ul> <!-- #bottom-bar -->
@@ -69,13 +62,14 @@
         <div class="indented display-none">
           <p>
             I'm a minimalist at heart.  I think software should favor
-            simplicity and reliability first, and only add complexity when
-            absolutely necessary.
+            simplicity and reliability, and the main goal when writing
+            software should be that it JustWorks&#8482;.  I think the internet
+            in particular has lost sight of this at some level.
           </p>
 
           <p>
-            I enjoy building stuff from scratch.  When I'm not working I pass my
-            time tinkering with C, 
+            I enjoy building things from scratch.  When I'm not working with
+            Javascript I pass time biking, skiing and tinkering with C.
           </p>
         </div>
       </div>
@@ -84,15 +78,15 @@
         <h2 class="gets-typed click-expand">interests()</h2>
         <div class="indented display-none">
           <p>
-            I have a burning fiery passion for loving my
-            <strong>flatbread</strong>!
+            I have a burning fiery passion for loving my beautiful
+            <strong>flatbread</strong>, Claudia!
           </p>
           <p>
             Recently I've become inspired by the work of Casey Muratori on
             <a href=http://handmadehero.org>Handmade Hero</a> and decided
             to write a 3D game engine in C.  It's called
-            <a href=https://github.com/jjbandit/bonsai>Bonsai</a>, and I'm
-            writing about it in the Projects section.
+            <a href=https://github.com/jjbandit/bonsai>Bonsai</a>, and can
+            can be found in the Projects section.
           </p>
         </div>
       </div>
@@ -102,18 +96,18 @@
         <div class="indented display-none">
           <p>
             <a href=https://github.com/jjbandit/bonsai>Bonsai</a> - A 3D game
-            engine focused on fast-paced, arcade style games.  Written
-            Handmade Hero style; in C with
-            no libraries.
+            engine focused on fast-paced, arcade style games.  Written in C
+            with no dependencies.
           </p>
           <p>
             <a href=https://github.com/jjbandit/alphaterm>Alphaterm</a> - An
             electron-based terminal emulater.  Abandoned due to the poor
-            performance of the electron architecture.
+            performance of WebSockets and JavaScript.
           </p>
           <p>
             <a href=https://github.com/fowler446/electron_music>Electron Music</a>
-            - An electron-based Youtube playlist app.  I'm probably it's only user.
+            - An electron-based Youtube playlist app.  I'm probably it's only
+            user.
           </p>
         </div>
       </div>
