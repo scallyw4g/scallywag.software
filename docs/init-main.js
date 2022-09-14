@@ -8,7 +8,7 @@ const InvalidCodePath = () => { Assert(false); }
 // This is used to directly look up into Router.routes so it CANNOT have a leading slash
 const ROUTE_404     = "404";
 
-const dev_MOUNT_POINT = "/docs"
+const dev_MOUNT_POINT = ""
 const prod_MOUNT_POINT = ""
 
 const ROUTE_INTRO   = "/intro";
