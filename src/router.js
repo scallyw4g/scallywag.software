@@ -30,7 +30,6 @@ function LookupRoute(Router, RouteNameOrUrl)
   }
 
   Assert(Result);
-
   return Result;
 }
 
@@ -41,12 +40,14 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
   const State = Event.detail;
   const Router = State.Router;
-  const PushState = Router.routingMode === RoutingMode_PushState;
+
+  console.log(Router);
 
   Router.navigate = (url) => {
+    console.log("router.navigate", url);
     if (this.Current) {
       this.Current.AnimationStatus.cancelled = true;
-      if (PushState) history.pushState({}, "", this.Current.Name);
+      history.pushState({}, "", this.Current.Name);
     }
 
     const UrlRootResolved = Router.ResolveRootUrlAlias(url);
@@ -57,10 +58,9 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
     if (TargetRoute.Name === "/404")
       Router.UpdateBrowserUrl("/404");
     else
-      Router.UpdateBrowserUrl(url);
+      Router.UpdateBrowserUrl(UrlRootResolved);
 
-    if (this.Current)
-      console.log("Navigating from %s to %s", this.Current.Name, TargetRoute.Name);
+    if (this.Current) { console.log("Navigating from %s to %s", this.Current.Name, TargetRoute.Name); }
 
     this.Current = TargetRoute;
 
@@ -90,7 +90,7 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
   delete Router.pendingNavigations;
 });
 
-function MakeRouter(Root) {
+function MakeRouter(Root, mountPoint) {
 
   /* Data Properties
    * **********************************************************************/
@@ -99,10 +99,10 @@ function MakeRouter(Root) {
   // this array.  Once the framework loads it is flushed and deleted.
   this.pendingNavigations = [];
 
+  this.mountPoint = mountPoint;
   this.root = Root;
 
   this.Current = null;
-  this.routingMode = RoutingMode_Undefined;
 
   this.routes = {};
 
@@ -111,36 +111,23 @@ function MakeRouter(Root) {
 
   this.ResolveRootUrlAlias = function(Route) {
     let Lookup = Route;
+
+    if (Lookup.startsWith(this.mountPoint))
+    {
+      Lookup = Lookup.slice(this.mountPoint.length)
+    }
+
     if (Lookup === "/") Lookup = this.root;
+
     return Lookup;
   }
 
   this.UpdateBrowserUrl = (url) => {
-    if (this.routingMode === RoutingMode_PushState)
-      history.replaceState({}, "", `${url}`);
-    else
-    {
-      // FIXME(Jesse): for some reason OnNavEvent still fires when we take this
-      // path so we end up navigating twice when calling Router.navigate
-      // document.body.onhashchange = null;
-      document.location.hash = `${url}`;
-      // document.body.onhashchange = this.OnNavEvent;
-    }
-    return;
+    history.replaceState({}, "", `${this.mountPoint}${url}`);
   }
 
   this.PullUrlFromDocument = () => {
-    if ( this.routingMode === RoutingMode_Hash &&
-         document.location.hash.length > 0)
-    {
-      let Hash = document.location.hash;
-      if (Hash.length > 0) {
-        Assert(Hash[0] === '#');
-        Route = Hash.substring(1);
-      }
-    }
-    else if ( this.routingMode === RoutingMode_PushState &&
-              document.location.pathname.length > 0)
+    if (document.location.pathname.length > 0)
     {
       Route = document.location.pathname;
     }
@@ -169,13 +156,7 @@ function MakeRouter(Root) {
   {
     console.log("Router.Initialize");
 
-    if ( history.pushState && document.location.protocol != "file:") {
-      this.routingMode = RoutingMode_PushState;
-      document.body.onpopstate = this.OnNavEvent;
-    } else {
-      this.routingMode = RoutingMode_Hash;
-      // document.body.onhashchange = this.OnNavEvent;
-    }
+    document.body.onpopstate = this.OnNavEvent;
 
     // Init Route Dom objects
     let DomElements = Array.from(document.getElementsByClassName("route"));

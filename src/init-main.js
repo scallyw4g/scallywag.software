@@ -8,6 +8,9 @@ const InvalidCodePath = () => { Assert(false); }
 // This is used to directly look up into Router.routes so it CANNOT have a leading slash
 const ROUTE_404     = "404";
 
+const dev_MOUNT_POINT = "/src"
+const prod_MOUNT_POINT = "/scallywag.software/index.html"
+
 const ROUTE_INTRO   = "/intro";
 const ROUTE_VIM_CREDITS = "/vim/credits";
 const ROUTE_VIM_INDEX = "/vim/index";
@@ -233,7 +236,14 @@ const Init = () => {
 
     Global_State.Dom = Dom;
 
-    State.Router = new MakeRouter(ROUTE_VIM_INDEX);
+    if (document.location.hostname === "localhost")
+    {
+      State.Router = new MakeRouter(ROUTE_VIM_INDEX, dev_MOUNT_POINT);
+    }
+    else
+    {
+      State.Router = new MakeRouter(ROUTE_VIM_INDEX, prod_MOUNT_POINT);
+    }
 
     console.log("Start: BindUserCallbacks");
     BindUserCallbacks(State).then( () => {
