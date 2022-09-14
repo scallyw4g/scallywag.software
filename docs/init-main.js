@@ -9,7 +9,7 @@ const InvalidCodePath = () => { Assert(false); }
 const ROUTE_404     = "404";
 
 const dev_MOUNT_POINT = "/src"
-const prod_MOUNT_POINT = "/scallywag.software/index.html"
+const prod_MOUNT_POINT = ""
 
 const ROUTE_INTRO   = "/intro";
 const ROUTE_VIM_CREDITS = "/vim/credits";
