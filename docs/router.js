@@ -1,3 +1,50 @@
+function MakeRoute(DomRef) {
+  Assert(DomRef instanceof HTMLElement);
+
+  this.Name = DomRef.dataset.route;
+  this.Url = DomRef.dataset.url;
+
+  this.InitialDom = DomRef.cloneNode(true);
+  SetDisplay(this.InitialDom, DISPLAY_BLOCK);
+
+  this.Main = null;
+  this.Callbacks = null;
+  this.RemoteDocument = null;
+  this.AnimationStatus = new AnimationStatus();
+}
+
+function RunInitAndMain(State, Route)
+{
+  Assert(State instanceof AppState);
+  Assert(Route instanceof MakeRoute);
+
+  if (Route.Init) {
+    console.log(Route.Name, " Running Init");
+    Route.Init(State, Route);
+  }
+
+  if (Route.Main) {
+      console.log(Route.Name, " Running Main");
+      Route.Main(State);
+  }
+
+}
+
+function HTMLElementFromString(HTMLString)
+{
+  Assert(typeof HTMLString === "string");
+
+  const domParser = new DOMParser();
+
+  let RemoteDocument = domParser.parseFromString(HTMLString, 'text/html');
+  console.log('-- RemoteDocument', RemoteDocument);
+
+  // let RemoteDocument = doc.body.children[0];
+  // RemoteDocument.PatchedStyles = doc.styleSheets;
+
+  return RemoteDocument;
+}
+
 function LookupRoute(Router, RouteNameOrUrl)
 {
   Assert(Router instanceof MakeRouter);
@@ -41,7 +88,7 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
   const State = Event.detail;
   const Router = State.Router;
 
-  console.log(Router);
+  Assert(State instanceof AppState);
 
   Router.navigate = (url) => {
     console.log("router.navigate", url);
@@ -65,19 +112,25 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
     this.Current = TargetRoute;
 
     TargetRoute.AnimationStatus.cancelled = false;
+
     // It's important to render the route initially before firing the Routes
     // Main() because then the route can query the rendered Dom
 
     Render(TargetRoute.Name, Router);
 
-    if (TargetRoute.Init) {
-      console.log(TargetRoute.Name, " Running Init");
-      TargetRoute.Init(State, TargetRoute);
+    if (TargetRoute.Url && TargetRoute.RemoteDocument == null)
+    {
+      fetch(TargetRoute.Url)
+        .then( r => r.text() )
+        .then( html => {
+          TargetRoute.RemoteDocument = HTMLElementFromString(html);
+          Render(TargetRoute.Name, Router);
+          RunInitAndMain(State, TargetRoute)
+        });
     }
-
-    if (TargetRoute.Main) {
-        console.log(TargetRoute.Name, " Running Main");
-        TargetRoute.Main(State);
+    else
+    {
+     RunInitAndMain(State, TargetRoute)
     }
 
   }
@@ -163,7 +216,6 @@ function MakeRouter(Root, mountPoint) {
     let RouteElements = DomElements.map( (Dom) => {
 
       let Route = new MakeRoute(Dom);
-      SetDisplay(Route.InitialDom, DISPLAY_BLOCK);
 
       let RoutePath = Dom.dataset.route.split("/");
       // Routes must begin with a / therefore the first element must be ""

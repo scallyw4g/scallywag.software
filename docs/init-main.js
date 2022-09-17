@@ -14,6 +14,7 @@ const prod_MOUNT_POINT = ""
 const ROUTE_INTRO   = "/intro";
 const ROUTE_VIM_CREDITS = "/vim/credits";
 const ROUTE_VIM_INDEX = "/vim/index";
+const ROUTE_VIM_RESUME = "/vim/resume";
 
 const INTRO_ANIM_COMPLETE = "IntroAnimationComplete"
 const INDEX_ANIM_COMPLETE = "IndexAnimationComplete"
@@ -23,18 +24,6 @@ const FUNC_MAIN = "Main";
 
 function AnimationStatus() {
   this.cancelled = false;
-}
-
-function MakeRoute(DomRef) {
-  Assert(DomRef instanceof HTMLElement);
-
-  this.Name = DomRef.dataset.route;
-
-  this.InitialDom = DomRef.cloneNode(true);
-
-  this.Main = null;
-  this.Callbacks = null;
-  this.AnimationStatus = new AnimationStatus();
 }
 
 function AppState() {
@@ -176,6 +165,7 @@ const MainCallback = (RouteName, callback) => {
 
 const Render = (RoutePath, Router) => {
   Assert(Router instanceof MakeRouter);
+
   console.log(" -- Render");
 
   const Dom = document.createElement("div");
@@ -196,11 +186,39 @@ const Render = (RoutePath, Router) => {
       Table = RenderRoute;
 
       const Yield = Dom.getElementsByClassName("yield")[0];
+
+      let DomToUse = RenderRoute.InitialDom;
+      let StylesToUse = [];
+
+      if (RenderRoute.RemoteDocument)
+      {
+        DomToUse = RenderRoute.RemoteDocument.body.children[0];
+
+        let newSheetText = "";
+        for (let sheetIndex = 0; sheetIndex < RenderRoute.RemoteDocument.styleSheets.length; ++sheetIndex)
+        {
+          let srcSheet = RenderRoute.RemoteDocument.styleSheets[sheetIndex];
+
+          for (let ruleIndex = 0; ruleIndex < srcSheet.cssRules.length; ++ruleIndex)
+          {
+            newSheetText += " " + srcSheet.cssRules[ruleIndex].cssText;
+          }
+
+        }
+
+        let newSheet = new CSSStyleSheet();
+        newSheet.replaceSync(newSheetText);
+        StylesToUse = [newSheet];
+      }
+
+
+      console.log(' -- StylesToUse ', StylesToUse);
+      document.adoptedStyleSheets = StylesToUse;
+
       if (Yield) {
-        // TODO(Jesse): Is cloning necessary here?
-        Yield.outerHTML = RenderRoute.InitialDom.cloneNode(true).outerHTML;
+        Yield.outerHTML = DomToUse.cloneNode(true).outerHTML; // TODO(Jesse): Is cloning necessary here?
       } else {
-        Dom.appendChild(RenderRoute.InitialDom.cloneNode(true));
+        Dom.appendChild(DomToUse.cloneNode(true));
       }
     }
   }

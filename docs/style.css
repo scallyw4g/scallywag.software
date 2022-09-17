@@ -14,22 +14,8 @@ html, body {
   color: #F4F0B8;
 }
 
-ul {
-  margin: 0;
-}
-
 a {
   color: #ED971F;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-
-.right {
-  float: right;
 }
 
 .typing-active::after{
@@ -47,6 +33,7 @@ a:hover {
 
 .click-expand {
   cursor: pointer;
+  margin-bottom: 1.0rem;
 }
 
 .route,
@@ -54,15 +41,29 @@ a:hover {
   display: none;
 }
 
-h2, .h2 {
-  font-size: 1.6em;
+h1, h2, h3, h4 {
   font-weight: 400;
+  margin: 0;
 }
 
 h1, .h1 {
-  padding: 0.5em 0;
-  font-size: 2em;
-  font-weight: 500;
+  font-size: 2.0rem;
+  margin-bottom: 0.5rem;
+}
+
+h2, .h2 {
+  font-size: 1.6rem;
+  margin-bottom: 0.3rem;
+}
+
+h3, .h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.25rem;
+}
+
+h4, .h4 {
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
 }
 
 .indented {
@@ -73,7 +74,9 @@ h1, .h1 {
   padding: 1em;
 }
 
-#vim-inner, #vim-credits {
+#vim-inner
+{
+  padding-top: 15px;
   border-right: 0.8em solid #313226; /* Lighter background color */
   width: 800px;
   height: 96%;
@@ -83,7 +86,8 @@ h1, .h1 {
   border-left: 0.1em solid #FF3D73;
   margin-left: 1.6em;
   padding-left: 0.4em;
-  height: 100%;
+  min-height: 100%;
+  padding-bottom: 4%;
 }
 
 #vim #bottom-bar {
@@ -101,6 +105,7 @@ h1, .h1 {
 #vim #bottom-bar li {
   display: inline-block;
   font-size: 1.2em;
+  padding: 0;
 }
 
 .ele-inner {
@@ -149,10 +154,6 @@ h1, .h1 {
   cursor: pointer;
 }
 
-#vim-credits div {
-  padding-top: 15px;
-}
-
 .arrow-left {
   float: right;
 }
@@ -178,12 +179,12 @@ h1, .h1 {
 }
 
 @keyframes slide-up {
-  from {max-height: 200px;}
+  from {max-height: 20000px;}
   to {max-height: 0px;}
 }
 @keyframes slide-down {
   from {max-height: 0px;}
-  to {max-height: 200px;}
+  to {max-height: 20000px;}
 }
 
 .slide-up {
@@ -193,7 +194,7 @@ h1, .h1 {
 }
 
 .slide-down {
-  max-height: 200px;
+  max-height: 20000px;
   animation-name: slide-down;
   overflow: hidden;
 }

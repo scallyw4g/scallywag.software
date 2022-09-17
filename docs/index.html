@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+
 <html>
 
   <head>
@@ -5,6 +7,7 @@
 
     <link href="https://fonts.googleapis.com/css?family=Oxygen+Mono" rel="stylesheet">
 
+    <link rel="stylesheet" type="text/css" href="/reset.css">
     <link rel="stylesheet" type="text/css" href="/style.css">
 
     <script src="/constants.js"> </script>
@@ -13,10 +16,9 @@
 
     <script src="/init-main.js"> </script>
     <script src="/route-vim.js"> </script>
-    <script src="/route-credits.js"> </script>
+    <!-- <script src="/route-credits.js"> </script> -->
     <script src="/route-console.js"> </script>
   </head>
-
   <body class="display-none">
     <div class="route" data-route="/404">
       <span> Oops, couldn't find that. </span>
@@ -47,11 +49,15 @@
     </div> <!-- #vim -->
 
 
-    <div id="vim-credits" class="route" data-route="/vim/credits">
+    <div id="vim-inner" class="route" data-route="/vim/credits">
       <div class="indented">
         <div>Font - <a href="http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL_web"> Oxygen Mono </a></div>
         <div>Favicon - <a href="https://www.flaticon.com/free-icons/skull" title="skull icons">Skull icons created by Smashicons - Flaticon</a></div>
       </div>
+    </div>
+
+    <div id="vim-inner" class="route" data-url="/resume.html" data-route="/vim/resume">
+      Loading ..
     </div>
 
     <div id="vim-inner" class="route" data-route="/vim/index">
@@ -59,7 +65,7 @@
         <span class="h1 gets-typed">scallywag() </span><span class="h1 gets-typed">{</span>
       </div>
 
-      <div class="indented ">
+      <div class="indented">
         <h2 class="gets-typed click-expand">about()</h2>
         <div class="indented display-none">
           <p>
@@ -71,7 +77,7 @@
         </div>
       </div>
 
-      <div class="indented ">
+      <div class="indented">
         <h2 class="gets-typed click-expand">interests()</h2>
         <div class="indented display-none">
           <p>
@@ -93,7 +99,7 @@
         </div>
       </div>
 
-      <div class="indented ">
+      <div class="indented">
         <h2 class="gets-typed click-expand">oss_contributions()</h2>
         <div class="indented display-none">
           <p>
@@ -115,19 +121,19 @@
         </div>
       </div>
 
-      <div class="indented ">
-        <h2 class="gets-typed click-expand">resume()</h2>
-        <div class="indented display-none">
-          My resume can be found <a target=_blank href="http://scallyw4g.github.io/resume/">here</a>.
-        </div>
+      <div class="indented">
+        <h2 class="gets-typed click-expand" onclick='HandleResumeClick()'>resume()</h2>
+        <div></div>
       </div>
 
-      <div class="indented ">
+      <div class="indented">
         <h2 class="gets-typed click-expand">say_hi()</h2>
         <div class="indented display-none">
-          I'm always looking for interesting things to work on!  If you think I
-          could be a good fit on your team I can be contacted at:
-          <a href="mailto:hello@scallywag.software">hello@scallywag.software</a>
+          <p>
+            I'm always looking for interesting things to work on!  If you think I
+            could be a good fit on your team I can be contacted at:
+            <a href="mailto:hello@scallywag.software">hello@scallywag.software</a>
+          </p>
         </div>
       </div>
 

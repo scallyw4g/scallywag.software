@@ -25,4 +25,10 @@ MainCallback(ROUTE_INTRO, (State, Route) => {
       return State.Router.navigate("/", State)
     });
 
+    // document.body.onclick = e => {
+    //   Route.AnimationStatus.cancelled = true;
+    //   State.Router.navigate(ROUTE_VIM_INDEX);
+      // Render(ROUTE_VIM_INDEX, State.Router);
+      // Route.Init(State, Route);
+    // }
 });

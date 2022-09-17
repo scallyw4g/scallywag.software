@@ -5,6 +5,8 @@ FitBottomBar = () => {
   BottomBar.style.width = RouteWidth;
 }
 
+let HandleResumeClick = null;
+
 BindBottomBarCallbacks = (State) => {
   Assert(State instanceof AppState);
   let Home = document.body.querySelector("#home-link");
@@ -17,34 +19,52 @@ BindBottomBarCallbacks = (State) => {
   Intro.onclick = e => {ClearAllCookies(); State.Router.navigate(ROUTE_INTRO);}
 }
 
+function ToggleClass(element, class1, class2)
+{
+  if (element.classList.contains(class1)) {
+    element.classList.remove(class1);
+    element.classList.add(class2);
+  } else {
+    element.classList.add(class1);
+    element.classList.remove(class2);
+  }
+}
+
+MainCallback( ROUTE_VIM_CREDITS, (State, Route) => {
+  Assert(State instanceof AppState);
+  Assert(Route instanceof MakeRoute);
+
+  BindBottomBarCallbacks(State);
+  FitBottomBar();
+});
+
+InitCallback( ROUTE_VIM_RESUME, (State, Route) => {
+  console.log(Route);
+  BindBottomBarCallbacks(State);
+  FitBottomBar();
+});
+
 InitCallback(ROUTE_VIM_INDEX, (State, Route) => {
   Assert(State instanceof AppState);
   Assert(Route instanceof MakeRoute);
   console.log(" ------ Initializing Vim Route");
 
-  // <piggy>
-  // This is bad on memory and should..? could..? be refactored
   document.body.onresize = FitBottomBar.bind(null, Route);
-  // </piggy>
 
   let headings = Array.from(document.body.getElementsByClassName("click-expand"));
   headings.forEach( (Elem) => {
-    Elem.onclick = (event) => {
+    Elem.addEventListener('click', (event) => {
       let sibling = event.target.nextElementSibling;
-      if (sibling.classList.contains("slide-down")) {
-        sibling.classList.remove("slide-down");
-        sibling.classList.add("slide-up");
-      }
-      else
-      {
-        sibling.classList.add("slide-down");
-        sibling.classList.remove("slide-up");
-      }
-    }
+      if (sibling) { ToggleClass(sibling, 'slide-down', 'slide-up') }
+    });
   });
 
   BindBottomBarCallbacks(State);
   FitBottomBar();
+
+  HandleResumeClick = ((State) => {
+    State.Router.navigate(ROUTE_VIM_RESUME);
+  }).bind(null, State);
 });
 
 MainCallback(ROUTE_VIM_INDEX, (State, Route) => {
@@ -62,6 +82,8 @@ MainCallback(ROUTE_VIM_INDEX, (State, Route) => {
       SetCookie({name: INDEX_ANIM_COMPLETE, value: true});
     }
 
+    console.log('ELEMENTSTOTYPE        ', ElementsToType);
+
     wait(200, Route)
       .then( () => { return blinkCursor(Route, 1)                      }, ChainRejection )
       .then( () => { return wait(100, Route)                           }, ChainRejection )
@@ -73,7 +95,8 @@ MainCallback(ROUTE_VIM_INDEX, (State, Route) => {
       .then( () => { return typeText(ElementsToType[5], Route)         }, ChainRejection )
       .then( () => { return typeText(ElementsToType[6], Route)         }, ChainRejection )
       .then( () => { return typeText(ElementsToType[7], Route)         }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[8], Route, 0)      }, ChainRejection )
+      .then( () => { return typeText(ElementsToType[8], Route)         }, ChainRejection )
+      .then( () => { return typeText(ElementsToType[9], Route, 0)      }, ChainRejection )
       .then( () => { return wait(200, Route)                           }, ChainRejection )
       .then( () => { return blinkCursor(Route, 2)                      }, ChainRejection )
       .then( () => { PurgeCursors(document.body); CompleteAnimation(); }, ChainRejection )
