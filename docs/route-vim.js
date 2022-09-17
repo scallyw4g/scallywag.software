@@ -1,21 +1,15 @@
-FitBottomBar = () => {
-  let RouteBounds = document.body.querySelector("#vim").getBoundingClientRect();
-  let RouteWidth = RouteBounds.right - RouteBounds.left;
-  let BottomBar = document.body.querySelector("#bottom-bar");
-  BottomBar.style.width = RouteWidth;
-}
 
 let HandleResumeClick = null;
 
 BindBottomBarCallbacks = (State) => {
   Assert(State instanceof AppState);
-  let Home = document.body.querySelector("#home-link");
+  let Home = document.querySelector("#home-link");
   Home.onclick = e => {State.Router.navigate("/");}
 
-  let Credits = document.body.querySelector("#credits-link");
+  let Credits = document.querySelector("#credits-link");
   Credits.onclick = e => {State.Router.navigate(ROUTE_VIM_CREDITS);}
 
-  let Intro = document.body.querySelector("#intro-link");
+  let Intro = document.querySelector("#intro-link");
   Intro.onclick = e => {ClearAllCookies(); State.Router.navigate(ROUTE_INTRO);}
 }
 
@@ -35,21 +29,17 @@ MainCallback( ROUTE_VIM_CREDITS, (State, Route) => {
   Assert(Route instanceof MakeRoute);
 
   BindBottomBarCallbacks(State);
-  FitBottomBar();
 });
 
 InitCallback( ROUTE_VIM_RESUME, (State, Route) => {
   console.log(Route);
   BindBottomBarCallbacks(State);
-  FitBottomBar();
 });
 
 InitCallback(ROUTE_VIM_INDEX, (State, Route) => {
   Assert(State instanceof AppState);
   Assert(Route instanceof MakeRoute);
   console.log(" ------ Initializing Vim Route");
-
-  document.body.onresize = FitBottomBar.bind(null, Route);
 
   let headings = Array.from(document.body.getElementsByClassName("click-expand"));
   headings.forEach( (Elem) => {
@@ -60,7 +50,6 @@ InitCallback(ROUTE_VIM_INDEX, (State, Route) => {
   });
 
   BindBottomBarCallbacks(State);
-  FitBottomBar();
 
   HandleResumeClick = ((State) => {
     State.Router.navigate(ROUTE_VIM_RESUME);

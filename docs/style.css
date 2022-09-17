@@ -84,25 +84,25 @@ h4, .h4 {
 
 #vim {
   border-left: 0.1em solid #FF3D73;
-  margin-left: 1.6em;
+  margin-left: 3%;
   padding-left: 0.4em;
   min-height: 100%;
   padding-bottom: 4%;
+  padding-top: 25px;
 }
 
-#vim #bottom-bar {
+#vim #link-bar {
   padding: 0;
   margin: 0;
 
   background: #313226; /* Lighter background color */
   position: fixed;
-  top: 95%;
+  top: 0;
   left: 0;
-  margin-left: 1.6em;
   width: 100%;
 }
 
-#vim #bottom-bar li {
+#vim #link-bar li {
   display: inline-block;
   font-size: 1.2em;
   padding: 0;
@@ -124,33 +124,33 @@ h4, .h4 {
 }
 
 /* LHS */
-#vim #bottom-bar .ele-1 {
+#vim #link-bar .ele-1 {
   background: #FF3D73;
 }
-#vim #bottom-bar .ele-2.arrow-right:before {
+#vim #link-bar .ele-2.arrow-right:before {
   border-left-color: #FF3D73;
 }
-#vim #bottom-bar .ele-2 {
+#vim #link-bar .ele-2 {
   background: #66D9EF;
 }
-#vim #bottom-bar .ele-final.arrow-right:before {
+#vim #link-bar .ele-final.arrow-right:before {
   border-left-color: #66D9EF;
 }
 
 
 /* RHS */
-#vim #bottom-bar .ele-3 {
+#vim #link-bar .ele-3 {
   background: #A5E22E;
 }
-#vim #bottom-bar .ele-final.arrow-left:before {
+#vim #link-bar .ele-final.arrow-left:before {
   border-right-color: #A5E22E;
 }
 
-#vim #bottom-bar .ele-final {
+#vim #link-bar .ele-final {
   background: transparent;
 }
 
-#vim #bottom-bar a {
+#vim #link-bar a {
   cursor: pointer;
 }
 
