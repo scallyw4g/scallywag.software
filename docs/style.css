@@ -77,13 +77,13 @@ h4, .h4 {
 #vim-inner
 {
   padding-top: 15px;
-  border-right: 0.8em solid #313226; /* Lighter background color */
+  border-right: 0.8em solid var(--background-light);
   width: 800px;
   height: 96%;
 }
 
 #vim {
-  border-left: 0.1em solid #FF3D73;
+  border-left: 0.1em solid var(--link-color-1);
   margin-left: 3%;
   padding-left: 0.4em;
   min-height: 100%;
@@ -95,7 +95,7 @@ h4, .h4 {
   padding: 0;
   margin: 0;
 
-  background: #313226; /* Lighter background color */
+  background: var(--background-light);
   position: fixed;
   top: 0;
   left: 0;
@@ -111,7 +111,7 @@ h4, .h4 {
 .ele-inner {
   transition: padding 0.2s;
   padding: 0 0.8em;
-  color: #313226; /* Lighter background color */
+  color: var(--background-light);
 }
 
 #home-link.ele-inner {
@@ -123,31 +123,51 @@ h4, .h4 {
   transition: padding 0.2s;
 }
 
+
+:root {
+  --link-color-1: #FF3D73;
+  --link-color-2: #66D9EF;
+  --link-color-3: #AE81FF;
+
+  --link-color-4: #A5E22E;
+
+  --background-light: #313226;
+}
+
+
 /* LHS */
-#vim #link-bar .ele-1 {
-  background: #FF3D73;
+#vim #link-bar .ele-left-1 {
+  background: var(--link-color-1);
 }
-#vim #link-bar .ele-2.arrow-right:before {
-  border-left-color: #FF3D73;
+#vim #link-bar .ele-left-1.arrow-right:after {
+  border-left-color: var(--link-color-1);
+  background: var(--link-color-2);
 }
-#vim #link-bar .ele-2 {
-  background: #66D9EF;
+
+#vim #link-bar .ele-left-2 {
+  background: var(--link-color-2);
 }
-#vim #link-bar .ele-final.arrow-right:before {
-  border-left-color: #66D9EF;
+#vim #link-bar .ele-left-2.arrow-right:after {
+  border-left-color: var(--link-color-2);
+  background: var(--link-color-3);
+}
+
+#vim #link-bar .ele-left-3 {
+  background: var(--link-color-3);
+}
+#vim #link-bar .ele-left-3.arrow-right:after {
+  border-left-color: var(--link-color-3);
+  background: var(--background-light);
 }
 
 
 /* RHS */
-#vim #link-bar .ele-3 {
-  background: #A5E22E;
+#vim #link-bar .ele-right-1 {
+  background: var(--link-color-4);
 }
-#vim #link-bar .ele-final.arrow-left:before {
-  border-right-color: #A5E22E;
-}
-
-#vim #link-bar .ele-final {
-  background: transparent;
+#vim #link-bar .ele-right-1.arrow-left:before {
+  border-right-color: var(--link-color-4);
+  background: var(--background-light);
 }
 
 #vim #link-bar a {
@@ -159,7 +179,7 @@ h4, .h4 {
 }
 
 .arrow-left:before,
-.arrow-right:before {
+.arrow-right:after {
   content: " ";
   width: 0;
   height: 0;
@@ -172,10 +192,12 @@ h4, .h4 {
 
 .arrow-left:before {
   border-right: solid black 1.2em;
+  background: var(--background-light);
 }
 
-.arrow-right:before {
+.arrow-right:after {
   border-left: solid black 1.2em;
+  background: var(--background-light);
 }
 
 @keyframes slide-up {
