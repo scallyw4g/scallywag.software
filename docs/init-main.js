@@ -11,10 +11,15 @@ const ROUTE_404     = "404";
 const dev_MOUNT_POINT = ""
 const prod_MOUNT_POINT = ""
 
-const ROUTE_INTRO   = "/intro";
+const ROUTE_INTRO       = "/intro";
+
+const ROUTE_VIM         = "/vim";
 const ROUTE_VIM_CREDITS = "/vim/credits";
-const ROUTE_VIM_INDEX = "/vim/index";
-const ROUTE_VIM_RESUME = "/vim/resume";
+const ROUTE_VIM_INDEX   = "/vim/index";
+const ROUTE_VIM_RESUME  = "/vim/resume";
+
+const ROUTE_VIM_BLOG                        = "/vim/blog";
+const ROUTE_VIM_BLOG_IMPROVE_TEXT_RENDERING = "/vim/blog/improving-text-rendering";
 
 const INTRO_ANIM_COMPLETE = "IntroAnimationComplete"
 const INDEX_ANIM_COMPLETE = "IndexAnimationComplete"
@@ -174,6 +179,8 @@ const Render = (RoutePath, Router) => {
   Assert(Path[0] === "");
   Path.shift();
 
+  let InitFunctionsToCall = [];
+
   let Table = Router.routes;
   for ( let PathIndex = 0;
         PathIndex < Path.length;
@@ -185,6 +192,16 @@ const Render = (RoutePath, Router) => {
     if (RenderRoute) {
       Table = RenderRoute;
 
+      if (RenderRoute.Init)
+      {
+        InitFunctionsToCall.push(RenderRoute.Init);
+        console.log(`*** Calling init on ${PathSeg}`);
+      }
+      else
+      {
+        console.log(`!!! Not calling init on ${PathSeg}`);
+      }
+
       const Yield = Dom.getElementsByClassName("yield")[0];
 
       let DomToUse = RenderRoute.InitialDom;
@@ -194,6 +211,9 @@ const Render = (RoutePath, Router) => {
       {
         DomToUse = RenderRoute.RemoteDocument.body.children[0];
 
+        // NOTE(Jesse): This is omega-barf, but it's literally the only way of
+        // using styles from an external source without appending the entire
+        // external source verbatim to the current document.  Sigh..
         let newSheetText = "";
         for (let sheetIndex = 0; sheetIndex < RenderRoute.RemoteDocument.styleSheets.length; ++sheetIndex)
         {
@@ -203,7 +223,6 @@ const Render = (RoutePath, Router) => {
           {
             newSheetText += " " + srcSheet.cssRules[ruleIndex].cssText;
           }
-
         }
 
         let newSheet = new CSSStyleSheet();
@@ -224,6 +243,7 @@ const Render = (RoutePath, Router) => {
   }
 
   document.body.innerHTML = Dom.innerHTML;
+  InitFunctionsToCall.forEach( f => f() );
 }
 
 
@@ -323,4 +343,8 @@ const Main = (State) => {
     Router.navigate(ROUTE_INTRO);
   }
 
+}
+
+const Redirect = (RouteString) => {
+  Global_State.Router.navigate(RouteString);
 }

@@ -36,17 +36,26 @@
       <ul id="link-bar">
 
            <li class="arrow-right ele-left-1"><a id="home-link" class="ele-inner">Home</a></li><!--
-        --><li class="arrow-right ele-left-2"><a id="credits-link" class="ele-inner">Blog</a></li><!--
+        --><li class="arrow-right ele-left-2"><a id="blog-link" class="ele-inner">Blog</a></li><!--
         --><li class="arrow-right ele-left-3"><a id="credits-link" class="ele-inner">Credits</a></li><!--
         --><li><span class="ele-inner comment">scallywag.software</span></li><!--
-
-
-        --><li class="arrow-left ele-right-1"><a id="intro-link" class="ele-inner">Replay Intro</a></li><!--
+        --><li class="arrow-left ele-right-1"><a id="intro-link" class="ele-inner">Replay Intro</a></li>
 
       </ul> <!-- #link-bar -->
 
     </div> <!-- #vim -->
 
+
+    <div id="vim-inner" class="route" data-route="/vim/blog">
+      <div class="yield">
+        <h2 class="click-expand" onclick='Redirect(ROUTE_VIM_BLOG_IMPROVE_TEXT_RENDERING)'>Improving text rendering in Bonsai</h2>
+      </div>
+    </div>
+
+    <div id="vim-inner" class="route" data-url="/blog/improving-text-rendering.html" data-route="/vim/blog/improving-text-rendering">
+      <div>Loading post, stand by ..</div>
+      <div>Red 5 standing by!</div>
+    </div>
 
     <div id="vim-inner" class="route" data-route="/vim/credits">
       <div class="indented">
@@ -56,7 +65,8 @@
     </div>
 
     <div id="vim-inner" class="route" data-url="/resume.html" data-route="/vim/resume">
-      Loading ..
+      <div>Loading resume, stand by ..</div>
+      <div>Red 5 standing by!</div>
     </div>
 
     <div id="vim-inner" class="route" data-route="/vim/index">
@@ -126,7 +136,7 @@
       </div>
 
       <div class="indented">
-        <h2 class="gets-typed click-expand" onclick='HandleResumeClick()'>resume()</h2>
+        <h2 class="gets-typed click-expand" onclick='Redirect(ROUTE_VIM_RESUME)'>resume()</h2>
         <div></div>
       </div>
 

@@ -1,0 +1,67 @@
+<h2>How to allocate memory without a GC</h2>
+
+<p>
+  I fairly frequently run into people that hold the opinion that manual memory
+  and lifetime management is some massive intractable problem that's far too
+  difficult for mere mortals to cope with.
+
+  In the vast majority of cases that's untrue.  In this post I'd like to
+  enumerate the cases that present problems when manually managing memory, and
+  its lifetime.
+</p>
+
+
+<h2>Case 1: (Truly) Dynamically sized data allocated on multiple threads</h2>
+<p>
+  While the number of tasks that truly require dynamic heap allocation is
+  small, it is non-zero, so we have to be prepared to handle it somehow.
+
+  One of the cases I've run into that requires a heap is allocating geometry
+  data.  Typically, 3D geometry data has an unpredictable lifetime; it could be
+  on the screen for a handful of frames, the majority of frames, or for the
+  entire playsession.  The size of data also varies greatly.  Some geometries
+  require a handful of triangles, some are tens or hundreds-of-thousands.  For
+  offline rendering (or, indeed, advanced real-time renderers) it's not
+  uncommon to reach into the hundreds-of-millions or billions of triangles.
+</p>
+
+<p>
+  This problem has N solutions I've been able to think of, which have various
+  tradeoffs discussed below
+</p>
+
+<h3>Solution 1: Allocate all memory on the main thread</h3>
+<p>
+  The easiest solution is to avoid the problem.
+
+  Pros.
+    Main thread can trivially free memory when it collects dead entities
+
+  Cons.
+    Have to know how much memory to allocate up-front.  If loading assets from
+    disk we might have to eat the cost of opening the file and figuring out
+    how much memory to allocate on the main thread.  Very bad, not good.
+      Soln.
+        Have an in-memory 'asset-index' that maps assets to their sizes
+</p>
+
+<h3>Solution 2: Allocate from worker thread using thread_local heap allocator </h3>
+<p>
+  Pros.
+    Entire asset load happens off the main thread
+
+  Cons.
+    Each thread needs their own heap allocator; wastes space
+    Allocations must be freed on the thread they were allocated on; tricky
+</p>
+
+
+<h3>Solution 3: Allocate from threads using mt-safe heap allocator</h3>
+<p>
+  Pros.
+    Entire asset load happens off the main thread
+
+  Cons.
+    mt-safe-ing the allocator makes it slow
+</p>
+

@@ -1,13 +1,15 @@
 
-let HandleResumeClick = null;
-
 BindBottomBarCallbacks = (State) => {
   Assert(State instanceof AppState);
+
   let Home = document.querySelector("#home-link");
   Home.onclick = e => {State.Router.navigate("/");}
 
   let Credits = document.querySelector("#credits-link");
   Credits.onclick = e => {State.Router.navigate(ROUTE_VIM_CREDITS);}
+
+  let Blog = document.querySelector("#blog-link");
+  Blog.onclick = e => {State.Router.navigate(ROUTE_VIM_BLOG);}
 
   let Intro = document.querySelector("#intro-link");
   Intro.onclick = e => {ClearAllCookies(); State.Router.navigate(ROUTE_INTRO);}
@@ -24,22 +26,16 @@ function ToggleClass(element, class1, class2)
   }
 }
 
-MainCallback( ROUTE_VIM_CREDITS, (State, Route) => {
-  Assert(State instanceof AppState);
-  Assert(Route instanceof MakeRoute);
 
-  BindBottomBarCallbacks(State);
-});
-
-InitCallback( ROUTE_VIM_RESUME, (State, Route) => {
+InitCallback( ROUTE_VIM, (State, Route) => {
   console.log(Route);
   BindBottomBarCallbacks(State);
 });
 
-InitCallback(ROUTE_VIM_INDEX, (State, Route) => {
+
+MainCallback(ROUTE_VIM_INDEX, (State, Route) => {
   Assert(State instanceof AppState);
   Assert(Route instanceof MakeRoute);
-  console.log(" ------ Initializing Vim Route");
 
   let headings = Array.from(document.body.getElementsByClassName("click-expand"));
   headings.forEach( (Elem) => {
@@ -49,18 +45,8 @@ InitCallback(ROUTE_VIM_INDEX, (State, Route) => {
     });
   });
 
-  BindBottomBarCallbacks(State);
-
-  HandleResumeClick = ((State) => {
-    State.Router.navigate(ROUTE_VIM_RESUME);
-  }).bind(null, State);
-});
-
-MainCallback(ROUTE_VIM_INDEX, (State, Route) => {
-  Assert(State instanceof AppState);
-  Assert(Route instanceof MakeRoute);
-
   if (!ReadCookie(INDEX_ANIM_COMPLETE)) {
+
     let ElementsToType = Array.from(document.body.getElementsByClassName("gets-typed"))
       .map((Dom) => { return new TypedElement(Dom); });
 

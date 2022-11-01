@@ -1,0 +1,245 @@
+<body>
+  <div>
+    <h2>Improving text rendering in Bonsai</h2>
+    <h4>An adventure in anti-aliasing for Fun and Profit</h4>
+    <h5>Nov 1, 2022</h5>
+
+    <hr>
+
+    <p>
+      The spoils of this adventure are the sweet, sweet anti-aliased pixels on
+      the borders of text.  If you're looking for a harrowing tale of riches
+      and glory, I'd suggest a good high-fantasy novel.
+    </p>
+
+    <h3>Introduction</h3>
+    <p>
+      After an initial pass on text rendering in Bonsai, there were glyphs on the screen!
+    </p>
+
+    <img src="/assets/bad_text_aliasing.png"></img>
+
+    <p>
+      Granted, they look like they were drawn by Windows in 1990.
+    </p>
+    <p>
+      Actually, that's being generous.  In 1990, Windows looked quite a bit better than that.
+    </p>
+
+    <img src="/assets/windows_3_text.png"></img>
+
+    <p>
+      Surely we can do better!
+    </p>
+
+    <h3>Background</h3>
+    <p>
+      The font rasterizer I wrote does a pretty good job of producing nice, AA'd
+      glyph bitmaps, however, the engine itself was doing a very poor job of
+      actually putting those glyphs on the screen.
+    </p>
+
+    <p>
+      One day I found myself fafing (read: working) on the 2D layout system and
+      spuriously commented out this line of shader code:
+    </p>
+
+    <code> if (bitmapTexel.a &lt; 0.5f) { discard; }</code>
+
+    <p>
+      The text all of a sudden looked INCREDIBLE!  At least compared to just a
+      moment ago.
+    </p>
+
+    <img src="/assets/good_text_aliasing.png"></img>
+
+    <p>
+      So, the decision was made.  My next task would be to cleanup text rendering.
+    </p>
+
+    <h3>Issues</h3>
+    <p>
+      There were three main issues contributing to aliasing, which we'll
+      deconstruct further:
+
+      <ol>
+        <li>The drawing code didn't properly support transparency (very bad, no good, don't do this)</li>
+        <li>The transparent AA'd pixels were gettind discarded by the fragment shader</li>
+        <li>The glyph textures were stored in a 3D texture, instead of 2D texture array</li>
+      </ol>
+    </p>
+
+
+    <h3> Issue 1: Supporting transparency </h3>
+    <p>
+      The root cause of the aliasing behavior is the 2D renderer did not
+      support transparency in any real way.  Instead of doing it the "real way"
+      on my first pass, I decided to quickly hack in something that would
+      achieve the goal of drawing text, quality be damned.  Thus, this line was
+      born:
+    </p>
+
+    <code> if (bitmapTexel.a &lt; 0.5f) { discard; }</code>
+
+    <p>
+      This line discards any texel that's less than 50% opaque, which partly
+      explains the aliasing.  But, you may ask, why not just turn that down to
+      0.001%?  Furthermore, what happens if you just delete that line entirely?
+      Surely we shouldn't need such weirdness in this fine establishment?!
+    </p>
+
+    <p>
+      We'll have to look at some different text to demonstrate the problems.
+    </p>
+
+    <p>
+      With the threshold set very low (0.001f):
+    </p>
+    <img></img>
+
+    <p>
+      With the discard off entirely:
+    </p>
+    <img></img>
+
+    <p>
+      Obviously, the background bleeding through the edges of text (or the
+      entire glyphs quad!) is objectionable and certainly not something us
+      folks of such standards and grace should tolerate!  So what's a programmer
+      to do?
+    </p>
+
+    <p>
+      Well, the answer lies somewhat hidden by an architectural decision that
+      was made w.r.t copying geometry to the video card.  The 3D renderer in
+      Bonsai uses glMapBuffer to reserve fairly large geometry buffers which
+      the engine copies all geometry into every frame [1].
+    </p>
+
+    <p>
+      Since I already had this system of copying data onto the video card, I
+      decided to reuse it for rendering text.
+    </p>
+
+    <p>
+      Now, after that decision was made, a sane thought process would have been
+      "Gee, maybe I should use this system in the same way that the rest of the
+      codebase uses it, because that's how it works".
+    </p>
+
+    <p>
+      Instead, this went though my head "Gee, I think I'll add an artificial
+      constraint that the geometry buffers should be really tiny (1 kilobyte),
+      just for fun".
+    </p>
+
+    <p>
+      So, now our text renderer draws stuff in multiple passes due to the tiny
+      geometry buffers, which is bad news for transparent stuff (aka: text).
+    </p>
+
+    <p>
+      Thus, turning the 'discard factor' up results in better-looking text
+      edges, but at the cost of also writing to the depth buffer, which we make
+      use of to keep windows stacking properly.  This means if the window
+      background gets drawn after the text it encloses (the likely case), whatever
+      was behind the window will bleed through the edges of the text.
+    </p>
+
+    <img></img>
+
+    <p>
+      Infinite sadness :((
+    </p>
+
+    <p>
+      This problem has two solutions:
+    </p>
+
+    <ol>
+      <li>Turn up the geometry buffer sizes such that they never fill on a single
+      frame, and draw opaque geometry before transparent geometry.
+      (Like any normal person would have done in the first place)</li>
+
+      <li>Do two passes over the render-command buffer [2] with small geometry
+      buffers, flushing as normal when they fill, drawing opaque geometry on
+      the first pass, and drawing transparent geometry on the second pass.</li>
+    </ol>
+
+    <p>
+      I decided to do (1) for the moment to make sure my assessment of the
+      situation is correct, and we'll tackle (2) for extra profit later.
+    </p>
+
+    <p>
+      So, to recap, to get the engine to support transparency for 2D geometry
+      we just multiplied a couple buffer sizes by 20,000 (which is ~100x
+      overkill) and everything magically worked.  It's also worth noting that
+      this could probably be a long-term solution.  In totality the draw
+      buffers are ~16 megabytes (aka: not that big), which accounts for 100x
+      more geometry than the renderer ever draws at this moment.  By flushing
+      every time we draw a window, we could push that multiplier to ~400x and
+      have no visual artifacts.
+    </p>
+
+    <p>
+      I'm a big fan of wasting memory when it buys you something, but in this
+      case it should be pretty easy to use 16 kilobytes instead of 16
+      megabytes, so we might as well do that.  We're craftspeople after all!
+    </p>
+
+    <h3> Issue 2: AA'd pixels getting discarded by the shader</h3>
+    <p>
+      We've seen this line already:
+    </p>
+
+    <code> if (bitmapTexel.a &lt; 0.5f) { discard; }</code>
+
+    <p>
+      Which is partially causing the bad aliasing behavior we're seeing.  Now
+      that the renderer isn't drawing opaque stuff overtop of our transparent
+      stuff, we can just delete this line!  Wee!
+    </p>
+
+    <h3> Issue 3: Glyph texels stored in a 3D texture instead of 2D texture array</h3>
+    <p>
+      The other issue that was contributing to aliasing is that the glyph
+      textures were being stored in a 3D texture and retrieved with
+      texelFetch() instead of texutre()!  This means that the texels were not
+      getting the normal bi-linear filtering treatment expected at such a
+      high-quality establishemnt.
+    </p>
+
+    <p>
+      This was also an easy fix, change the code that allocated the textures to ask
+      for a GL_TEXTURE_2D_ARRAY instead of GL_TEXTURE_3D, and change the
+      texelFetch() to texture().  Looking back I have no idea why I used a 3D
+      texture in the first place.
+    </p>
+
+
+    <h3>Final Boss : Drawing infinite text with 1kb of geometry buffer</h3>
+    <p>
+      This actually turned out to be a bit trickier than I expected.  The
+      overarching class of issues I ran into were that the layout engine assumed it
+      only ever did a single pass over the render-command buffer and, in a few
+      places, it modified elements directly, which resulted in some double-counting
+      during the layout step of the second render pass.
+    </p>
+
+
+    <hr>
+
+    <p>
+    [1] Yes, this is an unusual way for a renderer to work.  I'll probably rewrite
+    it at some point using a more conventional method, but I like trying weird
+    ideas I come up with.
+    </p>
+
+    <p>
+    [2] The render-command buffer is a buffer of tagged-union values that describe
+    the stuff our application wants to render.  I may write about it in more detail
+    in the future.
+    </p>
+  </div>
+</body>
