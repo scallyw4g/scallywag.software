@@ -21,7 +21,7 @@
   /* --text-normal: var(--background-light); */
   --text-normal: #d3d0b7;
   --text-dark: #6d6c66;
-  --text-link: var(--link-color-3);
+  --text-link: #ce673b; /* lighter version of --link-color-3 */
 }
 
 html, body {
