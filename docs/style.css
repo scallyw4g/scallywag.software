@@ -62,9 +62,9 @@ a {
   display: none;
 }
 
-h1, h2, h3, h4 {
-  font-weight: 400;
-  margin: 0;
+code {
+  background: var(--background-light);
+  color: var(--text-light);
 }
 
 h1, .h1 {
@@ -87,6 +87,14 @@ h4, .h4 {
   margin-bottom: 0.25rem;
 }
 
+.blog h2 {
+  border-bottom: 2px solid var(--link-color-3);
+}
+
+.blog h3 {
+  border-bottom: 2px solid var(--link-color-2);
+}
+
 .indented {
   padding-left: 1.2em;
 }
@@ -99,6 +107,7 @@ h4, .h4 {
 {
   padding-top: 1em;
   padding-left: 0.5em;
+  padding-right: 0.5em;
   border-right: 0.8em solid var(--background-light);
   max-width: 1200px;
   height: 96%;

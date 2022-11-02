@@ -1,10 +1,8 @@
 <body>
   <div>
-    <h2>Improving text rendering in Bonsai</h2>
-    <h4>An adventure in anti-aliasing for Fun and Profit</h4>
     <h5>Nov 1, 2022</h5>
-
-    <hr>
+    <h1>Improving Bonsai text rendering - Part 1</h1>
+    <h2>An adventure in anti-aliasing for Fun and Profit</h2>
 
     <p>
       The spoils of this adventure are the sweet, sweet anti-aliased pixels on
@@ -12,7 +10,7 @@
       and glory, I'd suggest a good high-fantasy novel.
     </p>
 
-    <h3>Introduction</h3>
+    <h2>Introduction</h2>
     <p>
       After an initial pass on text rendering in Bonsai, there were glyphs on the screen!
     </p>
@@ -32,7 +30,7 @@
       Surely we can do better!
     </p>
 
-    <h3>Background</h3>
+    <h2>Background</h2>
     <p>
       The font rasterizer I wrote does a pretty good job of producing nice, AA'd
       glyph bitmaps, however, the engine itself was doing a very poor job of
@@ -57,7 +55,7 @@
       So, the decision was made.  My next task would be to cleanup text rendering.
     </p>
 
-    <h3>Issues</h3>
+    <h2>Issues</h2>
     <p>
       There were three main issues contributing to aliasing, which we'll
       deconstruct further:
@@ -89,69 +87,66 @@
     </p>
 
     <p>
-      We'll have to look at some different text to demonstrate the problems.
+      We'll take a look at some different text to demonstrate the problems.
     </p>
 
     <p>
-      With the threshold set very low (0.001f):
+      With the discard threshold set very low (0.001f):
     </p>
     <img src="/assets/partial_text_clipping_through_background.png"></img>
+    <p>
+      Notice the bleeding in "RenderWorldToGBuffer"
+    </p>
 
     <p>
-      With the discard off entirely:
+      And with the discard off entirely:
     </p>
     <img src="/assets/full_text_clipping_through_background.png"></img>
 
     <p>
       Obviously, the background bleeding through the edges of text (or the
-      entire glyphs quad!) is objectionable and certainly not something us
-      folks of such standards and grace should tolerate!  So what's a programmer
-      to do?
+      entire quad!) is objectionable.  This happens because the text renderer
+      uses a depth buffer to ensure windows stack properly.  If the window
+      background gets drawn after the text it encloses (the likely case),
+      whatever was behind the window will bleed through the transparent parts
+      of the glyph.  Certainly not something we folk of such eminence and grace
+      should tolerate!  So, what's a programmer to do?
     </p>
 
     <p>
-      Well, the answer lies somewhat hidden by an architectural decision that
-      was made w.r.t copying geometry to the video card.  The 3D renderer in
-      Bonsai uses glMapBuffer to reserve fairly large geometry buffers which
-      the engine copies all geometry into every frame [1].
+      Well, the answer lies somewhat hidden, but is related to how Bonsai
+      copies memory to the video card.  It uses glMapBuffer to reserve fairly
+      large geometry buffers which the engine copies all geometry into every
+      frame [1].
     </p>
 
     <p>
-      Since I already had this system of copying data onto the video card, I
-      decided to reuse it for rendering text.
+      Since I already had this system of copying data onto the video card for
+      the 3D renderer, I decided to reuse it for rendering text.
     </p>
 
     <p>
-      Now, after that decision was made, a sane thought process would have been
+      Now, after that decision was made, a normal person would have thought:
       "Gee, maybe I should use this system in the same way that the rest of the
       codebase uses it, because that's how it works".
     </p>
 
     <p>
-      Instead, this went though my head "Gee, I think I'll add an artificial
-      constraint that the geometry buffers should be really tiny (1 kilobyte),
-      just for fun".
+      Instead, this went though my head: "Gee, I think I'll add an artificial
+      constraint that the buffers should be really tiny (1 kilobyte), just for
+      fun".
     </p>
 
     <p>
-      So, now our text renderer draws stuff in multiple passes due to the tiny
-      geometry buffers, which is bad news for transparent stuff (aka: text).
+      So, now our text renderer draws geometry in multiple passes due to the
+      tiny buffers, which is bad news for transparent stuff (aka: text).
     </p>
-
-    <p>
-      Thus, turning the 'discard factor' up results in better-looking text
-      edges, but at the cost of also writing to the depth buffer, which we make
-      use of to keep windows stacking properly.  This means if the window
-      background gets drawn after the text it encloses (the likely case), whatever
-      was behind the window will bleed through the edges of the text.
-    </p>
-
-    <img></img>
 
     <p>
       Infinite sadness :((
     </p>
 
+    <h3> Solutions </h3>
     <p>
       This problem has two solutions:
     </p>
@@ -174,18 +169,17 @@
     <p>
       So, to recap, to get the engine to support transparency for 2D geometry
       we just multiplied a couple buffer sizes by 20,000 (which is ~100x
-      overkill) and everything magically worked.  It's also worth noting that
-      this could probably be a long-term solution.  In totality the draw
-      buffers are ~16 megabytes (aka: not that big), which accounts for 100x
-      more geometry than the renderer ever draws at this moment.  By flushing
-      every time we draw a window, we could push that multiplier to ~400x and
-      have no visual artifacts.
+      overkill) and everything magically worked.
     </p>
 
+
     <p>
-      I'm a big fan of wasting memory when it buys you something, but in this
-      case it should be pretty easy to use 16 kilobytes instead of 16
-      megabytes, so we might as well do that.  We're craftspeople after all!
+      Unfortunately for us, this is not a long-term solution.  In totality the
+      draw buffers are now ~120 megabytes (aka: much bigger than a few kilobytes),
+      which accounts for 100x more geometry than the renderer ever draws at
+      this moment.  We could do some tricks to get the memory usage down, but
+      why waste time doing tricks when doing it right isn't that hard in the
+      first place?  We're craftspeople after all!  Do it right!
     </p>
 
     <h3> Issue 2: AA'd pixels getting discarded by the shader</h3>
@@ -196,8 +190,12 @@
     <code> if (bitmapTexel.a &lt; 0.5f) { discard; }</code>
 
     <p>
-      Which is partially causing the bad aliasing behavior we're seeing.  Now
-      that the renderer isn't drawing opaque stuff overtop of our transparent
+      Which is partially causing the bad aliasing behavior we're seeing.
+    </p>
+
+    <h3> Solution </h3>
+    <p>
+      Now that the renderer isn't drawing opaque stuff overtop of our transparent
       stuff, we can just delete this line!  Wee!
     </p>
 
@@ -210,6 +208,7 @@
       high-quality establishemnt.
     </p>
 
+    <h3> Solution </h3>
     <p>
       This was also an easy fix, change the code that allocated the textures to ask
       for a GL_TEXTURE_2D_ARRAY instead of GL_TEXTURE_3D, and change the
@@ -217,18 +216,22 @@
       texture in the first place.
     </p>
 
+    <h2> Result </h2>
     <p>
       Looking good!  Nice AA'd edges and no bleeding artifacts!
     </p>
     <img src="/assets/no_text_clipping_through_background.png"></img>
 
-    <h3>Final Boss : Drawing infinite text with 1kb of geometry buffer</h3>
+    <h2>Final Boss : Drawing infinite text with 1kb of geometry buffer</h2>
     <p>
       This actually turned out to be a bit trickier than I expected.  The
-      overarching class of issues I ran into were that the layout engine assumed it
-      only ever did a single pass over the render-command buffer and, in a few
-      places, it modified elements directly, which resulted in some double-counting
-      during the layout step of the second render pass.
+      overarching class of issues I ran into were that the layout engine
+      assumed it only ever did a single pass over the render-command buffer
+      and, in a few places, it modified elements directly, which resulted in
+      some double-counting during the layout step of the second render pass.
+    </p>
+    <p>
+      Stay tuned for the conclusion of this epic adventure in Part 2!
     </p>
 
 
