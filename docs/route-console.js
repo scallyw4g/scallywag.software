@@ -8,27 +8,34 @@ MainCallback(ROUTE_INTRO, (State, Route) => {
   PurgeCursors(document.body);
   InitCursor(ElementsToType[0]);
 
-  blinkCursor(Route, 4)
-    .then(() => { return typeText(ElementsToType[0], Route) })
-    .then(() => { return typeText(ElementsToType[1], Route) })
-    .then(() => { return wait(60, Route)                    })
-    .then(() => { return blinkCursor(Route, 1)              })
-    .then(() => { return wait(60, Route)                    })
+  blinkCursor(Route, 2)
+    .then(() => { return typeText(ElementsToType[0], Route) }, ChainRejection)
+    .then(() => { return typeText(ElementsToType[1], Route) }, ChainRejection)
+    .then(() => { return wait(60, Route)                    }, ChainRejection)
+    .then(() => { return blinkCursor(Route, 1)              }, ChainRejection)
+    .then(() => { return wait(60, Route)                    }, ChainRejection)
     .then(() => { return new Promise( (resolve) => {
       PurgeCursors(document.body);
       InitCursor(ElementsToType[2]);
       resolve();
-    })                                                      })
-    .then(() => { return wait(140, Route)                   })
+    })                                                      }, ChainRejection)
+    .then(() => { return wait(140, Route)                   }, ChainRejection)
     .then(() => {
-      SetCookie({name: INTRO_ANIM_COMPLETE, value: true});
-      return State.Router.navigate("/", State)
-    });
+      CompleteAnimation(Route, INTRO_ANIM_COMPLETE);
+      State.Router.navigate(ROUTE_VIM_INDEX);
+    }, ChainRejection)
+    .catch( () => {
+      CompleteAnimation(Route, INTRO_ANIM_COMPLETE);
+      Route.AnimationStatus.cancelled = false;
+      State.Router.navigate(ROUTE_VIM_INDEX);
+    })
 
-    // document.body.onclick = e => {
-    //   Route.AnimationStatus.cancelled = true;
-    //   State.Router.navigate(ROUTE_VIM_INDEX);
-      // Render(ROUTE_VIM_INDEX, State.Router);
-      // Route.Init(State, Route);
-    // }
+    Assert(Route.AnimationStatus.cancelled == false);
+
+    document.body.onclick = e => {
+      document.body.onclick = null;
+      e.stopPropagation();
+      Route.AnimationStatus.cancelled = true;
+    }
+
 });

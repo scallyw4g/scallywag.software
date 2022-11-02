@@ -38,6 +38,8 @@ let blink = (Cursor, Route) => {
 }
 
 let blinkCursor = (Route, count) => {
+  if (Route.AnimationStatus.cancelled) { return Promise.reject("blinkCursor"); }
+
   Assert(Route instanceof MakeRoute);
 
   let Cursor = document.body.querySelector(".typing-active");

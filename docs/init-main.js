@@ -94,7 +94,7 @@ const typeText = (Elem, Route, finalDelay = 500) => {
   Assert(Route instanceof MakeRoute);
   Assert(Route.AnimationStatus instanceof AnimationStatus);
 
-  const charAnimInterval = 50;
+  const charAnimInterval = 45;
 
   PurgeCursors(document.body);
   Elem.Dom.classList.add("typing-active");
@@ -108,7 +108,7 @@ const typeText = (Elem, Route, finalDelay = 500) => {
 
       if (Route.AnimationStatus.cancelled) {
         clearInterval(TextAnimation);
-        reject( "typeText " + Elem.Content.join(""));
+        reject("typeText: " + Elem.Content.join(""));
         return;
       }
 
@@ -323,11 +323,20 @@ const ReadCookie  = (Needle) => {
 }
 
 const ClearAllCookies = () => {
+  //
+  // NOTE(Jesse): You'd think, since cookies are just strings, that the
+  // following would work.  Unfortunately, because the web APIs were apparently
+  // designed by marsupials with brain damage, that's not the case.  Instead
+  // you have to set 'expires' properties to the epoch because .. reasons
+  //
+  // document.cookie = "";
+
   document.cookie.split(";").forEach( (cookie) => {
     var eqPos = cookie.indexOf("=");
     var name = cookie.substr(0, eqPos).trim();
     document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
   });
+
 }
 
 const Main = (State) => {
@@ -348,3 +357,12 @@ const Main = (State) => {
 const Redirect = (RouteString) => {
   Global_State.Router.navigate(RouteString);
 }
+
+const CompleteAnimation = (Route, AnimationName) => {
+  Assert(typeof AnimationName === "string");
+  Assert(Route instanceof MakeRoute);
+
+  SetCookie({name: AnimationName, value: true});
+  // Route.AnimationStatus.cancelled = false;
+}
+

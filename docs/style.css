@@ -1,27 +1,48 @@
+
+:root {
+  --color-cursor: #F7208B;
+
+  /* --link-color-1: #8E61DF; */
+  /* --link-color-2: #66D9EF; */
+  /* --link-color-3: #CE3D73; */
+  /* --link-color-4: #F5EF2E; */
+
+
+  --link-color-1: #46244C;
+  --link-color-2: #712B75;
+  --link-color-3: #a34c27;
+
+  --link-color-4: #46244C;  /* RHS links */
+  --link-color-5: #bc326e;
+
+  --background-light: #202020;
+  --background-dark: #151515;
+
+  /* --text-normal: var(--background-light); */
+  --text-normal: #d3d0b7;
+  --text-dark: #6d6c66;
+  --text-link: var(--link-color-3);
+}
+
 html, body {
   font-family:  'Oxygen Mono', monospace;
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #272822;
-  color: #F4F0B8;
-  /* color: #FD971F; */
-  /* color: #FFF7FB; */
-}
-
-#say-hi a {
-  color: #F4F0B8;
+  background: var(--background-dark);
+  color: var(--text-normal);
 }
 
 a {
-  color: #ED971F;
+  color: var(--text-link);
 }
 
 .typing-active::after{
   content: " ";
-  background: #F7208B;
+  background: var(--color-cursor);
 }
+
 .cursor-off::after {
   display: none;
 }
@@ -76,19 +97,17 @@ h4, .h4 {
 
 #vim-inner
 {
-  padding-top: 15px;
+  padding-top: 1em;
+  padding-left: 0.5em;
   border-right: 0.8em solid var(--background-light);
-  width: 800px;
+  max-width: 800px;
   height: 96%;
 }
 
 #vim {
   border-left: 0.1em solid var(--link-color-1);
   margin-left: 3%;
-  padding-left: 0.4em;
   min-height: 100%;
-  padding-bottom: 4%;
-  padding-top: 25px;
 }
 
 #vim #link-bar {
@@ -96,7 +115,6 @@ h4, .h4 {
   margin: 0;
 
   background: var(--background-light);
-  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -109,30 +127,19 @@ h4, .h4 {
 }
 
 .ele-inner {
-  transition: padding 0.2s;
   padding: 0 0.8em;
-  color: var(--background-light);
+  color: var(--text-normal);
 }
 
 #home-link.ele-inner {
   padding-left: 1.3em;
 }
 
-.ele-inner:hover {
-  padding: 0 1.2em;
-  transition: padding 0.2s;
-}
+/* .ele-inner:hover { */
+/*   padding: 0 1.2em; */
+/*   transition: padding 0.2s; */
+/* } */
 
-
-:root {
-  --link-color-1: #FF3D73;
-  --link-color-2: #66D9EF;
-  --link-color-3: #AE81FF;
-
-  --link-color-4: #A5E22E;
-
-  --background-light: #313226;
-}
 
 
 /* LHS */
@@ -161,14 +168,23 @@ h4, .h4 {
 }
 
 
+
 /* RHS */
 #vim #link-bar .ele-right-1 {
   background: var(--link-color-4);
 }
 #vim #link-bar .ele-right-1.arrow-left:before {
   border-right-color: var(--link-color-4);
+  background: var(--link-color-5);
+}
+#vim #link-bar .ele-right-2 {
+  background: var(--link-color-5);
+}
+#vim #link-bar .ele-right-2.arrow-left:before {
+  border-right-color: var(--link-color-5);
   background: var(--background-light);
 }
+
 
 #vim #link-bar a {
   cursor: pointer;
@@ -184,10 +200,10 @@ h4, .h4 {
   width: 0;
   height: 0;
 
-  border-top:  solid transparent 0.67em;
-  border-bottom: solid transparent 0.67em;
+  border-top:  solid transparent 0.6666666em;
+  border-bottom: solid transparent 0.6666666em;
   display: inline-block;
-  margin-bottom: -0.33em;
+  margin-bottom: -0.33333333em;
 }
 
 .arrow-left:before {
@@ -228,6 +244,14 @@ h4, .h4 {
 }
 
 .comment {
-  color: #ABAA98;
+  color: var(--text-dark);
+}
+
+.hover-underline:hover {
+  text-decoration: underline;
+}
+
+.float-right {
+  float: right;
 }
 

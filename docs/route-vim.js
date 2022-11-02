@@ -8,11 +8,14 @@ BindBottomBarCallbacks = (State) => {
   let Credits = document.querySelector("#credits-link");
   Credits.onclick = e => {State.Router.navigate(ROUTE_VIM_CREDITS);}
 
+  let Resume = document.querySelector("#resume-link");
+  Resume.onclick = e => {State.Router.navigate(ROUTE_VIM_RESUME);}
+
   let Blog = document.querySelector("#blog-link");
   Blog.onclick = e => {State.Router.navigate(ROUTE_VIM_BLOG);}
 
   let Intro = document.querySelector("#intro-link");
-  Intro.onclick = e => {ClearAllCookies(); State.Router.navigate(ROUTE_INTRO);}
+  Intro.onclick = e => {e.stopPropagation(); ClearAllCookies(); State.Router.navigate(ROUTE_INTRO);}
 }
 
 function ToggleClass(element, class1, class2)
@@ -45,43 +48,39 @@ MainCallback(ROUTE_VIM_INDEX, (State, Route) => {
     });
   });
 
-  if (!ReadCookie(INDEX_ANIM_COMPLETE)) {
+  // if (!ReadCookie(INDEX_ANIM_COMPLETE)) {
 
-    let ElementsToType = Array.from(document.body.getElementsByClassName("gets-typed"))
-      .map((Dom) => { return new TypedElement(Dom); });
+    // let ElementsToType = Array.from(document.body.getElementsByClassName("gets-typed"))
+    //   .map((Dom) => { return new TypedElement(Dom); });
 
-    InitCursor(ElementsToType[0]);
+    // InitCursor(ElementsToType[0]);
 
-    let CompleteAnimation = () => {
-      document.body.onclick = null;
-      SetCookie({name: INDEX_ANIM_COMPLETE, value: true});
-    }
+    // console.log('ELEMENTSTOTYPE        ', ElementsToType);
 
-    console.log('ELEMENTSTOTYPE        ', ElementsToType);
+//     wait(200, Route)
+//       .then( () => { return blinkCursor(Route, 1)                      }, ChainRejection )
+//       .then( () => { return wait(60, Route)                            }, ChainRejection )
+//       .then( () => { return typeText(ElementsToType[0], Route, 150)    }, ChainRejection )
+//       .then( () => { return typeText(ElementsToType[1], Route)         }, ChainRejection )
+//       .then( () => { return typeText(ElementsToType[2], Route)         }, ChainRejection )
+//       .then( () => { return typeText(ElementsToType[3], Route)         }, ChainRejection )
+//       .then( () => { return typeText(ElementsToType[4], Route)         }, ChainRejection )
+//       .then( () => { return typeText(ElementsToType[5], Route)         }, ChainRejection )
+//       .then( () => { return typeText(ElementsToType[6], Route)         }, ChainRejection )
+//       .then( () => { return typeText(ElementsToType[7], Route)         }, ChainRejection )
+//       .then( () => { return typeText(ElementsToType[8], Route)         }, ChainRejection )
+//       .then( () => { return wait(60, Route)                            }, ChainRejection )
+//       .then( () => { return blinkCursor(Route, 1)                      }, ChainRejection )
+//       .then( () => { PurgeCursors(document.body); CompleteAnimation(Route, INDEX_ANIM_COMPLETE); }, ChainRejection )
+//       .catch(() => { console.log("Animation Cancelled"); CompleteAnimation(Route, INDEX_ANIM_COMPLETE); });
 
-    wait(200, Route)
-      .then( () => { return blinkCursor(Route, 1)                      }, ChainRejection )
-      .then( () => { return wait(100, Route)                           }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[0], Route, 150)    }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[1], Route)         }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[2], Route)         }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[3], Route)         }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[4], Route)         }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[5], Route)         }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[6], Route)         }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[7], Route)         }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[8], Route)         }, ChainRejection )
-      .then( () => { return typeText(ElementsToType[9], Route, 0)      }, ChainRejection )
-      .then( () => { return wait(200, Route)                           }, ChainRejection )
-      .then( () => { return blinkCursor(Route, 2)                      }, ChainRejection )
-      .then( () => { PurgeCursors(document.body); CompleteAnimation(); }, ChainRejection )
-      .catch(() => { console.log("Animation Cancelled"); CompleteAnimation(); });
+//     document.body.onclick = e => {
+//       document.body.onclick = null;
+//       CompleteAnimation(Route, INDEX_ANIM_COMPLETE);
+//       Route.AnimationStatus.cancelled = true;
+//       State.Router.navigate(ROUTE_INTRO);
+//     }
+  // }
 
-    document.body.onclick = e => {
-      Route.AnimationStatus.cancelled = true;
-      Render(ROUTE_VIM_INDEX, State.Router);
-      Route.Init(State, Route);
-    }
-  }
 });
 

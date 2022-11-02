@@ -92,9 +92,11 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
   Router.navigate = (url) => {
     console.log("router.navigate", url);
+    document.body.onclick = null;
+
     if (this.Current) {
-      this.Current.AnimationStatus.cancelled = true;
-      history.pushState({}, "", this.Current.Name);
+      // this.Current.AnimationStatus.cancelled = true;
+      // history.pushState({}, "", this.Current.Name);
     }
 
     const UrlRootResolved = Router.ResolveRootUrlAlias(url);
@@ -102,16 +104,15 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
     Assert(TargetRoute);
     Assert(TargetRoute.AnimationStatus instanceof AnimationStatus);
 
-    if (TargetRoute.Name === "/404")
-      Router.UpdateBrowserUrl("/404");
-    else
-      Router.UpdateBrowserUrl(UrlRootResolved);
+    // if (TargetRoute.Name === "/404")
+    //   Router.UpdateBrowserUrl("/404");
+    // else
+    //   Router.UpdateBrowserUrl(UrlRootResolved);
 
     if (this.Current) { console.log("Navigating from %s to %s", this.Current.Name, TargetRoute.Name); }
 
     this.Current = TargetRoute;
-
-    TargetRoute.AnimationStatus.cancelled = false;
+    // this.Current.AnimationStatus.cancelled = false;
 
     // It's important to render the route initially before firing the Routes
     // Main() because then the route can query the rendered Dom
@@ -130,17 +131,14 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
     }
     else
     {
-     RunInitAndMain(State, TargetRoute)
+      RunInitAndMain(State, TargetRoute)
     }
 
   }
 
 
-  Router.pendingNavigations.forEach( (Nav) => {
-    Router.navigate(Nav);
-  });
-
-  delete Router.pendingNavigations;
+  Router.navigate(Router.cachedNav);
+  delete Router.cachedNav;
 });
 
 function MakeRouter(Root, mountPoint) {
@@ -148,9 +146,9 @@ function MakeRouter(Root, mountPoint) {
   /* Data Properties
    * **********************************************************************/
 
-  // Before the framework is initialized, Router.navigate pushes stuff into
-  // this array.  Once the framework loads it is flushed and deleted.
-  this.pendingNavigations = [];
+  // Before the framework is initialized, Router.navigate overwrites this, then
+  // once the framework is initialized we actually perform the nav and delete this.
+  this.cachedNav = "/";
 
   this.mountPoint = mountPoint;
   this.root = Root;
@@ -176,7 +174,7 @@ function MakeRouter(Root, mountPoint) {
   }
 
   this.UpdateBrowserUrl = (url) => {
-    history.replaceState({}, "", `${this.mountPoint}${url}`);
+    // history.replaceState({}, "", `${this.mountPoint}${url}`);
   }
 
   this.PullUrlFromDocument = () => {
@@ -195,7 +193,7 @@ function MakeRouter(Root, mountPoint) {
   // Stub method to cache navigations before the framework is fully loaded
   this.navigate = function(targetRoute) {
     console.log("Caching nav to ", targetRoute);
-    this.pendingNavigations.push(targetRoute);
+    this.cachedNav = targetRoute;
   }
 
   this.OnNavEvent = (e) => {

@@ -11,7 +11,7 @@ ul {
 
 code {
   display: block;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 p, code, img {
@@ -69,6 +69,7 @@ h6, .h6 {
 
 img {
   max-width: 400px;
+  width: 98%;
 }
 
 
