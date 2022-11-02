@@ -19,6 +19,7 @@
     <!-- <script src="/route-credits.js"> </script> -->
     <script src="/route-console.js"> </script>
   </head>
+
   <body class="display-none">
     <div class="route" data-route="/404">
       <span> Oops, couldn't find that. </span>
@@ -31,23 +32,33 @@
     </div>
 
     <div id="vim" class="route" data-route="/vim">
-      <div class="yield"></div>
 
       <ul id="link-bar">
 
-           <li class="ele-1"><a id="home-link" class="ele-inner">Home</a></li><!--
-        --><li class="arrow-right ele-2"><a id="credits-link" class="ele-inner">Credits</a></li><!--
-        --><li class="arrow-right ele-final"></li><!--
+           <li class="arrow-right ele-left-1"><a id="home-link" class="ele-inner">Home</a></li><!--
+        --><li class="arrow-right ele-left-2"><a id="blog-link" class="ele-inner">Blog</a></li><!--
+        --><li class="arrow-right ele-left-3"><a id="resume-link" class="ele-inner">Resume</a></li><!--
         --><li><span class="ele-inner comment">scallywag.software</span></li><!--
-
-
-        --><li class="right ele-3"><a id="intro-link" class="ele-inner">Replay Intro</a></li><!--
-        --><li class="arrow-left ele-final"></li>
+        --><li class="arrow-left ele-right-1"><a id="credits-link" class="ele-inner">Credits</a></li><!--
+        --><li class="arrow-left ele-right-2"><a id="intro-link" class="ele-inner">Replay Intro</a></li>
 
       </ul> <!-- #link-bar -->
 
+      <div class="yield"></div>
+
     </div> <!-- #vim -->
 
+
+    <div id="vim-inner" class="route" data-route="/vim/blog">
+      <div class="yield hover-underline" onclick='Redirect(ROUTE_VIM_BLOG_IMPROVE_TEXT_RENDERING)'>
+        <h2 class="click-expand" >Improving text rendering in Bonsai</h2>
+        <h5>Nov 1, 2022</h5>
+      </div>
+    </div>
+
+    <div class="route" data-url="/blog/improving-text-rendering.html" data-route="/vim/blog/improving-text-rendering">
+      <h2>Improving text rendering in Bonsai</h2>
+    </div>
 
     <div id="vim-inner" class="route" data-route="/vim/credits">
       <div class="indented">
@@ -57,21 +68,22 @@
     </div>
 
     <div id="vim-inner" class="route" data-url="/resume.html" data-route="/vim/resume">
-      Loading ..
+      <div>Loading resume, stand by ..</div>
+      <div>Red 5 standing by!</div>
     </div>
 
     <div id="vim-inner" class="route" data-route="/vim/index">
-      <div>
-        <span class="h1 gets-typed">scallywag() </span><span class="h1 gets-typed">{</span>
-      </div>
+      <!-- <div> -->
+        <!-- <span class="h1 gets-typed">scallywag() </span><span class="h1 gets-typed">{</span> -->
+      <!-- </div> -->
 
-      <div class="indented">
-        <h2 class="gets-typed click-expand">about()</h2>
+      <div class="">
+        <h2 class="gets-typed click-expand hover-underline">about()</h2>
         <div class="indented display-none">
           <p>
             Hi, my name is Jesse.  I'm a man of simple tastes.  I like
             computers, nature, and travelling.  Lately I've been spending most
-            of my time programming, surfing or skiing.
+            of my time programming, surfing or snowboarding.
           </p>
           <p>
             I'm a minimalist at heart.  A philosophy I believe in is software
@@ -82,20 +94,20 @@
         </div>
       </div>
 
-      <div class="indented">
-        <h2 class="gets-typed click-expand">interests()</h2>
+      <div class="">
+        <h2 class="gets-typed click-expand hover-underline">interests()</h2>
         <div class="indented display-none">
           <p>
             I've always had an itch to build developer tooling, and I've
             developed a strong interest in compilers recently.  I've been working
             on a metaprogramming system for the C programming language.  It's
-            called poof, and can be found in the oss_contributions section
+            called poof, and can be found in the open_source section
           </p>
           <p>
             In the past I've been inspired by the work of Casey Muratori on
             <a href=http://handmadehero.org>Handmade Hero</a> and decided
             to write a 3D game engine from scratch.  It's called Bonsai, and
-            can can be found in the oss_contributions section.
+            can can be found in the open_source section.
           </p>
           <p>
             Outside of writing software I can be found backcountry skiing,
@@ -104,8 +116,8 @@
         </div>
       </div>
 
-      <div class="indented">
-        <h2 class="gets-typed click-expand">oss_contributions()</h2>
+      <div class="">
+        <h2 class="gets-typed click-expand hover-underline">open_source()</h2>
         <div class="indented display-none">
           <p>
             <a target=_blank href=https://scallyw4g.github.io/poof>poof</a>
@@ -126,13 +138,8 @@
         </div>
       </div>
 
-      <div class="indented">
-        <h2 class="gets-typed click-expand" onclick='HandleResumeClick()'>resume()</h2>
-        <div></div>
-      </div>
-
-      <div class="indented">
-        <h2 class="gets-typed click-expand">say_hi()</h2>
+      <div class="">
+        <h2 class="gets-typed click-expand hover-underline">say_hi()</h2>
         <div class="indented display-none">
           <p>
             I'm always looking for interesting things to work on!  If you think I
@@ -142,7 +149,8 @@
         </div>
       </div>
 
-      <span class="h1 gets-typed">} </span><span class="h1 gets-typed comment">// </span><span class="h1 gets-typed comment">:) </span>
+      <!-- <span class="h1 gets-typed">} </span> -->
+      <span class="h2 gets-typed comment">// </span><span class="h2 gets-typed comment">:) </span>
     </div> <!-- #vim-inner -->
 
   </body>

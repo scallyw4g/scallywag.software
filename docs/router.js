@@ -174,7 +174,7 @@ function MakeRouter(Root, mountPoint) {
   }
 
   this.UpdateBrowserUrl = (url) => {
-    // history.replaceState({}, "", `${this.mountPoint}${url}`);
+    history.replaceState({}, "", `${this.mountPoint}${url}`);
   }
 
   this.PullUrlFromDocument = () => {
