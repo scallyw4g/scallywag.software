@@ -104,10 +104,10 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
     Assert(TargetRoute);
     Assert(TargetRoute.AnimationStatus instanceof AnimationStatus);
 
-    // if (TargetRoute.Name === "/404")
-    //   Router.UpdateBrowserUrl("/404");
-    // else
-    //   Router.UpdateBrowserUrl(UrlRootResolved);
+    if (TargetRoute.Name === "/404")
+      Router.UpdateBrowserUrl("/404");
+    else
+      Router.UpdateBrowserUrl(UrlRootResolved);
 
     if (this.Current) { console.log("Navigating from %s to %s", this.Current.Name, TargetRoute.Name); }
 
