@@ -90,7 +90,7 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
   Assert(State instanceof AppState);
 
-  Router.navigate = (url) => {
+  Router.navigate = async (url) => {
     console.log("router.navigate", url);
     document.body.onclick = null;
 
@@ -121,13 +121,15 @@ document.addEventListener( USER_CALLBACKS_COMPLETE, (Event) => {
 
     if (TargetRoute.Url && TargetRoute.RemoteDocument == null)
     {
-      fetch(TargetRoute.Url)
+      await fetch(TargetRoute.Url)
         .then( r => r.text() )
         .then( html => {
           TargetRoute.RemoteDocument = HTMLElementFromString(html);
           Render(TargetRoute.Name, Router);
           RunInitAndMain(State, TargetRoute)
         });
+
+      Assert(TargetRoute.RemoteDocument);
     }
     else
     {

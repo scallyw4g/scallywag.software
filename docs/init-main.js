@@ -209,25 +209,32 @@ const Render = (RoutePath, Router) => {
 
       if (RenderRoute.RemoteDocument)
       {
-        DomToUse = RenderRoute.RemoteDocument.body.children[0];
-
-        // NOTE(Jesse): This is omega-barf, but it's literally the only way of
-        // using styles from an external source without appending the entire
-        // external source verbatim to the current document.  Sigh..
-        let newSheetText = "";
-        for (let sheetIndex = 0; sheetIndex < RenderRoute.RemoteDocument.styleSheets.length; ++sheetIndex)
+        if (0)
         {
-          let srcSheet = RenderRoute.RemoteDocument.styleSheets[sheetIndex];
+          DomToUse = RenderRoute.RemoteDocument.body.children[0];
 
-          for (let ruleIndex = 0; ruleIndex < srcSheet.cssRules.length; ++ruleIndex)
+          // NOTE(Jesse): This is omega-barf, but it's literally the only way of
+          // using styles from an external source without appending the entire
+          // external source verbatim to the current document.  Sigh..
+          let newSheetText = "";
+          for (let sheetIndex = 0; sheetIndex < RenderRoute.RemoteDocument.styleSheets.length; ++sheetIndex)
           {
-            newSheetText += " " + srcSheet.cssRules[ruleIndex].cssText;
-          }
-        }
+            let srcSheet = RenderRoute.RemoteDocument.styleSheets[sheetIndex];
 
-        let newSheet = new CSSStyleSheet();
-        newSheet.replaceSync(newSheetText);
-        StylesToUse = [newSheet];
+            for (let ruleIndex = 0; ruleIndex < srcSheet.cssRules.length; ++ruleIndex)
+            {
+              newSheetText += " " + srcSheet.cssRules[ruleIndex].cssText;
+            }
+          }
+
+          let newSheet = new CSSStyleSheet();
+          newSheet.replaceSync(newSheetText);
+          StylesToUse = [newSheet];
+        }
+        else
+        {
+          DomToUse = RenderRoute.RemoteDocument.children[0];
+        }
       }
 
 
