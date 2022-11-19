@@ -120,6 +120,7 @@ h4, .h4 {
 }
 
 #vim #link-bar {
+  overflow: hidden;
   padding: 0;
   margin: 0;
 
