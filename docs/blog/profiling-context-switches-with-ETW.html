@@ -207,6 +207,8 @@ class CSwitch : Thread_V2
   PVOID                            UserContext;
 };</code>
 
+    <p> Well that's not too bad, what's this EVENT_HEADER thing?</p>
+
 <code>struct EVENT_HEADER
 {
   USHORT           Size;
@@ -229,6 +231,8 @@ class CSwitch : Thread_V2
 };
 </code>
 
+    <p> Okay, that's getting pretty meaty now, what else we got?</p>
+
 <code>struct EVENT_DESCRIPTOR
 {
   USHORT    Id;
@@ -239,6 +243,8 @@ class CSwitch : Thread_V2
   USHORT    Task;
   ULONGLONG Keyword;
 };</code>
+
+    <p> Okay, that seems useful ..  </p>
 
 <code>struct ETW_BUFFER_CONTEXT
 {
@@ -252,6 +258,8 @@ class CSwitch : Thread_V2
   USHORT LoggerId;
 };</code>
 
+    <p> Uhh .. </p>
+
 <code>struct EVENT_HEADER_EXTENDED_DATA_ITEM {
   USHORT    Reserved1;
   USHORT    ExtType;
@@ -263,9 +271,10 @@ class CSwitch : Thread_V2
   ULONGLONG DataPtr;
 };</code>
 
-    <p> Woah, that's a fat struct.  Oh, and it's scattered across 5 documentation pages.  </p>
+    <p> Jeez.  That's a fat struct.  Oh, and it's scattered across 5 documentation pages.  </p>
     <p> Oh, and the type names aren't clickable; you have to go find the links in the member descriptions.  </p>
     <p> Oh, and that's not all the definitions; I omittted GUID and LARGE_INTEGER which are, in fact, more structs.  </p>
+    <p> Oh, and I removed a bunch of garbage that makes the definitions much harder to read on the actual docs.</p>
     <p> FML </p>
     <p> Okay, breathe.  </p>
 
