@@ -1,0 +1,350 @@
+<body>
+  <div>
+    <h5>Dec 15, 2022</h5>
+    <h1>Profiling Context Switch Timing with ETW</h1>
+    <h2>Or, spelunking in "The Worst Docs Ever Written"</h2>
+
+    <p>
+      I'm not the first person to call ETW the "worst API ever made".  That
+      honor belongs to the venerable
+      <a target='_blank' href="https://caseymuratori.com/blog_0025">Casey Muratori</a>, who
+      wrote about it back in 2014.  While he was writing that, I was but a wee
+      little programmer who didn't know ETW existed, let alone what a context
+      switch was.  Today, I'd like to propose here that ETW has gotten,
+      shockingly, _worse_ than it was back then.  Not because the API has
+      changed much (although I believe there are some subtle differences, which
+      do make it worse), but because there are new, "better" ways of using ETW,
+      which are unilaterally: don't use it directly.  All this has resulted in,
+      in my opinon, "The Worst Documentation Ever Written".  Let's dive in.
+    </p>
+
+    <h2>Introduction</h2>
+    <p>
+      The ETW documentation is extremely hostile towards users that would like
+      to start a kernel tracing session for profiling context switches (or,
+      presumably, any other kernel events).
+    </p>
+
+    <p>
+      Now, you may be wondering, why on earth would anyone want to know when
+      the scheduler performed a context switch?  Well, the full answer to that
+      question is well beyond the scope of this article, but suffice to say
+      context switches cost cycles, and arguably more importantly, the
+      scheduler is likely to set up the next thread with a cache that's not
+      well primed for it's workload.  So, the short answer is, more context
+      switches may equal slower program, but sometimes not.  Straightforward,
+      right?
+    </p>
+
+    <p>
+      I wanted to get this information so I could see exactly when, and on
+      which cores, my program was running.  Here's a screenshot of a typical
+      frame from a game I'm working on.  There's stuff going on, but a notable
+      lack of context-switch information.  Let's remedy that.
+    </p>
+
+    <img class="full-width" src="/assets/call_graph_no_context_switches.png"></img>
+
+    <p>
+      If you haven't read <a target='_blank' href="https://caseymuratori.com/blog_0025">Casey's blog/rant</a>
+      on ETW, now's a good time to at least skim that.  It's a good read.  From
+      here on out I'll assume you're familiar with starting a kernel tracing
+      session with ETW.
+    </p>
+
+    <h2>Chapter One: The obvious path</h2>
+    <p>
+      So, once we've started a tracing session, opened the session with the
+      kernel provider, and started processing events (with <code class="inline">StartTrace()</code>,
+      <code class="inline">OpenTrace()</code> and <code class="inline">ProcessTrace()</code>
+      respectively), things are looking good.  All that's left to do is
+      interpret the events, and then we can draw some context switches to the
+      screen!  Sounds easy enough .. let's open up the
+      <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/consuming-events">documentation</a>.
+    </p>
+
+    <p>
+      Most of the preamble on that page is stuff we've learned by reading
+      Casey's post (or, at your peril, the MSDN docs).  Near the bottom there's
+      a paragraph that reads:
+      <quote>
+        For an example that shows how to consume events published source using a
+        manifest, MOF, or TMF files, see
+        <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/retrieving-event-data-using-tdh">Retrieving Event Data Using TDH</a>.
+        Note that beginning with Windows Vista, you should use the trace data
+        helper (TDH) functions to consume events.
+      </quote>
+    </p>
+
+    <p>
+      Well, I don't know if context switch events are manifest, MOF, or TMF
+      events, or wtf TDH is, but whatever.  That says we should use TDH because
+      we're running a modern version of Windows.  Let's go read that stuff real
+      quick.
+    </p>
+
+    <p>
+      They link to four examples, <strong>totalling 2811 lines</strong> of C++. Jesus. Fuck.
+    </p>
+
+    <p>
+      Okay, back to square one; I'm not adding that to my codebase.
+    </p>
+
+    <h2>Chapter Two: The hidden path</h2>
+    <p>
+      Let's try and figure out what type of event a context switch is.
+      Naturally, it turned out to be impossible to search MSDN for the
+      <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/cswitch">CSwitch</a>
+      struct, but Google turned it up right away.
+    </p>
+    <p>
+      From MSDN:
+
+      <quote>The following syntax is simplified from MOF code.</quote>
+      <code>[EventType{36}, EventTypeName{"CSwitch"}]
+class CSwitch : Thread_V2
+{
+  uint32 NewThreadId;
+  uint32 OldThreadId;
+  sint8  NewThreadPriority;
+  sint8  OldThreadPriority;
+  uint8  PreviousCState;
+  sint8  SpareByte;
+  sint8  OldThreadWaitReason;
+  sint8  OldThreadWaitMode;
+  sint8  OldThreadState;
+  sint8  OldThreadWaitIdealProcessor;
+  uint32 NewThreadWaitTime;
+  uint32 Reserved;
+};</code>
+
+      Well, that looks like what we want .. I guess context switches are MOF events.
+    </p>
+
+    <p>
+      As it turns out, MOF events are the oldest type of ETW event.  That
+      tracks, so let's go back to the page on 
+      <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/consuming-events">Consuming Events</a>,
+      to see if
+      there are any more clues.  Oh, and hopefully we don't have to deal with
+      all the base-classes for this event, because it's the fourth level deep
+      in the event hierarchy.  Yikes.
+    </p>
+
+    <p>
+      So, back on
+      <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/consuming-events">Consuming Events</a>,
+      literally the last line on the page is another link:
+      <quote>
+        For an example that shows how to consume events published using MOF, see 
+        <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/retrieving-event-data-using-mof">Retrieving Event Data Using MOF.</a>
+      </quote>
+    </p>
+
+    <p>
+      Great, that's exactly what we want to do! Let's check it out.
+    </p>
+
+    <p>
+      There's some preamble that has some good pointers there, like:
+      <quote>All the kernel events use MOF to publish the format of the event data.</quote>
+    </p>
+
+    <p>
+      So far so good! And some (maybe misleading) information like:
+    </p>
+
+    <quote>Because ETW does not force an alignment between event data values, typecasting or assigning the value directly from a buffer may cause an alignment fault; you should not create a structure from the MOF class and try to use it to consume event data. </quote>
+
+    <p>
+      Okay, kinda weird, but I guess in a very general eventing system like ETW it's good to be memory efficient.
+    </p>
+
+    <p>
+    And then.. you find it.  Another <strong>1348 lines</strong> of glorious example code.  Fuck.  Why the fucking .. <strong>fuck</strong>!
+    </p>
+
+    <p>
+      Surely the scheduler (who's presumably responsible for writing these
+      context switch events) isn't doing anything so insanely convoluted.  The
+      Windows scheduler was written at a time when we had less cycles to waste,
+      so it <strong>must</strong> be efficient, right?!
+    </p>
+
+    <h2>Chapter Three: The fools path</h2>
+    <p>
+      Well, we can come back to the example code as a last resort, but I'm not
+      convinced that's the only way to get what we want.  Let's take a closer
+      look at the structure of the actual event we're receiving.
+    </p>
+
+<code>struct EVENT_RECORD
+{
+  EVENT_HEADER                     EventHeader;
+  ETW_BUFFER_CONTEXT               BufferContext;
+  USHORT                           ExtendedDataCount;
+  USHORT                           UserDataLength;
+  PEVENT_HEADER_EXTENDED_DATA_ITEM ExtendedData;
+  PVOID                            UserData;
+  PVOID                            UserContext;
+};</code>
+
+<code>struct EVENT_HEADER
+{
+  USHORT           Size;
+  USHORT           HeaderType;
+  USHORT           Flags;
+  USHORT           EventProperty;
+  ULONG            ThreadId;
+  ULONG            ProcessId;
+  LARGE_INTEGER    TimeStamp;
+  GUID             ProviderId;
+  EVENT_DESCRIPTOR EventDescriptor;
+  union {
+    struct {
+      ULONG KernelTime;
+      ULONG UserTime;
+    };
+    ULONG64 ProcessorTime;
+  };
+  GUID             ActivityId;
+};
+</code>
+
+<code>struct EVENT_DESCRIPTOR
+{
+  USHORT    Id;
+  UCHAR     Version;
+  UCHAR     Channel;
+  UCHAR     Level;
+  UCHAR     Opcode;
+  USHORT    Task;
+  ULONGLONG Keyword;
+};</code>
+
+<code>struct ETW_BUFFER_CONTEXT
+{
+  union {
+    struct {
+      UCHAR ProcessorNumber;
+      UCHAR Alignment;
+    };
+    USHORT ProcessorIndex;
+  };
+  USHORT LoggerId;
+};</code>
+
+<code>struct EVENT_HEADER_EXTENDED_DATA_ITEM {
+  USHORT    Reserved1;
+  USHORT    ExtType;
+  struct {
+    USHORT Linkage : 1;
+    USHORT Reserved2 : 15;
+  };
+  USHORT    DataSize;
+  ULONGLONG DataPtr;
+};</code>
+
+    <p> Woah, that's a fat struct.  Oh, and it's scattered across 5 documentation pages.  </p>
+    <p> Oh, and the type names aren't clickable; you have to go find the links in the member descriptions.  </p>
+    <p> Oh, and that's not all the definitions; I omittted GUID and LARGE_INTEGER which are, in fact, more structs.  </p>
+    <p> FML </p>
+    <p> Okay, breathe.  </p>
+
+    <p>
+      Let's take a look at a screenshot of one of those bad boys expanded in
+      <a target='_blank' href="https://remedybg.handmade.network/">RemedyBG</a>.
+    </p>
+
+    <img class="full-width" src="/assets/remedy_etw_event.png"></img>
+
+    <p>
+      There are a few interesting values in there.  First, both
+      <code class="inline">ThreadId</code> and <code class="inline">ProcessId</code> are
+      <code class="inline">ULONG_MAX</code>, which are not very helpful values.
+      I believe that is something that's changed since Casey wrote his article;
+      you used to get the ProcessId and ThreadId, but it appears that's no
+      longer true.
+    </p>
+
+    <p>
+      Another interesting value is <code class="inline">Opcode=36</code>.  That
+      happens to be the <code class='inline'>EventType</code> that the
+      <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/cswitch">CSwitch</a>
+      struct specifies .. so I guess this might be a context switch event ..?
+    </p>
+
+    <p>
+      In the <code class='inline'>BufferContext</code> object we get the
+      <code class='inline'>ProcessorIndex</code>, which is something
+      useful to know.  Unfortunately it doesn't tell you which physical core
+      it's on; getting that information is a story for another blog post.
+    </p>
+
+    <p>
+      And then, halleleuja, would you look at that, dress me in velvet and
+      spank my bottom, there are <code class="inline">UserDataLength=24</code> and
+      <code class="inline">UserData=&#60;pointer-looking-thing&#62;</code>!!  And
+      <code class="inline">UserDataLength</code> just happens to match the size of the
+      <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/cswitch">CSwitch</a>
+      struct!  If you turn on <code class="inline">#pragma push(pack, 1)</code>, of course.
+      Anyhow, fuck yea!!  Let's get to casting!
+    </p>
+
+    <p>
+      To be safe, we should probably memcpy because of the alignment issue the
+      docs mentioned earlier, but I did try casting, and it seems to work.
+
+    <code>context_switch_event *SystemEvent = (context_switch_event*)Event->UserData;</code>
+      Versus:
+    <code>context_switch_event SystemEvent;
+MemCopy( (u8*)Event->UserData, (u8*)&SystemEvent, sizeof(context_switch_event));</code>
+
+      Since both work, and this code only runs on dev machines, I'm just going to cast for now.
+    </p>
+
+    <h2>Epilogue</h2>
+    <p>
+      So, in closing, I spent an entire day chasing my tail around MSDN, read
+      through almost 4500 lines of OOPs-y example code for clues, ended up
+      looking for other codebases that do this (big surprise, I couldn't find
+      any) and, in the end, had to make educated guesses by looking at the
+      runtime values I was seeing.
+    </p>
+
+    <p>
+      <strong>LOOKING FOR ONE LINE OF CODE</strong>
+    </p>
+
+    <p>
+      The lesson here is, don't trust the MSDN documentation much, and
+      certainly don't take the example code, or their recommendations, as gospel.
+    </p>
+
+    <p>
+      Feel free to take a look at the code that I wrote to do this in
+      <a target='_blank' href="https://github.com/scallyw4g/bonsai_debug/blob/master/headers/win32_etw.cpp">win32_etw.cpp</a>.
+      That should be more-or-less everything you need to get started.  Happy context-switching!
+    </p>
+
+    <p>
+      Finally, I'll leave you with some pretty pictures of our hard-won context
+      switch data on the screen.  The small colored bar above the fat colored
+      bars indicates which logical core the thread is running on at any given
+      time.  A gap in the thin bars means the thread's been swapped out!
+    </p>
+
+    <img class="full-width" src="/assets/call_graph_with_context_switches.png"></img>
+    <img class="full-width" src="/assets/call_graph_with_context_switches_2.png"></img>
+    <img class="full-width" src="/assets/call_graph_with_context_switches_3.png"></img>
+    <img class="full-width" src="/assets/call_graph_with_context_switches_4.png"></img>
+
+    <p>
+      Next up, a new "Cores" view showing what thread is running on each
+      physical core at a given time.
+    </p>
+
+  </div>
+</body>
+

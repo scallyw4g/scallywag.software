@@ -21,15 +21,21 @@
   </head>
 
   <body class="display-none">
+
+    <!-- ! -->
+
     <div class="route" data-route="/404">
       <span> Oops, couldn't find that. </span>
     </div>
 
+    <!-- ! -->
 
     <div id="intro" class="route" data-route="/intro">
       <span class="h2">~ </span><span class="h2 gets-typed">vim </span><span class="h2 gets-typed">scallywag.software </span>
       <div><span class="h2 gets-typed"> </span></div>
     </div>
+
+    <!-- ! -->
 
     <div id="vim" class="route" data-route="/vim">
 
@@ -48,18 +54,35 @@
 
     </div> <!-- #vim -->
 
+    <!-- ! -->
 
     <div id="vim-inner" class="route blog" data-route="/vim/blog">
       <div class="yield hover-underline" onclick='Redirect(ROUTE_VIM_BLOG_IMPROVE_TEXT_RENDERING)'>
         <h5>Nov 1, 2022</h5>
         <h1>Improving Bonsai text rendering - Part 1</h1>
       </div>
+
+      <div class="yield hover-underline" onclick='Redirect(ROUTE_VIM_BLOG_PROFILING_CONTEXT_SWITCHES)'>
+        <h5>Dec 15, 2022</h5>
+        <h1>Profiling Context Switch Timing with ETW</h1>
+      </div>
     </div>
+
+    <!-- ! -->
 
     <div class="route" data-url="/blog/improving-text-rendering.html" data-route="/vim/blog/improving-text-rendering">
       <h5>Nov 1, 2022</h5>
       <h1>Improving Bonsai text rendering - Part 1</h1>
     </div>
+
+    <!-- ! -->
+
+    <div class="route" data-url="/blog/profiling-context-switches-with-ETW.html" data-route="/vim/blog/profiling-context-switches-with-ETW">
+      <h5>Dec 15, 2022</h5>
+      <h1>Profiling Context Switch Timing with ETW</h1>
+    </div>
+
+    <!-- ! -->
 
     <div id="vim-inner" class="route" data-route="/vim/credits">
       <div class="indented">
@@ -68,10 +91,14 @@
       </div>
     </div>
 
+    <!-- ! -->
+
     <div id="vim-inner" class="route" data-url="/resume.html" data-route="/vim/resume">
       <div>Loading resume, stand by ..</div>
       <div>Red 5 standing by!</div>
     </div>
+
+    <!-- ! -->
 
     <div id="vim-inner" class="route" data-route="/vim/index">
       <!-- <div> -->
