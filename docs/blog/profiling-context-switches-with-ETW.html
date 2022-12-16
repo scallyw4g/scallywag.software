@@ -5,42 +5,53 @@
     <h2>Or, spelunking in "The Worst Docs Ever Written"</h2>
 
     <p>
-      I'm not the first person to call ETW the "worst API ever made".  That
+      I'm hardly the first person to call ETW the "Worst API Ever Made".  That
       honor belongs to the venerable
       <a target='_blank' href="https://caseymuratori.com/blog_0025">Casey Muratori</a>, who
       wrote about it back in 2014.  While he was writing that, I was but a wee
       little programmer who didn't know ETW existed, let alone what a context
-      switch was.  Today, I'd like to propose here that ETW has gotten,
-      shockingly, _worse_ than it was back then.  Not because the API has
-      changed much (although I believe there are some subtle differences, which
-      do make it worse), but because there are new, "better" ways of using ETW,
-      which are unilaterally: don't use it directly.  All this has resulted in,
-      in my opinon, "The Worst Documentation Ever Written".  Let's dive in.
+      switch was.
+    </p>
+    <p>
+      Today, I'd like to propose here that ETW has gotten, shockingly, even
+      worse than it was back then.  Not because the API has changed much
+      (although there are some subtle differences), but because there are new,
+      improved ways of using ETW, and the documentation for using said new
+      services impoverishes ones ability to get to the bottom of using the 'old'
+      stuff, ie. kernel tracing.
+    </p>
+
+    <p>
+      By the way, the 'new' ways you use ETW are unilaterally: "Don't use it
+      directly, use this system that calls it for you instead."  This has
+      resulted in "The Worst Documentation Ever Written".  And really, who
+      would be surprised?  Shouldn't the worst API also have the worst
+      documentation?
+    </p>
+
+    <p>
+      Anyway, let's dive in.
     </p>
 
     <h2>Introduction</h2>
     <p>
-      The ETW documentation is extremely hostile towards users that would like
-      to start a kernel tracing session for profiling context switches (or,
-      presumably, any other kernel events).
-    </p>
-
-    <p>
       Now, you may be wondering, why on earth would anyone want to know when
-      the scheduler performed a context switch?  Well, the full answer to that
-      question is well beyond the scope of this article, but suffice to say
-      context switches cost cycles, and arguably more importantly, the
-      scheduler is likely to set up the next thread with a cache that's not
-      well primed for it's workload.  So, the short answer is, more context
-      switches may equal slower program, but sometimes not.  Straightforward,
-      right?
+      the scheduler performed a context switch?
+    </p>
+    <p>
+      Well, the full answer to that question is well beyond the scope of this
+      article, but suffice to say context switches cost cycles, and arguably
+      more importantly, the scheduler is likely to set up the next thread with
+      a cache that's not well primed for it's workload.  So, the short answer
+      is, more context switches may equal slower program, but sometimes not.
+      Straightforward, right?
     </p>
 
     <p>
-      I wanted to get this information so I could see exactly when, and on
-      which cores, my program was running.  Here's a screenshot of a typical
-      frame from a game I'm working on.  There's stuff going on, but a notable
-      lack of context-switch information.  Let's remedy that.
+      I want this information so I can see exactly when, and on which cores, my
+      program is running.  Here's a screenshot of a typical frame from a game
+      I'm working on.  There's stuff going on, but a notable lack of
+      context-switch information.  Let's remedy that.
     </p>
 
     <img class="full-width" src="/assets/call_graph_no_context_switches.png"></img>
@@ -77,29 +88,34 @@
     </p>
 
     <p>
-      Well, I don't know if context switch events are manifest, MOF, or TMF
-      events, or wtf TDH is, but whatever.  That says we should use TDH because
-      we're running a modern version of Windows.  Let's go read that stuff real
-      quick.
+      Well, I don't know if context switch events are 'manifest', MOF, or TMF
+      events, or wtf <italic>TDH</italic> is, but whatever.  That quote says we
+      should use TDH because we're running a modern version of Windows.  Let's
+      go read <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/retrieving-event-data-using-tdh">Retrieving Event Data Using TDH</a>.
+      real quick.
     </p>
 
     <p>
-      They link to four examples, <strong>totalling 2811 lines</strong> of C++. Jesus. Fuck.
+      That page links to four examples, <strong>totalling 2811 lines</strong> of C++. Fuck.
     </p>
 
     <p>
-      Okay, back to square one; I'm not adding that to my codebase.
+      Okay, back to square one; I'm not adding that to my codebase, and I'm
+      sure as hell not trying to understand it deeply unless it's my only option.
     </p>
 
     <h2>Chapter Two: The hidden path</h2>
     <p>
       Let's try and figure out what type of event a context switch is.
+    </p>
+    <p>
       Naturally, it turned out to be impossible to search MSDN for the
       <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/cswitch">CSwitch</a>
-      struct, but Google turned it up right away.
+      struct (unless you knew the name already), but Google turned it up right away.
     </p>
     <p>
       From MSDN:
+    </p>
 
       <quote>The following syntax is simplified from MOF code.</quote>
       <code>[EventType{36}, EventTypeName{"CSwitch"}]
@@ -119,6 +135,7 @@ class CSwitch : Thread_V2
   uint32 Reserved;
 };</code>
 
+    <p>
       Well, that looks like what we want .. I guess context switches are MOF events.
     </p>
 
@@ -260,12 +277,15 @@ class CSwitch : Thread_V2
     <img class="full-width" src="/assets/remedy_etw_event.png"></img>
 
     <p>
-      There are a few interesting values in there.  First, both
-      <code class="inline">ThreadId</code> and <code class="inline">ProcessId</code> are
-      <code class="inline">ULONG_MAX</code>, which are not very helpful values.
-      I believe that is something that's changed since Casey wrote his article;
-      you used to get the ProcessId and ThreadId, but it appears that's no
-      longer true.
+      There are a few interesting values in there.
+    </p>
+    <p>
+      First, both <code class="inline">ThreadId</code> and
+      <code class="inline">ProcessId</code> are <code class="inline">ULONG_MAX</code>,
+      which are not very helpful values.  I believe that is something that's
+      changed since Casey wrote his article; you used to get the ProcessId and
+      ThreadId, but it appears that's no longer true.  We now have to dig for
+      that data, and in particular ProcessId is hidden behind another syscall.
     </p>
 
     <p>
@@ -283,26 +303,32 @@ class CSwitch : Thread_V2
     </p>
 
     <p>
-      And then, halleleuja, would you look at that, dress me in velvet and
+      And then, you turn the corner and, halleleuja, would you look at that, dress me in velvet and
       spank my bottom, there are <code class="inline">UserDataLength=24</code> and
       <code class="inline">UserData=&#60;pointer-looking-thing&#62;</code>!!  And
       <code class="inline">UserDataLength</code> just happens to match the size of the
       <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/cswitch">CSwitch</a>
       struct!  If you turn on <code class="inline">#pragma push(pack, 1)</code>, of course.
-      Anyhow, fuck yea!!  Let's get to casting!
+      Anyway .. fuck yeah!!  Let's get to casting!
     </p>
 
     <p>
       To be safe, we should probably memcpy because of the alignment issue the
       docs mentioned earlier, but I did try casting, and it seems to work.
-
-    <code>context_switch_event *SystemEvent = (context_switch_event*)Event->UserData;</code>
-      Versus:
-    <code>context_switch_event SystemEvent;
-MemCopy( (u8*)Event->UserData, (u8*)&SystemEvent, sizeof(context_switch_event));</code>
-
-      Since both work, and this code only runs on dev machines, I'm just going to cast for now.
     </p>
+
+<code>context_switch_event *SystemEvent =
+                   (context_switch_event*)Event->UserData;</code>
+
+    <p> Versus: </p>
+
+<code>context_switch_event SystemEvent;
+
+MemCopy( (u8*)Event->UserData,
+         (u8*)&SystemEvent,
+         sizeof(context_switch_event));</code>
+
+    <p> Since both work, and this code only runs on dev machines, I'm just going to cast for now.  </p>
 
     <h2>Epilogue</h2>
     <p>
@@ -313,8 +339,11 @@ MemCopy( (u8*)Event->UserData, (u8*)&SystemEvent, sizeof(context_switch_event));
       runtime values I was seeing.
     </p>
 
+    <p> <strong>THIS WAS ALL LOOKING FOR A SINGLE LINE OF CODE</strong> </p>
+
     <p>
-      <strong>LOOKING FOR ONE LINE OF CODE</strong>
+      Surely, Microsoft, other people want to do this without adding thousands
+      of lines of code to their projects.
     </p>
 
     <p>
