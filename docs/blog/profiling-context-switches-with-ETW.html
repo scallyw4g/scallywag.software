@@ -4,29 +4,39 @@
     <h1>Profiling Context Switch Timing with ETW</h1>
     <h2>Or, spelunking in "The Worst Docs Ever Written"</h2>
 
+    <h2>Disclaimer</h2>
+    <p>
+      This post is 80% rant, 15% good information, 5% pretty pictures.  If
+      you're just interested in how to actually decode context switch events,
+      skip ahead to "Chapter 3".
+    </p>
+
+    <h2>Preface</h2>
     <p>
       I'm hardly the first person to call ETW the "Worst API Ever Made".  That
-      honor belongs to the venerable
-      <a target='_blank' href="https://caseymuratori.com/blog_0025">Casey Muratori</a>, who
-      wrote about it back in 2014.  While he was writing that, I was but a wee
-      little programmer who didn't know ETW existed, let alone what a context
-      switch was.
+      badge of honor belongs to the venerable
+      <a target='_blank' href="https://caseymuratori.com/blog_0025">Casey Muratori</a>,
+      who wrote about it back in 2014.  While he was writing that, I was but a
+      wee little programmer who didn't know ETW existed, let alone what a
+      context switch was.
     </p>
     <p>
       Today, I'd like to propose here that ETW has gotten, shockingly, even
       worse than it was back then.  Not because the API has changed much
-      (although there are some subtle differences), but because there are new,
-      improved ways of using ETW, and the documentation for using said new
-      services impoverishes ones ability to get to the bottom of using the 'old'
-      stuff, ie. kernel tracing.
+      (although there are some subtle differences), but because the
+      documentation has turned into a mud-pie of english-and-c++ soup.  As far
+      as I can tell, this is because there are new, improved ways of using ETW,
+      and the documentation for using said new services impoverishes ones
+      ability to get to the bottom of using the 'old' stuff, ie. kernel
+      tracing.
     </p>
 
     <p>
       By the way, the 'new' ways you use ETW are unilaterally: "Don't use it
       directly, use this system that calls it for you instead."  This has
-      resulted in "The Worst Documentation Ever Written".  And really, who
-      would be surprised?  Shouldn't the worst API also have the worst
-      documentation?
+      resulted in what I would qualify as "The Worst Documentation Ever
+      Written".  And really, who would be surprised?  Shouldn't the worst API
+      also have the worst documentation?
     </p>
 
     <p>
@@ -35,22 +45,26 @@
 
     <h2>Introduction</h2>
     <p>
-      Now, you may be wondering, why on earth would anyone want to know when
-      the scheduler performed a context switch?
+      You may be wondering, why on earth would anyone want to know when the
+      scheduler performed a context switch?
     </p>
     <p>
       Well, the full answer to that question is well beyond the scope of this
-      article, but suffice to say context switches cost cycles, and arguably
-      more importantly, the scheduler is likely to set up the next thread with
-      a cache that's not well primed for it's workload.  So, the short answer
-      is, more context switches may equal slower program, but sometimes not.
+      article, but suffice to say context switches cost cycles and, arguably
+      more importantly, the scheduler may set up the next thread with a cache
+      that's not well primed for it's workload.  So, the short answer is, more
+      context switches may make a slower program, or maybe sometimes not, and
+      you need them, so here's some context switches for you.
+    </p>
+    <p>
       Straightforward, right?
     </p>
 
     <p>
-      I want this information so I can see exactly when, and on which cores, my
-      program is running.  Here's a screenshot of a typical frame from a game
-      I'm working on.  There's stuff going on, but a notable lack of
+      In more concrete terms, I want this information so I can see exactly
+      when, and on which cores, my program is running.  And if there's a lot of
+      thrashing going on anywhere.  Here's a screenshot of a typical frame from
+      a game I'm working on.  There's stuff going on, but a notable lack of
       context-switch information.  Let's remedy that.
     </p>
 
@@ -91,8 +105,12 @@
       Well, I don't know if context switch events are 'manifest', MOF, or TMF
       events, or wtf <italic>TDH</italic> is, but whatever.  That quote says we
       should use TDH because we're running a modern version of Windows.  Let's
-      go read <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/retrieving-event-data-using-tdh">Retrieving Event Data Using TDH</a>.
+      go read <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/retrieving-event-data-using-tdh">Retrieving Event Data Using TDH</a>
       real quick.
+    </p>
+
+    <p>
+      ... drumroll ...
     </p>
 
     <p>
@@ -136,23 +154,21 @@ class CSwitch : Thread_V2
 };</code>
 
     <p>
-      Well, that looks like what we want .. I guess context switches are MOF events.
+      Great, that looks like exactly what we want.  I guess context switches
+      are MOF events.  Hopefully we don't have to deal with all the
+      base-classes for this event, because it's the fourth level deep in the
+      event hierarchy.  Yikes.
     </p>
 
     <p>
       As it turns out, MOF events are the oldest type of ETW event.  That
       tracks, so let's go back to the page on 
       <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/consuming-events">Consuming Events</a>,
-      to see if
-      there are any more clues.  Oh, and hopefully we don't have to deal with
-      all the base-classes for this event, because it's the fourth level deep
-      in the event hierarchy.  Yikes.
+      to see if there are any more clues.
     </p>
 
     <p>
-      So, back on
-      <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/consuming-events">Consuming Events</a>,
-      literally the last line on the page is another link:
+      Literally the last line on that page is another link:
       <quote>
         For an example that shows how to consume events published using MOF, see 
         <a target='_blank' href="https://learn.microsoft.com/en-us/windows/win32/etw/retrieving-event-data-using-mof">Retrieving Event Data Using MOF.</a>
@@ -160,7 +176,7 @@ class CSwitch : Thread_V2
     </p>
 
     <p>
-      Great, that's exactly what we want to do! Let's check it out.
+      Great, that's also exactly what we want!!  Things are looking up; let's check it out.
     </p>
 
     <p>
@@ -169,7 +185,7 @@ class CSwitch : Thread_V2
     </p>
 
     <p>
-      So far so good! And some (maybe misleading) information like:
+      So far so good! And some information like:
     </p>
 
     <quote>Because ETW does not force an alignment between event data values, typecasting or assigning the value directly from a buffer may cause an alignment fault; you should not create a structure from the MOF class and try to use it to consume event data. </quote>
@@ -179,14 +195,18 @@ class CSwitch : Thread_V2
     </p>
 
     <p>
-    And then.. you find it.  Another <strong>1348 lines</strong> of glorious example code.  Fuck.  Why the fucking .. <strong>fuck</strong>!
+      And then.. you find it.
+    </p>
+
+    <p>
+      Another <strong>1348</strong> glorious lines of example code for decoding events.  Fuck.  Why the fucking .. <strong>fuck</strong>!
     </p>
 
     <p>
       Surely the scheduler (who's presumably responsible for writing these
       context switch events) isn't doing anything so insanely convoluted.  The
-      Windows scheduler was written at a time when we had less cycles to waste,
-      so it <strong>must</strong> be efficient, right?!
+      Windows scheduler was written in a time when cycles were precious, so it
+      <strong>must</strong> be efficient, right?!
     </p>
 
     <h2>Chapter Three: The fools path</h2>
@@ -207,7 +227,7 @@ class CSwitch : Thread_V2
   PVOID                            UserContext;
 };</code>
 
-    <p> Well that's not too bad, what's this EVENT_HEADER thing?</p>
+    <p> Well that's not too bad, but what's this EVENT_HEADER thing?</p>
 
 <code>struct EVENT_HEADER
 {
@@ -231,7 +251,7 @@ class CSwitch : Thread_V2
 };
 </code>
 
-    <p> Okay, that's getting pretty meaty now, what else we got?</p>
+    <p> Okay, that's getting pretty meaty.  What else we got?</p>
 
 <code>struct EVENT_DESCRIPTOR
 {
@@ -258,9 +278,10 @@ class CSwitch : Thread_V2
   USHORT LoggerId;
 };</code>
 
-    <p> Uhh .. </p>
+    <p> Uhh .. why another struct for that? </p>
 
-<code>struct EVENT_HEADER_EXTENDED_DATA_ITEM {
+<code>struct EVENT_HEADER_EXTENDED_DATA_ITEM
+{
   USHORT    Reserved1;
   USHORT    ExtType;
   struct {
@@ -271,12 +292,12 @@ class CSwitch : Thread_V2
   ULONGLONG DataPtr;
 };</code>
 
-    <p> Jeez.  That's a fat struct.  Oh, and it's scattered across 5 documentation pages.  </p>
-    <p> Oh, and the type names aren't clickable; you have to go find the links in the member descriptions.  </p>
+    <p> Holy fatstruct batman, that's a fat struct. Oh, and it's scattered across 5 documentation pages.  </p>
+    <p> Oh, and the type names aren't clickable; you have to scroll around and find the links in the member descriptions.  </p>
     <p> Oh, and that's not all the definitions; I omittted GUID and LARGE_INTEGER which are, in fact, more structs.  </p>
     <p> Oh, and I removed a bunch of garbage that makes the definitions much harder to read on the actual docs.</p>
     <p> FML </p>
-    <p> Okay, breathe.  </p>
+    <p> Okay, deep breath. </p>
 
     <p>
       Let's take a look at a screenshot of one of those bad boys expanded in
