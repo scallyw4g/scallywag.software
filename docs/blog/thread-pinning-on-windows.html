@@ -1,0 +1,170 @@
+<body>
+  <div>
+    <h5>Jan 5, 2023</h5>
+    <h1>Pinning worker threads to physical cores on Windows</h1>
+
+    <h3>Preface</h3>
+    <p>
+      After Googling around for a nominal amount of time, I couldn't find any
+      resources that told me exactly what I wanted to know.  After goofing
+      around for a couple hours, I decided to write down what I learned in the
+      hopes that it'll help someone else looking for this in the future.
+      Probably myself.
+    </p>
+
+    <p>
+      One resource I did find that has some information and pseudo-code that
+      looks kind-of similar to what we want is on the Intel site.  Search for
+      <code class='inline'>GetLogicalProcessorInformation</code> on this
+      <a href="https://www.intel.cn/content/www/cn/zh/developer/articles/guide/12th-gen-intel-core-processor-gamedev-guide.html">Intel article</a>.
+    </p>
+
+    <h3>Introduction</h3>
+    <p>
+      First of all, why would one want to pin a thread to a physical core?
+      Well the answer, as is becoming usual around here, is performance.  If
+      you tell the OS to only schedule your thread on logical cores hosted on
+      the same physical core, it has a much higher chance of waking up with a
+      cache primed for it's workload.
+    </p>
+
+    <p>
+      Before we continue, a word of caution; doing this requires (reasonably)
+      careful profiling, and comes with a list of caveats.  I won't go through
+      them all here, but the most important one to keep in mind is that if you
+      start more worker threads than you have logical cores, you're probably
+      going to have a bad time.  This is sort-of universally true, but becomes
+      more important as you get further down the optimization rabbit-hole.
+    </p>
+
+    <p>
+      So, without further ado, let's see the code.
+    </p>
+
+    <p>
+      The first step is to count the number of physical cores on your machine
+      using <code class='inline'>GetLogicalProcessorInformationEx</code>.
+    </p>
+
+<code>SYSTEM_INFO sysinfo;
+GetSystemInfo(&sysinfo);
+
+unsigned long LogicalProcessorCount = (u32)sysinfo.dwNumberOfProcessors;
+
+unsigned long AllocatedSize =
+    sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX)*LogicalProcessorCount;
+
+SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *RelationshipBuffer =
+    (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)Allocate(AllocatedSize);
+
+if (GetLogicalProcessorInformationEx(
+        RelationProcessorCore,
+        RelationshipBuffer,
+        &AllocatedSize)
+  )
+{
+  // Count physical processors
+  u32 PhysicalCoreCount = 0;
+
+  SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *Info = RelationshipBuffer;
+  for (u32 Offset = 0; Offset < AllocatedSize; Offset += Info->Size)
+  {
+    Info = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)((u8*)Info + Info->Size);
+    Assert(Info->Processor.GroupCount == 1);
+    PhysicalCoreCount++;
+  }
+}
+else
+{
+  SoftError("GetLogicalProcessorInformationEx Failed");
+}</code>
+
+    <p>
+      There's a fair bit going on here, so I'll point out the important bits:
+    </p>
+
+    <p>
+    The first argument to <code class='inline'>GetLogicalProcessorInformationEx()</code> is a symbolic
+      constant; "RelationshipType".  There are a few values you can pass, but
+      the one we're interested in says "I'm interested in logical processors
+      that share a physical core."
+    </p>
+
+    <p>
+      The other two parameters are the buffer it's going to write the results
+      to, and the size of the buffer.  It returns a nonzero value on success.
+    </p>
+
+    <p>
+      If that function succeeds, we step through the buffer it returns to us
+      and tally up the number of cores we've got.
+    </p>
+
+    <p>
+      Now, with that information, we can create one thread per physical core,
+      and use "<code class='inline'>SetThreadAffinityMask</code>" to pin it to
+      only logical cores that share a physical core.
+    </p>
+
+<code>SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *ProcessorInfo = RelationshipBuffer;
+
+for (u32 CoreIndex = 0; CoreIndex < PhysicalCoreCount; ++CoreIndex)
+{
+  HANDLE ThreadHandle = CreateThread(0, 0, ThreadMain, 0, 0, 0);
+  SetThreadAffinityMask(ThreadHandle, ProcessorInfo->Processor.GroupMask->Mask);
+
+  ProcessorInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)
+                    ((u8*)ProcessorInfo + ProcessorInfo->Size);
+}
+</code>
+
+    <p>
+      That's all pretty straight-forward, with the exception of the second
+      argument to <code class='inline'>SetThreadAffinityMask</code>, which is
+      where the magic happens.  That pile of accesses is for a 64-bit bitmask
+      representing which logical cores belong to that physical processor, which
+      is exactly what <code class='inline'>SetThreadAffinityMask</code> expects
+      to be fed.  Neat-o gang!
+    </p>
+
+    <p>
+      So there you have it.  Go forth and prosper, pinning threads to your
+      physical cores as you do!
+    </p>
+
+    <p>
+      And I'll leave you, good reader, with a pretty picture showing frames of
+      a game with and without pinning.
+    </p>
+
+    <img class="full-width" src="/assets/call_graph_thread_pinning_example.png"></img>
+
+    <p>
+      I left the main thread unpinned for this screenshot, and the worker
+      threads are pinned.  Notice the small colorful bars which represent which
+      logical core a thread is running on.  If you zoom in, you can see Thread
+      0 (the main thread) gets swapped around onto 6 different cores!
+    </p>
+
+    <p>
+      The net result was a pretty marginal savings on frame time at rest, and
+      under high-load.
+    </p>
+
+    <figure class='inline-block'>
+      <img src="/assets/frame_time_without_thread_pinning.png"></img>
+      <figcaption> Threads Unpinned </figcaption>
+    </figure>
+
+    <figure class='inline-block'>
+      <img src="/assets/frame_time_with_thread_pinning.png"></img>
+      <figcaption> Threads Pinned </figcaption>
+    </figure>
+
+    <p>
+      The source code that I used as a reference for this blog is in
+      <a href="https://github.com/scallyw4g/bonsai_stdlib/blob/77cf04a5552fb5c7e81da4096daab588a319d785/platform/win32_platform.cpp#L81">Bonsai</a>.
+    </p>
+
+  </div>
+</body>

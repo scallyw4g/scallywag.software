@@ -27,12 +27,15 @@ p, quote {
 p, code, img {
   padding: 0;
   margin: 0;
-  margin-bottom: 1.4rem;
+}
+
+p, code {
+  margin-bottom: 1.3rem;
 }
 
 code {
   display: block;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   padding: 0.5rem;
   white-space: break-spaces;
   border: 1px solid var(--background-light);
@@ -41,7 +44,7 @@ code {
 
 code.inline {
   display: inline;
-  font-size: 1rem;
+  font-size: 0.8rem;
   border-radius: 2px;
   padding: 0 0.2rem;
 }
@@ -65,22 +68,22 @@ h1, h2, h3, h4, h5, h6 {
 
 h1, .h1 {
   font-size: 2.0rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 h2, .h2 {
   font-size: 1.75rem;
-  margin-bottom: 0.3rem;
+  margin-bottom: 1.0rem;
 }
 
 h3, .h3 {
   font-size: 1.5rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.70rem;
 }
 
 h4, .h4 {
   font-size: 1.35rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
 h5, .h5 {
@@ -95,7 +98,6 @@ h6, .h6 {
 
 img {
   max-width: 600px;
-  width: 98%;
 }
 
 

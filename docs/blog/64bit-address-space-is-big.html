@@ -1,0 +1,115 @@
+
+<body>
+  <div>
+    <h5>date</h5>
+    <h1>title</h1>
+    <h2>tagline</h2>
+    <quote>
+      Space is big. You just won't believe how vastly, hugely, mind-bogglingly
+      big it is. I mean, you may think it's a long way down the road to the
+      chemist's, but that's just peanuts to space.
+    </quote>
+
+    <p>
+      -Douglas Adams, The Hitchhiker's Guide to the Galaxy
+    </p>
+
+    <p>
+      Mr. Adams really hit the nail on the head with that one.  And for 64-bit
+      address space, doubly so.  Today I want to put into perspective (mostly
+      for myself) how vastly, hugely, mind-bogglingly big the 64-bit address
+      space really is.
+    </p>
+
+    <p>
+      So, in absolute terms, the maximum value a 64-bit number can represent is
+      (2^64-1), or 18,446,744,073,709,551,615 in base 10.. which looks really
+      big to me.  Let's compare that to a few other really big numbers.
+    </p>
+
+    <p>
+      Estimates on the number of atoms in the observable universe range from
+      10^78 to 10^82.  Let's split the difference there and say there are 10^80
+      atoms out there.  That means, with a 64-bit pointer, we can address a very
+      small percentage of atoms in the universe; roughly 1.8^-59 percent.
+    </p>
+
+    <p>
+      Well, that's an underwhelming result.  Turns out space is
+      <strong>REALLY</strong> big.  And atoms are really small.  As it turns
+      out, if wanted a hunk of Aluminum with 2^64 atoms in it, you'd get
+      something roughly 2.9e15 meters cubed.  Pretty big, but hilariously small
+      given the scale of the universe.
+    </p>
+
+    <p>
+      What about time?  According to people smarter than me, the universe has
+      been around for ~13.7 billion years.  If we wanted to simulate the
+      lifetime of the universe to date, what kind of resolution could we get
+      with 64 bits?
+    </p>
+
+    <p>
+      First off, let's convert 13.7B years to seconds : 13700000*365*24*60*60 = ~4.3e14 seconds
+    </p>
+
+    <p>
+      Now, divide that by u64_max and we get 0.0000234211 seconds.  In other
+      words, with a 64 bit integer, we could simulate the lifetime of the
+      universe at a 23 microsecond granularity.  That's pretty good.
+    </p>
+
+    <p>
+      Viewing the lifetime of the universe through the lense of a game, if the
+      universe ran at 240fps (4.16ms/frame), with 64 bits we'd be able to count
+      frames for 177.8 lifetimes of our universe to date, or 2.44 trillion
+      years.  Wow.
+    </p>
+
+    <p>
+      What if we wanted to sample time at a small-but-still-worldly scale, like
+      the nanosecond?  CPUs execute operations on the order of nanoseconds, so
+      that seems a reasonable place to start.  How many hours can we pack into
+      64 bits at a nanosecond granularity?
+    </p>
+
+    <p>
+      5,124,095.57 hours, or 585 years.  Jeepers.
+    </p>
+
+    <p>
+      What about memory?  Let's say we're playing a modern game of some sort,
+      which consumes 10 gigabytes of memory at peak.  If we wanted to saturate
+      the 64-bit address space with that 10 gigabytes, how much space would we
+      have to waste?
+    </p>
+
+    <p>
+      For every byte the game allocated, 64 bits could address an addtional 1.8
+      terabytes.  That's right, 1.8 terabytes for every single byte allocated.
+    </p>
+
+    <p>
+      So, you may ask, what the heck can we do with all this space?  Well,
+      there are a few interesting things we can do.
+    </p>
+
+    <p>
+      Firstly, and maybe most obviously, we could not use all of it.  Modern
+      ISAs have instructions that let you pack 8-16 bits of whatever-you-want
+      into the top byte of a pointer.  This effectively reduces the address
+      space of a 64-bit pointer to 56 or 48 bits, and gives you some application
+      defined data per-pointer.  Pretty sweet tool for address sanitizers and
+      operating systems.
+    </p>
+
+    <p>
+      What about streaming datatypes?  Ever had a type of thing that might take
+      10 bytes, or 10MB?  Next time, maybe allocate a terabyte (or ten, or
+      whatever) of virtual address space, and have the operating system do the
+      rest.  Obviously this trick comes with a whole laundry-list of tradeoffs
+      that I won't go into here, but it's generally pretty useful.
+    </p>
+
+  </div>
+</body>

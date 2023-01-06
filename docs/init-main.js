@@ -21,6 +21,7 @@ const ROUTE_VIM_RESUME  = "/vim/resume";
 const ROUTE_VIM_BLOG                        = "/vim/blog";
 const ROUTE_VIM_BLOG_IMPROVE_TEXT_RENDERING = "/vim/blog/improving-text-rendering";
 const ROUTE_VIM_BLOG_PROFILING_CONTEXT_SWITCHES = "/vim/blog/profiling-context-switches-with-ETW";
+const ROUTE_VIM_BLOG_THREAD_PINNING_ON_WINDOWS  = "/vim/blog/thread-pinning-on-windows";
 
 const INTRO_ANIM_COMPLETE = "IntroAnimationComplete"
 const INDEX_ANIM_COMPLETE = "IndexAnimationComplete"

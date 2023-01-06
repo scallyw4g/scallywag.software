@@ -1,21 +1,22 @@
 <body>
   <div>
     <h5>Dec 15, 2022</h5>
-    <h1>Profiling Context Switch Timing with ETW</h1>
+    <h1>Decoding ETW Context Switch Events</h1>
     <h2>Or, spelunking in "The Worst Docs Ever Written"</h2>
 
-    <h2>Disclaimer</h2>
+    <h4>Disclaimer</h4>
     <p>
       This post is 80% rant, 15% good information, 5% pretty pictures.  If
       you're just interested in how to actually decode context switch events,
       skip ahead to "Chapter 3".
     </p>
 
-    <h2>Preface</h2>
+    <h3>Preface</h3>
     <p>
-      I'm hardly the first person to call ETW the "Worst API Ever Made".  That
-      badge of honor belongs to the venerable
-      <a target='_blank' href="https://caseymuratori.com/blog_0025">Casey Muratori</a>,
+      I'm hardly the first person to call ETW the
+      <a target='_blank' href="https://caseymuratori.com/blog_0025">"Worst API Ever Made"</a>.
+      That badge of honor belongs to the venerable
+      <a target='_blank' href="https://caseymuratori.com">Casey Muratori</a>,
       who wrote about it back in 2014.  While he was writing that, I was but a
       wee little programmer who didn't know ETW existed, let alone what a
       context switch was.
@@ -43,7 +44,7 @@
       Anyway, let's dive in.
     </p>
 
-    <h2>Introduction</h2>
+    <h3>Introduction</h3>
     <p>
       You may be wondering, why on earth would anyone want to know when the
       scheduler performed a context switch?
@@ -77,7 +78,7 @@
       session with ETW.
     </p>
 
-    <h2>Chapter One: The obvious path</h2>
+    <h3>Chapter One: The obvious path</h3>
     <p>
       So, once we've started a tracing session, opened the session with the
       kernel provider, and started processing events (with <code class="inline">StartTrace()</code>,
@@ -122,7 +123,7 @@
       sure as hell not trying to understand it deeply unless it's my only option.
     </p>
 
-    <h2>Chapter Two: The hidden path</h2>
+    <h3>Chapter Two: The hidden path</h3>
     <p>
       Let's try and figure out what type of event a context switch is.
     </p>
@@ -209,7 +210,7 @@ class CSwitch : Thread_V2
       <strong>must</strong> be efficient, right?!
     </p>
 
-    <h2>Chapter Three: The fools path</h2>
+    <h3>Chapter Three: The fools path</h3>
     <p>
       Well, we can come back to the example code as a last resort, but I'm not
       convinced that's the only way to get what we want.  Let's take a closer
@@ -360,16 +361,19 @@ MemCopy( (u8*)Event->UserData,
 
     <p> Since both work, and this code only runs on dev machines, I'm just going to cast for now.  </p>
 
-    <h2>Epilogue</h2>
+    <h3>Epilogue</h3>
     <p>
       So, in closing, I spent an entire day chasing my tail around MSDN, read
       through almost 4500 lines of OOPs-y example code for clues, ended up
       looking for other codebases that do this (big surprise, I couldn't find
-      any) and, in the end, had to make educated guesses by looking at the
-      runtime values I was seeing.
+      any)(EDIT: I was browsing profilers the other day and came across
+      <a href="https://github.com/wolfpld/tracy">Tracy</a>, which does
+      <a href="https://github.com/wolfpld/tracy/blob/master/public/client/TracySysTrace.cpp">exactly this</a>,
+      and more!) and, in the end, had to make educated guesses by looking at
+      the runtime values I was seeing.
     </p>
 
-    <p> <strong>THIS WAS ALL LOOKING FOR A SINGLE LINE OF CODE</strong> </p>
+    <p> <strong>THIS WAS ALL LOOKING FOR HOW TO CAST A POINTER</strong> </p>
 
     <p>
       Surely, Microsoft, other people want to do this without adding thousands

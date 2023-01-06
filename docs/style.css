@@ -67,34 +67,16 @@ code {
   color: var(--text-light);
 }
 
-h1, .h1 {
-  font-size: 2.0rem;
-  margin-bottom: 0.5rem;
-}
-
-h2, .h2 {
-  font-size: 1.6rem;
-  margin-bottom: 0.3rem;
-}
-
-h3, .h3 {
-  font-size: 1.4rem;
-  margin-bottom: 0.25rem;
-}
-
-h4, .h4 {
-  font-size: 1.2rem;
-  margin-bottom: 0.25rem;
+.blog h1 {
+  border-bottom: 2px solid var(--link-color-3);
 }
 
 .blog h2 {
   border-bottom: 2px solid var(--link-color-3);
-  margin-bottom: 1rem;
 }
 
 .blog h3 {
   border-bottom: 2px solid var(--link-color-2);
-  margin-bottom: 1rem;
 }
 
 img.full-width {
@@ -268,5 +250,9 @@ img.full-width {
 
 .float-right {
   float: right;
+}
+
+.inline-block {
+  display: inline-block;
 }
 
