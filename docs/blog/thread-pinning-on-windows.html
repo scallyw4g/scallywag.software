@@ -41,6 +41,7 @@
       So, without further ado, let's see the code.
     </p>
 
+    <h3>Main</h3>
     <p>
       The first step is to count the number of physical cores on your machine
       using <code class='inline'>GetLogicalProcessorInformationEx</code>.
@@ -108,7 +109,7 @@ else
 
 <code>SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *ProcessorInfo = RelationshipBuffer;
 
-for (u32 CoreIndex = 0; CoreIndex < PhysicalCoreCount; ++CoreIndex)
+for (u32 ThreadIndex = 0; ThreadIndex < PhysicalCoreCount; ++ThreadIndex)
 {
   HANDLE ThreadHandle = CreateThread(0, 0, ThreadMain, 0, 0, 0);
   SetThreadAffinityMask(ThreadHandle, ProcessorInfo->Processor.GroupMask->Mask);
@@ -127,6 +128,7 @@ for (u32 CoreIndex = 0; CoreIndex < PhysicalCoreCount; ++CoreIndex)
       to be fed.  Neat-o gang!
     </p>
 
+    <h3>Conclusion</h3>
     <p>
       So there you have it.  Go forth and prosper, pinning threads to your
       physical cores as you do!
@@ -147,8 +149,11 @@ for (u32 CoreIndex = 0; CoreIndex < PhysicalCoreCount; ++CoreIndex)
     </p>
 
     <p>
-      The net result was a pretty marginal savings on frame time at rest, and
-      under high-load.
+      The net result was a noticible, but somewhat marginal savings on frame
+      time, both at rest and under high-load.  Here we see a difference of
+      ~0.8ms/frame at idle.  I believe pinning may have also reduced frame time
+      variance, though 120 frames (the number tracked by this output) is not
+      enough resolution to say with much confidance.
     </p>
 
     <figure class='inline-block'>

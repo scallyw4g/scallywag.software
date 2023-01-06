@@ -29,8 +29,22 @@ p, code, img {
   margin: 0;
 }
 
-p, code {
+p, code, img {
   margin-bottom: 1.3rem;
+}
+
+figure img {
+  margin: 0;
+}
+
+
+figure {
+  background: var(--background-light);
+  padding: 8px;
+  border-radius: 12px;
+  font-size: .75rem;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 code {
