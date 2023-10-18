@@ -1,0 +1,56 @@
+<body>
+  <div>
+    <h5>Jun 7, 2022</h5>
+    <h1>Voxel Engine Implementaion Details FAQs</h1>
+    <h2>Answers to common Qs I see on Reddit</h2>
+
+    <h4>Disclaimer</h4>
+    <p>
+      While I've certainly been programming a while (10 years professionally),
+      I'm definitely not perfect, and I'm continually learning to be better.
+      Interpret these answers as guidance I would have given my younger self,
+      if I were blessed with a time-machine.  YMMV.
+    </p>
+
+    <h3>Q: How do I generate the exterior faces for voxels on the borders of a chunk?</h3>
+    <p>
+      The way I solve this is, at generation time (when you initialize a new
+      chunk), initialize a chunk whos dimention is 2 voxels larger that the one
+      you want to produce.  If you do this, and you can populate that 'halo'
+      with appropriate data, you can generate all the information you need to
+      build the mesh from that single buffer.  This approach has the attractive
+      quality of operating on a single block of memory, and thus is easily run
+      on multiple threads.  Once the mesh is generated, you have to copy the
+      interior voxels out of the larger chunk you initialized which are the
+      voxels you actually need to store.
+    </p>
+
+    <h3>Q: How should I store my world chunks?</h3>
+    <p>
+      I see a lot of folks around recommending using a hashtable to store chunks,
+      keyed by the world position of the chunk.  This can be a good idea, or it
+      can be a really bad idea, depending on the details.  If you're using C++
+      and you reach for std::unordered_map, stop right now.  That datastructure
+      has an almost comically large performance cliff when it rebalanaces, which
+      you desperately want to avoid.  A better idea is to write your own hashtable
+      that uses local probing.  Another option is to set the size of the world
+      to a statically known value at compile time (maybe 32x32x8 chunks?) and
+      allocate a table that is exactly the volume of that area, then you can
+      perfectly map the chunks you want to render into their respective slot
+      in that 'table'.  Yet another method is to use a persistant octree (as in,
+      not rebuilt on every frame), as the storage medium.  IIRC this is what
+      Avoyd does.
+    </p>
+    <p>
+      What I do is slightly weird.  I have a pair of local-probing hashtables
+      that I double buffer.  Every frame I re-insert every chunk into a freshly
+      cleared hashtable that acts as the source of truth for what's in the world
+      that frame.  This doesn't scale particularly well (IIRC 64k chunks is
+      about the upper limit), but it's simple, has a stable cost, and allows
+      for easily resizing the visible region into the world across frames, which
+      is an appropriate tradeoff for my engine.
+    </p>
+
+  </div>
+</body>
+
