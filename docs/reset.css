@@ -20,6 +20,12 @@ quote {
   background: var(--background-light);
 }
 
+quote p
+{
+  margin: 0;
+  padding: 0.3rem;
+}
+
 p, quote {
   font-family: serif;
 }

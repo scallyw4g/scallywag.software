@@ -136,23 +136,25 @@
       From MSDN:
     </p>
 
-      <quote>The following syntax is simplified from MOF code.</quote>
-      <code>[EventType{36}, EventTypeName{"CSwitch"}]
-class CSwitch : Thread_V2
-{
-  uint32 NewThreadId;
-  uint32 OldThreadId;
-  sint8  NewThreadPriority;
-  sint8  OldThreadPriority;
-  uint8  PreviousCState;
-  sint8  SpareByte;
-  sint8  OldThreadWaitReason;
-  sint8  OldThreadWaitMode;
-  sint8  OldThreadState;
-  sint8  OldThreadWaitIdealProcessor;
-  uint32 NewThreadWaitTime;
-  uint32 Reserved;
-};</code>
+    <quote>The following syntax is simplified from MOF code.</quote>
+    <code>
+    [EventType{36}, EventTypeName{"CSwitch"}]
+    class CSwitch : Thread_V2
+    {
+      uint32 NewThreadId;
+      uint32 OldThreadId;
+      sint8  NewThreadPriority;
+      sint8  OldThreadPriority;
+      uint8  PreviousCState;
+      sint8  SpareByte;
+      sint8  OldThreadWaitReason;
+      sint8  OldThreadWaitMode;
+      sint8  OldThreadState;
+      sint8  OldThreadWaitIdealProcessor;
+      uint32 NewThreadWaitTime;
+      uint32 Reserved;
+    };
+    </code>
 
     <p>
       Great, that looks like exactly what we want.  I guess context switches
@@ -217,81 +219,90 @@ class CSwitch : Thread_V2
       look at the structure of the actual event we're receiving.
     </p>
 
-<code>struct EVENT_RECORD
-{
-  EVENT_HEADER                     EventHeader;
-  ETW_BUFFER_CONTEXT               BufferContext;
-  USHORT                           ExtendedDataCount;
-  USHORT                           UserDataLength;
-  PEVENT_HEADER_EXTENDED_DATA_ITEM ExtendedData;
-  PVOID                            UserData;
-  PVOID                            UserContext;
-};</code>
+    <code>
+    struct EVENT_RECORD
+    {
+      EVENT_HEADER                     EventHeader;
+      ETW_BUFFER_CONTEXT               BufferContext;
+      USHORT                           ExtendedDataCount;
+      USHORT                           UserDataLength;
+      PEVENT_HEADER_EXTENDED_DATA_ITEM ExtendedData;
+      PVOID                            UserData;
+      PVOID                            UserContext;
+    };
+    </code>
 
     <p> Well that's not too bad, but what's this EVENT_HEADER thing?</p>
 
-<code>struct EVENT_HEADER
-{
-  USHORT           Size;
-  USHORT           HeaderType;
-  USHORT           Flags;
-  USHORT           EventProperty;
-  ULONG            ThreadId;
-  ULONG            ProcessId;
-  LARGE_INTEGER    TimeStamp;
-  GUID             ProviderId;
-  EVENT_DESCRIPTOR EventDescriptor;
-  union {
-    struct {
-      ULONG KernelTime;
-      ULONG UserTime;
+    <code>
+    struct EVENT_HEADER
+    {
+      USHORT           Size;
+      USHORT           HeaderType;
+      USHORT           Flags;
+      USHORT           EventProperty;
+      ULONG            ThreadId;
+      ULONG            ProcessId;
+      LARGE_INTEGER    TimeStamp;
+      GUID             ProviderId;
+      EVENT_DESCRIPTOR EventDescriptor;
+      union {
+        struct {
+          ULONG KernelTime;
+          ULONG UserTime;
+        };
+        ULONG64 ProcessorTime;
+      };
+      GUID             ActivityId;
     };
-    ULONG64 ProcessorTime;
-  };
-  GUID             ActivityId;
-};
-</code>
+    </code>
 
     <p> Okay, that's getting pretty meaty.  What else we got?</p>
 
-<code>struct EVENT_DESCRIPTOR
-{
-  USHORT    Id;
-  UCHAR     Version;
-  UCHAR     Channel;
-  UCHAR     Level;
-  UCHAR     Opcode;
-  USHORT    Task;
-  ULONGLONG Keyword;
-};</code>
+    <code>
+    struct EVENT_DESCRIPTOR
+    {
+      USHORT    Id;
+      UCHAR     Version;
+      UCHAR     Channel;
+      UCHAR     Level;
+      UCHAR     Opcode;
+      USHORT    Task;
+      ULONGLONG Keyword;
+    };
+    </code>
 
     <p> Okay, that seems useful ..  </p>
 
-<code>struct ETW_BUFFER_CONTEXT
-{
-  union {
-    struct {
-      UCHAR ProcessorNumber;
-      UCHAR Alignment;
+    <code>
+    struct ETW_BUFFER_CONTEXT
+    {
+      union {
+        struct {
+          UCHAR ProcessorNumber;
+          UCHAR Alignment;
+        };
+        USHORT ProcessorIndex;
+      };
+      USHORT LoggerId;
     };
-    USHORT ProcessorIndex;
-  };
-  USHORT LoggerId;
-};</code>
+    </code>
 
     <p> Uhh .. why another struct for that? </p>
 
-<code>struct EVENT_HEADER_EXTENDED_DATA_ITEM
-{
-  USHORT    Reserved1;
-  USHORT    ExtType;
-  struct {
-    USHORT Linkage : 1;
-    USHORT Reserved2 : 15;
-  };
-  USHORT    DataSize;
-  ULONGLONG DataPtr;
-};</code>
+    <code>
+    struct EVENT_HEADER_EXTENDED_DATA_ITEM
+    {
+      USHORT    Reserved1;
+      USHORT    ExtType;
+      struct {
+        USHORT Linkage : 1;
+        USHORT Reserved2 : 15;
+      };
+      USHORT    DataSize;
+      ULONGLONG DataPtr;
+    };
+    </code>
 
     <p> Holy fatstruct batman, that's a fat struct. Oh, and it's scattered across 5 documentation pages.  </p>
     <p> Oh, and the type names aren't clickable; you have to scroll around and find the links in the member descriptions.  </p>
@@ -348,16 +359,20 @@ class CSwitch : Thread_V2
       docs mentioned earlier, but I did try casting, and it seems to work.
     </p>
 
-<code>context_switch_event *SystemEvent =
-                   (context_switch_event*)Event->UserData;</code>
+    <code>
+    context_switch_event *SystemEvent =
+                     (context_switch_event*)Event->UserData;
+    </code>
 
     <p> Versus: </p>
 
-<code>context_switch_event SystemEvent;
+    <code>
+    context_switch_event SystemEvent;
 
-MemCopy( (u8*)Event->UserData,
-         (u8*)&SystemEvent,
-         sizeof(context_switch_event));</code>
+    MemCopy( (u8*)Event->UserData,
+             (u8*)&SystemEvent,
+             sizeof(context_switch_event));
+    </code>
 
     <p> Since both work, and this code only runs on dev machines, I'm just going to cast for now.  </p>
 

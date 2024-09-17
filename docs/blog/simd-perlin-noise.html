@@ -269,8 +269,8 @@
     </code>
 
     <p>
-      Basically, we're just storing four floats in one of these <code class='inline'>_m128</code>
-      things (<code class='inline'>#include &lt;xmmintrin.h&gt;</code>), which
+      Basically, we're just overlaying four floats on top of these <code class='inline'>_m128</code>
+      things (<code class='inline'>#include &lt;intrin.h&gt;</code>), which
       is the C++ representation of a 128-bit register.  And with a few operator
       overloads, our <code class='inline'>lerp</code> magically evolves into a
       <code class='inline'>Lerp4x</code>!
@@ -324,7 +324,7 @@
     </code>
 
     <p>
-      Becomes ..
+      They become ..
     </p>
 
     <code>
@@ -381,12 +381,10 @@
       there are predicates, and we haven't dealt with branching yet.  Not to worry.
     </p>
 
-    <p>
-      "Where there's a will, there's a way, and I have a way!"
-    </p>
-    <p>
-      -Donkey
-    </p>
+    <quote>
+      <p>"Where there's a will, there's a way, and I have a way!"</p>
+      <p>-Donkey</p>
+    </quote>
 
 
     <p>
@@ -553,8 +551,20 @@
       <code class='inline'>lerp</code>.
     </p>
 
+    <p>
+      Instead of doing a single voxel, we're now set up to do <i>four voxels</i>
+      in parallel, eliminating our need to downshift to scalar and saturating
+      our instruction potential.  The reason I didn't go to four voxels wide
+      right off the bat was so that I could implement Lerp4x and Grad4x and
+      debug them in an environemnt that was confirmed working, and port the
+      algorithm piece-by-piece.  I also think it made this article a little more
+      approachable, which was a nice bonus.
+    </p>
+
     <code>
-    for (u32 VoxelIndex = 0; VoxelIndex < 8; VoxelIndex +=4) // Notice we advance by 4 each loop!
+    // Here we compute 4 noise cells per loop iteration!
+
+    for (u32 VoxelIndex = 0; VoxelIndex < 8; VoxelIndex +=4)
     {
       //
       // data setup omitted for brevity.  Take a look at the <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/2e1e8e4bf618a3eba301eadf22f35ef6d9852f42/src/perlin.h#L241'>complete function</a> on Github
@@ -590,14 +600,6 @@
       Result[VoxelIndex+3] = Res.E[3];
     }
     </code>
-
-    <p>
-      Instead of doing a single voxel, we're now set up to do <i>four voxels</i>
-      in parallel, eliminating our need to downshift to scalar and saturating
-      our instruction potential.  If I'm being honest, there wasn't really a reason
-      to not do 4-voxels-wide from the start, except that I felt it made this
-      article more approachable.
-    </p>
 
 
     <figure class='inline-block'>
