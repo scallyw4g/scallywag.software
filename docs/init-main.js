@@ -23,6 +23,7 @@ const ROUTE_VIM_BLOG_IMPROVE_TEXT_RENDERING     = "/vim/blog/improving-text-rend
 const ROUTE_VIM_BLOG_PROFILING_CONTEXT_SWITCHES = "/vim/blog/profiling-context-switches-with-ETW";
 const ROUTE_VIM_BLOG_THREAD_PINNING_ON_WINDOWS  = "/vim/blog/thread-pinning-on-windows";
 const ROUTE_VIM_BLOG_VOXEL_ENGINE_FAQ           = "/vim/blog/voxel-engine-faq";
+const ROUTE_VIM_BLOG_SIMD_PERLIN_NOISE          = "/vim/blog/simd-perlin-noise";
 
 const INTRO_ANIM_COMPLETE = "IntroAnimationComplete"
 const INDEX_ANIM_COMPLETE = "IndexAnimationComplete"

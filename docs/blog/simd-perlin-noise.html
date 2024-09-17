@@ -1,0 +1,623 @@
+<body>
+  <div>
+    <h5>Sept 16, 2024</h5>
+    <h1>SIMD Perlin Noise</h1>
+    <h2>Beating the compiler for fun and profit!</h2>
+
+    <h3>TL;DR</h3>
+    <p>
+      Wrote some 4-wide SIMD code, ended up with a core algorithm that looks
+      almost identical to the original, although there's a lot more data setup code.
+    </p>
+    <p>
+      Went from 102.7 to 36.2 cycles per voxel to compute Perlin noise.
+    </p>
+    <p>
+      Go slow, port your code piece by piece, ensuring you have a working project
+      at every step of the way.
+    </p>
+
+
+    <h3>Preface</h3>
+    <p>
+      I was recently working on an octree-based LoD system for my voxel engine
+      <a href="https://github.com/scallyw4g/bonsai">Bonsai</a> and became
+      dissatisfied with the performance of my Perlin noise implementation.  So,
+      naturally I decided to get completely side-tracked and port it to use SIMD!
+    </p>
+    <p>
+      Aside: Every once in a while, I get comments along the lines of "Ohhh,
+      honey, don't try to write assembly yourself.  It's too hard!  The
+      optimizer will take care of it for you!!!  You'll never beat the
+      compiler!!1!  What about premature optimization!?!1?1?".  Obviously that
+      sentiment is nonsense, and this felt like a good opportunity to make a
+      small example that illustrates the process of taking an existing piece of
+      scalar code and porting it to SIMD.
+    </p>
+    <p>
+      And, since there are no grownups around, I'm going for it!
+    </p>
+
+    <h3>Overview</h3>
+    <p>
+      For the uninitiated, Perlin noise is a grid-based noise which (more or
+      less) calculates a pseudorandom vector at each grid cell and interpolates
+      between them.  A full explanation is beyond the scope of this article,
+      but you could take a look at this excellent blog post at 
+      <a href="https://adrianb.io/2014/08/09/perlinnoise.html">adrianb.io</a>
+      for a more in-depth explanation.
+    </p>
+
+    <figure class='inline-block'>
+      <img src="/assets/perlin_grid.png"></img>
+      <figcaption>Perlin gradients & intensities.</figcaption>
+      <figcaption>Source: <a href="https://en.wikipedia.org/wiki/Perlin_noise">Wikipedia</a></figcaption>
+    </figure>
+
+    <h3>Current Implementation</h3>
+    <p>
+      The implementation I started with is pretty bog-standard.  It's a direct
+      port of Ken Perlins original Java source to my own C++ codebase.  I've
+      omitted some details for brevity, but the full
+      <a href="https://github.com/scallyw4g/bonsai_stdlib/blob/2e1e8e4bf618a3eba301eadf22f35ef6d9852f42/src/perlin.h#L174">
+        source code</a> is available.
+    </p>
+
+    <code>
+  f32 PerlinNoise(f32 x, f32 y, f32 z)
+  {
+    // Find the unit cube that contains the point
+    if (x < 0) x -= 1.f;
+    if (y < 0) y -= 1.f;
+    if (z < 0) z -= 1.f;
+
+    u32 Xi = u32(x) & 255;
+    u32 Yi = u32(y) & 255;
+    u32 Zi = u32(z) & 255;
+
+    // Find relative x,y,z of point in cube
+    x -= Floorf(x);
+    y -= Floorf(y);
+    z -= Floorf(z);
+
+    // Compute fade curves for each of x, y, z
+    f32 u = fade(x);
+    f32 v = fade(y);
+    f32 w = fade(z);
+
+    // Hash coordinates of the 8 cube corners
+    u32 A  = (u32)Global_PerlinHashValues[Xi]  + Yi;
+    u32 AA = (u32)Global_PerlinHashValues[A]   + Zi;
+    u32 AB = (u32)Global_PerlinHashValues[A+1] + Zi;
+    u32 B  = (u32)Global_PerlinHashValues[Xi+1]+ Yi;
+    u32 BA = (u32)Global_PerlinHashValues[B]   + Zi;
+    u32 BB = (u32)Global_PerlinHashValues[B+1] + Zi;
+
+    // Yikes
+    return lerp(w,
+             lerp(v,
+               lerp(u, grad(Global_PerlinHashValues[AA  ], x  , y  , z   ),
+                       grad(Global_PerlinHashValues[BA  ], x-1, y  , z   )),
+               lerp(u, grad(Global_PerlinHashValues[AB  ], x  , y-1, z   ),
+                       grad(Global_PerlinHashValues[BB  ], x-1, y-1, z   ))),
+             lerp(v,
+               lerp(u, grad(Global_PerlinHashValues[AA+1], x  , y  , z-1 ),
+                       grad(Global_PerlinHashValues[BA+1], x-1, y  , z-1 )),
+               lerp(u, grad(Global_PerlinHashValues[AB+1], x  , y-1, z-1 ),
+                       grad(Global_PerlinHashValues[BB+1], x-1, y-1, z-1 ))));
+
+    res = (res + 1.0f)/2.0f;
+
+    return res;
+  }
+    </code>
+
+    <h3>Baseline Measurement</h3>
+    <p>
+      I setup a small test scene which initializes 1485 world chunks sized
+      72x72x72 with 6 octaves of Perlin noise.  Our baseline implementation
+      chugs along at ~230,000,000 cycles per chunk, which works out to about
+      102.7 cycles/voxel.
+    </p>
+    <p>
+      One interesting thing about this profile is it reliably gets slower near
+      the end.  I didn't diagnose the cause, but I did at least rule out thermal throttling.
+    </p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_baseline.png"></img>
+      <figcaption>Baseline: 102.7 cycles/voxel</figcaption>
+    </figure>
+
+
+    <h3>Quick n' Dirty Tricks (and, API redesign)</h3>
+    <p>
+      One quick-n-dirty trick that helps the optimizer figure it's shit out is
+      making static loops for it to unroll, and optimize across.  We can make a
+      wrapper function that just calls <code class='inline'>PerlinNoise</code> 8 times.
+    </p>
+    <p>
+      Conveniently, this is also the first step in moving to our SIMD
+      implementation; making a new function signature that can take multiple
+      inputs, and produce multiple outputs.
+    </p>
+
+    <code>
+      void PerlinNoise_8x(f32 *x, f32 y, f32 z f32 *Result)
+      {
+        for (u32 Index = 0; Index < 8; ++Index)
+        {
+          Result[Index] = PerlinNoise(x[Index], y, z);
+        }
+      }
+    </code>
+
+    <p>
+      Even this nacho-cheezey trick gets us a pretty good win, shaving off ~25M
+      cycles per chunk.
+    </p>
+
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_checkin_1.png"></img>
+      <figcaption> Current: 91.5 cycles/voxel</figcaption>
+      <figcaption> Baseline: 102.7 cycles/voxel</figcaption>
+    </figure>
+
+    <h3>Factoring</h3>
+    <p>
+      The first real transformation we're going to make on this code is to
+      'factor' the code such that there are no nested expressions.  Basically,
+      manually convert the code to SSA form, such that one expression is
+      assigned to a single variable, and not modified.  This does nothing to
+      make the runtime faster, but gives us a much better starting place
+      for the next steps.  In particular, this monster lerp-grad-fest needs help:
+    </p>
+
+
+    <code>
+      // Yikes
+
+      lerp(w,
+        lerp(v,
+          lerp(u, grad(Global_PerlinHashValues[AA  ], x  , y  , z   ),
+                  grad(Global_PerlinHashValues[BA  ], x-1, y  , z   )),
+          lerp(u, grad(Global_PerlinHashValues[AB  ], x  , y-1, z   ),
+                  grad(Global_PerlinHashValues[BB  ], x-1, y-1, z   ))),
+        lerp(v,
+          lerp(u, grad(Global_PerlinHashValues[AA+1], x  , y  , z-1 ),
+                  grad(Global_PerlinHashValues[BA+1], x-1, y  , z-1 )),
+          lerp(u, grad(Global_PerlinHashValues[AB+1], x  , y-1, z-1 ),
+                  grad(Global_PerlinHashValues[BB+1], x-1, y-1, z-1 ))));
+    </code>
+
+    <p>
+      And the 'factored' code:
+    </p>
+
+    <code>
+      // whew ..
+
+      u32 H0 = Global_PerlinHashValues[AA  ];
+      u32 H1 = Global_PerlinHashValues[BA  ];
+      u32 H2 = Global_PerlinHashValues[AB  ];
+      u32 H3 = Global_PerlinHashValues[BB  ];
+      u32 H4 = Global_PerlinHashValues[AA+1];
+      u32 H5 = Global_PerlinHashValues[BA+1];
+      u32 H6 = Global_PerlinHashValues[AB+1];
+      u32 H7 = Global_PerlinHashValues[BB+1];
+
+      f32 G0 = grad(H0, x  , y  , z);
+      f32 G1 = grad(H1, x-1, y  , z);
+      f32 G2 = grad(H2, x  , y-1, z);
+      f32 G3 = grad(H3, x-1, y-1, z);
+
+      f32 G4 = grad(H4, x  , y  , z-1);
+      f32 G5 = grad(H5, x-1, y  , z-1);
+      f32 G6 = grad(H6, x  , y-1, z-1);
+      f32 G7 = grad(H7, x-1, y-1, z-1);
+
+      f32 L0  = lerp(u, G0, G1);
+      f32 L1  = lerp(u, G2, G3);
+      f32 L2  = lerp(u, G4, G5);
+      f32 L3  = lerp(u, G6, G7);
+
+      f32 L4  = lerp(v, L0, L1);
+      f32 L5  = lerp(v, L2, L3);
+
+      f32 res = lerp(w, L4, L5 );
+    </code>
+
+    <p>
+      As you can imagine, the compiler doesn't give a flying duck about this
+      transformation, but we're now in a pretty good place to analyze what we
+      can do to to vectorize this function.  The first thing that jumps out at
+      me is <code class='inline'>lerp</code>.  In particular, we could make a
+      <code class='inline'>Lerp4x</code> that does the L0 through L3
+      computations in a single call.  Let's get it!
+    </p>
+
+    <h3>Lerp4x</h3>
+    <p>
+      First off, let's take a look at the code for <code class='inline'>lerp</code>
+    </p>
+
+    <code>
+    f32 lerp(f32 t, f32 a, f32 b)
+    {
+      f32 res = a + t * (b - a);
+      return res;
+    }
+    </code>
+
+    <p>
+      This is an extrememly easy function to vectorize; it's just maff.  And
+      this is a great time to introduce the first datatype we're going to use
+      to start vectorizing; <code class='inline'>f32_4x</code>!
+    </p>
+
+    <code>
+    // UB purists, avert your eyes
+
+    union f32_4x
+    {
+      _m128 Sse;
+        f32 E[4];
+    }
+
+    // Bonus points: Take a look at the <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/2e1e8e4bf618a3eba301eadf22f35ef6d9852f42/src/simd.h#L14'>initializer functions</a> on Github.
+    </code>
+
+    <p>
+      Basically, we're just storing four floats in one of these <code class='inline'>_m128</code>
+      things (<code class='inline'>#include &lt;xmmintrin.h&gt;</code>), which
+      is the C++ representation of a 128-bit register.  And with a few operator
+      overloads, our <code class='inline'>lerp</code> magically evolves into a
+      <code class='inline'>Lerp4x</code>!
+    </p>
+
+
+    <code>
+    inline f32_4x
+    operator+(f32_4x A, f32_4x B)
+    {
+      f32_4x Result = {{ _mm_add_ps(A.Sse, B.Sse) }};
+      return Result;
+    }
+
+    inline f32_4x
+    operator-(f32_4x A, f32_4x B)
+    {
+      f32_4x Result = {{ _mm_sub_ps(A.Sse, B.Sse) }};
+      return Result;
+    }
+
+    inline f32_4x
+    operator*(f32_4x A, f32_4x B)
+    {
+      f32_4x Result = {{ _mm_mul_ps(A.Sse, B.Sse) }};
+      return Result;
+    }
+
+    // Look ma, new types!
+
+    f32_4x Lerp4x(f32_4x t, f32_4x a, f32_4x b)
+    {
+      f32_4x res = a + t * (b - a); // equation stayed the same!
+      return res;
+    }
+    </code>
+
+
+    <p>
+      So, that's pretty cute, but what does it look like back in our <code class='inline'>PerlinNoise_8x</code>
+      function?
+    </p>
+
+    <code>
+      // Remember these?
+
+      f32 L0  = lerp(u, G0, G1);
+      f32 L1  = lerp(u, G2, G3);
+      f32 L2  = lerp(u, G4, G5);
+      f32 L3  = lerp(u, G6, G7);
+    </code>
+
+    <p>
+      Becomes ..
+    </p>
+
+    <code>
+      // First we have to pack the scalar operands into 128-bit registers
+
+      f32_4x u_4x = F32_4X(u,u,u,u);
+
+      f32_4x LHS = F32_4X(G0, G2, G4, G6); // left-hand column of operands
+      f32_4x RHS = F32_4X(G1, G3, G5, G7); // right-hand column of operands
+
+      // Time to party!
+
+      f32_4x L0123 = Lerp4x(u_4x, LHS, RHS);
+    </code>
+
+    <p>
+      Even this relatively tiny change gets us down to ~174M cycles per chunk!
+      We can also notice that "Min Cycles" is now just 87M, about half of our baseline minimum!
+    </p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_checkin_2.png"></img>
+      <figcaption> Current: 77.7 cycles/voxel</figcaption>
+      <figcaption> Baseline: 102.7 cycles/voxel</figcaption>
+    </figure>
+
+
+    <p>
+      We're far from done here though, let's take a look at <code class='inline'>grad</code>
+    </p>
+
+    <h3>Grad4x</h3>
+    <p>
+      This one's going to be a bit trickier ..
+    </p>
+
+    <code>
+      f32 grad(u32 hash, f32 x, f32 y, f32 z)
+      {
+        int h = hash & 15;
+
+        // Convert lower 4 bits of hash into 12 gradient directions
+        f32 u = h < 8 ? x : y;
+        f32 v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+
+        f32 res = ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+        return res;
+      }
+    </code>
+
+    <p>
+      Taking a look at this function, we notice a few things.  First, there's
+      an unsigned 32-bit value here, which we haven't dealt with yet.  Second,
+      there are predicates, and we haven't dealt with branching yet.  Not to worry.
+    </p>
+
+    <p>
+      "Where there's a will, there's a way, and I have a way!"
+    </p>
+    <p>
+      -Donkey
+    </p>
+
+
+    <p>
+      For the unsigned value, we can make a <code class='inline'>u32_4x</code>
+      which follows the same pattern as <code class='inline'>f32_4x</code>. 
+      Take a look at the <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/2e1e8e4bf618a3eba301eadf22f35ef6d9852f42/src/simd.h#L7'>source code</a> on Github if you'd like the details.
+    </p>
+
+    <p>
+      For the predicates, we're going to need a tool we haven't seen yet, namely
+      a function called <code class='inline'>Select</code>
+    </p>
+
+    <code>
+      f32_4x Select(u32_4x Mask, f32_4x A, f32_4x B)
+      {
+        u32_4x Result = {{ _mm_or_ps(
+                              _mm_and_ps(Mask.Sse, A.Sse),
+                              _mm_andnot_ps(Mask.Sse, B.Sse) ) }};
+        return Result;
+      }
+    </code>
+
+    <p>
+      Now, this might look like a doozie, but it's pretty simple.  We take two
+      sets of four operands, A and B, and a Mask, and we mix the two sets
+      together to form a new set, based on the Mask.  Now, the mask must be ALL
+      ONEs when we want to take side A, and ALL ZEROs when we want side B.
+      This works very conveniently because compare instructions, for example
+      <code class='inline'>_mm_cmpeq_ps</code> (compare floats for equality),
+      produces masks exactly like the one we need for <code class='inline'>Select</code>.
+    </p>
+
+    <p>
+      You can probably see we now have the building blocks to deal with branching;
+      we'll compute both sides of the branch, and mask out the values that don't
+      pass the test.
+    </p>
+
+    <h3>Factoring Grad4x</h3>
+    <p>
+      We'll do the same thing to grad that we did to the main body of our
+      PerlinNoise implementation; factor all expressions out into SSA form.
+    </p>
+
+    <code>
+    link_internal f32
+    grad(u32 hash, f32 x, f32 y, f32 z)
+    {
+      auto h = hash & 15;
+
+      auto uSel = h < 8;
+      auto vSel = h < 4;
+      auto xSel = (h == 12 | h == 14);
+
+      auto u  = uSel ? x : y;
+      auto xz = xSel ? x : z;
+      auto v  = vSel ? y : xz;
+
+      auto uFlip = (h & 1) == 1;
+      auto vFlip = (h & 2) == 2;
+
+      auto R0 = uFlip ? u*-1 : u;
+      auto R1 = vFlip ? v*-1 : v;
+      auto Result = R0 + R1;
+
+      return Result;
+    }
+    </code>
+
+    <p>
+      Once we're here, and we go implement a few <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/2e1e8e4bf618a3eba301eadf22f35ef6d9852f42/src/simd.h#L138'>more operators</a>,
+      we can pretty much just swap out the input types and we've got a shiny
+      new <code class='inline'>Grad4x</code>!
+    </p>
+
+    <code>
+    f32_4x Grad4x(u32_4x hash, f32_4x x, f32_4x y, f32_4x z)
+    {
+      // Pack scalars (for comparison instructions) to into 4-wide registers
+
+      auto _15 = U32_4X(15);
+      auto _14 = U32_4X(14);
+      auto _12 = U32_4X(12);
+      auto _8 = U32_4X(8);
+      auto _4 = U32_4X(4);
+      auto _2 = U32_4X(2);
+      auto _1 = U32_4X(1);
+      auto _n1 = F32_4X(-1);
+
+      // Rest of the function stays nearly the same, now using Select for predicates
+
+      auto h = hash & _15;
+
+      auto uSel = h < _8;
+      auto vSel = h < _4;
+      auto xSel = (h == _12 | h == _14 );
+
+      auto u  = Select(uSel, x, y);
+      auto xz = Select(xSel, x, z);
+      auto v  = Select(vSel, y, xz);
+
+      auto uFlip = (h & _1) == _1;
+      auto vFlip = (h & _2) == _2;
+
+      auto R0 = Select(uFlip, u*_n1, u);
+      auto R1 = Select(vFlip, v*_n1, v);
+      auto Result = R0 + R1;
+
+      return Result;
+    }
+    </code>
+
+
+    <p>
+      Now, we can take our newly minted Grad4x and integrate it back into PerlinNoise_8x!
+    </p>
+
+    <code>
+    // Here we compute a single voxel using our SIMD-ized Grad4x and Lerp4x functions!
+    // Admittedly, this is pretty hard to follow, but we're going to work on that next.
+
+    f32_4x u4 = F32_4X(u);
+    f32_4x v4 = F32_4X(v);
+
+    f32_4x x_x_x_x     = F32_4X(x, x, x, x);
+    f32_4x nx_nx_nx_nx = F32_4X(x-1, x-1, x-1, x-1);
+    f32_4x y_ny_y_ny   = F32_4X(y, y-1, y, y-1);
+    f32_4x z_z_nz_nz   = F32_4X(z, z, z-1, z-1);
+
+    u32_4x H1357 = U32_4X(H1, H3, H5, H7);
+    u32_4x H0246 = U32_4X(H0, H2, H4, H6);
+
+    f32_4x A4 = Grad4x(H0246,     x_x_x_x, y_ny_y_ny, z_z_nz_nz);
+    f32_4x B4 = Grad4x(H1357, nx_nx_nx_nx, y_ny_y_ny, z_z_nz_nz);
+
+    f32_4x L0123 = Lerp4x(u4, A4, B4);
+
+    f32_4x L0L2 = F32_4X(L0123.E[0], L0123.E[2], 0.f, 0.f);
+    f32_4x L1L3 = F32_4X(L0123.E[1], L0123.E[3], 0.f, 0.f);
+
+    f32_4x L4L5 = Lerp4x(v4, L0L2, L1L3);
+    f32 res = lerp(w, L4L5.E[0], L4L5.E[1] );
+    </code>
+
+    <p>
+      Nice!  We've got a nice flat profile now, and we've saved about 60% on our <s>car insurance</s> runtime!
+    </p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_checkin_3.png"></img>
+      <figcaption> Current: 42.4 cycles/voxel</figcaption>
+      <figcaption> Baseline: 102.7 cycles/voxel</figcaption>
+    </figure>
+
+
+    <p>
+      I've got one trick left to play, and it's the one that really brings this
+      whole thing together.  Up until now, we've been vectorizing the
+      operations to compute a <i>single voxel</i>, which has been getting us
+      some pretty good wins.  This has been great, but an astute reader would
+      notice that we have some data-dependency chains, have to do some operand
+      shuffling, and we have to downshift to scalar for the final
+      <code class='inline'>lerp</code>.
+    </p>
+
+    <code>
+    for (u32 VoxelIndex = 0; VoxelIndex < 8; VoxelIndex +=4) // Notice we advance by 4 each loop!
+    {
+      //
+      // data setup omitted for brevity.  Take a look at the <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/2e1e8e4bf618a3eba301eadf22f35ef6d9852f42/src/perlin.h#L241'>complete function</a> on Github
+      //
+
+      // This looks remarkably similar to the original implementation.  So much
+      // so that if you overloaded the function names, you'd barely know this
+      // was SIMD code.
+
+      auto G0 = Grad4x(H0,  x,  y, z);
+      auto G1 = Grad4x(H1, nx,  y, z);
+      auto G2 = Grad4x(H2,  x, ny, z);
+      auto G3 = Grad4x(H3, nx, ny, z);
+
+      auto G4 = Grad4x(H4,  x,  y, nz);
+      auto G5 = Grad4x(H5, nx,  y, nz);
+      auto G6 = Grad4x(H6,  x, ny, nz);
+      auto G7 = Grad4x(H7, nx, ny, nz);
+
+      auto L0  = Lerp4x(u4, G0, G1);
+      auto L1  = Lerp4x(u4, G2, G3);
+      auto L2  = Lerp4x(u4, G4, G5);
+      auto L3  = Lerp4x(u4, G6, G7);
+      auto L4  = Lerp4x(v4, L0, L1);
+      auto L5  = Lerp4x(v4, L2, L3);
+
+      auto Res = Lerp4x(w4, L4, L5 );
+      Res = (Res + F32_4X(1.f)) / F32_4X(2.f);
+
+      Result[VoxelIndex+0] = Res.E[0];
+      Result[VoxelIndex+1] = Res.E[1];
+      Result[VoxelIndex+2] = Res.E[2];
+      Result[VoxelIndex+3] = Res.E[3];
+    }
+    </code>
+
+    <p>
+      Instead of doing a single voxel, we're now set up to do <i>four voxels</i>
+      in parallel, eliminating our need to downshift to scalar and saturating
+      our instruction potential.  If I'm being honest, there wasn't really a reason
+      to not do 4-voxels-wide from the start, except that I felt it made this
+      article more approachable.
+    </p>
+
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_checkin_4.png"></img>
+      <figcaption> Current: 36.2 cycles/voxel</figcaption>
+      <figcaption> Baseline: 102.7 cycles/voxel</figcaption>
+    </figure>
+
+    <h3>Conclusion</h3>
+    <p>
+      So, there you have it.  We <i>handily</i> beat the optimizer, and it only
+      took half a day.  The point I wanted to illustrate here that's important
+      when doing this kind of code is to make small, incremental changes, take
+      measurements, and ensure you have a working program at every step of the
+      way.  It's easy to break things if you go too fast, and end up with a mess
+      that's hard to untangle.  But, if you have a rough plan and slowly work
+      towards it, beating the compiler turns out to be surprisingly easy.
+    </p>
+
+
+  </div>
+</body>
+
