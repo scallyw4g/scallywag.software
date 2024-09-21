@@ -46,38 +46,40 @@
       using <code class='inline'>GetLogicalProcessorInformationEx</code>.
     </p>
 
-<code>SYSTEM_INFO sysinfo;
-GetSystemInfo(&sysinfo);
+    <code>
+  SYSTEM_INFO sysinfo;
+  GetSystemInfo(&sysinfo);
 
-unsigned long LogicalProcessorCount = (u32)sysinfo.dwNumberOfProcessors;
+  unsigned long LogicalProcessorCount = (u32)sysinfo.dwNumberOfProcessors;
 
-unsigned long AllocatedSize =
-    sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX)*LogicalProcessorCount;
+  unsigned long AllocatedSize =
+      sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX)*LogicalProcessorCount;
 
-SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *RelationshipBuffer =
-    (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)Allocate(AllocatedSize);
+  SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *RelationshipBuffer =
+      (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)Allocate(AllocatedSize);
 
-if (GetLogicalProcessorInformationEx(
-        RelationProcessorCore,
-        RelationshipBuffer,
-        &AllocatedSize)
-  )
-{
-  // Count physical processors
-  u32 PhysicalCoreCount = 0;
-
-  SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *Info = RelationshipBuffer;
-  for (u32 Offset = 0; Offset < AllocatedSize; Offset += Info->Size)
+  if (GetLogicalProcessorInformationEx(
+          RelationProcessorCore,
+          RelationshipBuffer,
+          &AllocatedSize)
+    )
   {
-    Info = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)((u8*)Info + Info->Size);
-    Assert(Info->Processor.GroupCount == 1);
-    PhysicalCoreCount++;
+    // Count physical processors
+    u32 PhysicalCoreCount = 0;
+
+    SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *Info = RelationshipBuffer;
+    for (u32 Offset = 0; Offset < AllocatedSize; Offset += Info->Size)
+    {
+      Info = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)((u8*)Info + Info->Size);
+      Assert(Info->Processor.GroupCount == 1);
+      PhysicalCoreCount++;
+    }
   }
-}
-else
-{
-  SoftError("GetLogicalProcessorInformationEx Failed");
-}</code>
+  else
+  {
+    SoftError("GetLogicalProcessorInformationEx Failed");
+  }
+    </code>
 
     <p>
       There's a fair bit going on here, so I'll point out the important bits:
@@ -101,17 +103,18 @@ else
       thread to a set of logical cores that share a physical core.
     </p>
 
-<code>SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *ProcessorInfo = RelationshipBuffer;
+    <code>
+    SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *ProcessorInfo = RelationshipBuffer;
 
-for (u32 ThreadIndex = 0; ThreadIndex < PhysicalCoreCount; ++ThreadIndex)
-{
-  HANDLE ThreadHandle = CreateThread(0, 0, ThreadMain, 0, 0, 0);
-  SetThreadAffinityMask(ThreadHandle, ProcessorInfo->Processor.GroupMask->Mask);
+    for (u32 ThreadIndex = 0; ThreadIndex < PhysicalCoreCount; ++ThreadIndex)
+    {
+      HANDLE ThreadHandle = CreateThread(0, 0, ThreadMain, 0, 0, 0);
+      SetThreadAffinityMask(ThreadHandle, ProcessorInfo->Processor.GroupMask->Mask);
 
-  ProcessorInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)
-                    ((u8*)ProcessorInfo + ProcessorInfo->Size);
-}
-</code>
+      ProcessorInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)
+                        ((u8*)ProcessorInfo + ProcessorInfo->Size);
+    }
+    </code>
 
     <p>
       That's all pretty straight-forward, with the exception of the second
