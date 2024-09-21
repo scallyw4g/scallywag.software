@@ -2,7 +2,7 @@
   <div>
     <h5>Sept 16, 2024</h5>
     <h1>SIMD Perlin Noise</h1>
-    <h2>Beating the compiler for fun and profit!</h2>
+    <h2>Beating the compiler with SSE!</h2>
 
     <h3>TL;DR</h3>
     <p>
@@ -10,7 +10,7 @@
       almost identical to the original, although there's a lot more data setup code.
     </p>
     <p>
-      Went from 102.7 to 36.2 cycles per voxel to compute Perlin noise.
+      Went from 102.7 to 36.2 cycles per cell to compute Perlin noise.
     </p>
     <p>
       Go slow, port your code piece by piece, ensuring you have a working project
@@ -117,7 +117,7 @@
       I setup a small test scene which initializes 1485 world chunks sized
       72x72x72 with 6 octaves of Perlin noise.  Our baseline implementation
       chugs along at ~230,000,000 cycles per chunk, which works out to about
-      102.7 cycles/voxel.
+      102.7 cycles/cell.
     </p>
     <p>
       One interesting thing about this profile is it reliably gets slower near
@@ -126,7 +126,7 @@
 
     <figure class='inline-block'>
       <img class='full-width' src="/assets/perlin_baseline.png"></img>
-      <figcaption>Baseline: 102.7 cycles/voxel</figcaption>
+      <figcaption>Baseline: 102.7 cycles/cell</figcaption>
     </figure>
 
 
@@ -160,8 +160,8 @@
 
     <figure class='inline-block'>
       <img class='full-width' src="/assets/perlin_checkin_1.png"></img>
-      <figcaption> Current: 91.5 cycles/voxel</figcaption>
-      <figcaption> Baseline: 102.7 cycles/voxel</figcaption>
+      <figcaption> Current: 91.5 cycles/cell</figcaption>
+      <figcaption> Baseline: 102.7 cycles/cell</figcaption>
     </figure>
 
     <h3>Factoring</h3>
@@ -347,8 +347,8 @@
 
     <figure class='inline-block'>
       <img class='full-width' src="/assets/perlin_checkin_2.png"></img>
-      <figcaption> Current: 77.7 cycles/voxel</figcaption>
-      <figcaption> Baseline: 102.7 cycles/voxel</figcaption>
+      <figcaption> Current: 77.7 cycles/cell</figcaption>
+      <figcaption> Baseline: 102.7 cycles/cell</figcaption>
     </figure>
 
 
@@ -504,7 +504,7 @@
     </p>
 
     <code>
-    // Here we compute a single voxel using our SIMD-ized Grad4x and Lerp4x functions!
+    // Here we compute a single cell using our SIMD-ized Grad4x and Lerp4x functions!
     // Admittedly, this is pretty hard to follow, but we're going to work on that next.
 
     f32_4x u4 = F32_4X(u);
@@ -536,15 +536,15 @@
 
     <figure class='inline-block'>
       <img class='full-width' src="/assets/perlin_checkin_3.png"></img>
-      <figcaption> Current: 42.4 cycles/voxel</figcaption>
-      <figcaption> Baseline: 102.7 cycles/voxel</figcaption>
+      <figcaption> Current: 42.4 cycles/cell</figcaption>
+      <figcaption> Baseline: 102.7 cycles/cell</figcaption>
     </figure>
 
 
     <p>
       I've got one trick left to play, and it's the one that really brings this
       whole thing together.  Up until now, we've been vectorizing the
-      operations to compute a <i>single voxel</i>, which has been getting us
+      operations to compute a <i>single cell</i>, which has been getting us
       some pretty good wins.  This has been great, but an astute reader would
       notice that we have some data-dependency chains, have to do some operand
       shuffling, and we have to downshift to scalar for the final
@@ -552,7 +552,7 @@
     </p>
 
     <p>
-      Instead of doing a single voxel, we're now set up to do <i>four voxels</i>
+      Instead of doing a single cell, we're now set up to do <i>four voxels</i>
       in parallel, eliminating our need to downshift to scalar and saturating
       our instruction potential.  The reason I didn't go to four voxels wide
       right off the bat was so that I could implement Lerp4x and Grad4x and
@@ -604,8 +604,8 @@
 
     <figure class='inline-block'>
       <img class='full-width' src="/assets/perlin_checkin_4.png"></img>
-      <figcaption> Current: 36.2 cycles/voxel</figcaption>
-      <figcaption> Baseline: 102.7 cycles/voxel</figcaption>
+      <figcaption> Current: 36.2 cycles/cell</figcaption>
+      <figcaption> Baseline: 102.7 cycles/cell</figcaption>
     </figure>
 
     <h3>Conclusion</h3>

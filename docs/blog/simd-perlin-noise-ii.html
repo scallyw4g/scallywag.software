@@ -1,0 +1,136 @@
+<body>
+  <div>
+    <h5>Sept 21, 2024</h5>
+    <h1>SIMD Perlin Noise Part II</h1>
+    <h2>AVX Strikes Back!</h2>
+
+    <h3>TL;DR</h3>
+    <p>
+      Moved from SSE to AVX.  Looked at FastNoise2 for tricks.  Found some ;)
+    </p>
+
+
+    <h3>Preface</h3>
+    <p>
+      If you didn't catch the first part of this series where we vectorized
+      with SSE, check out <a href="/vim/blog/simd-perlin-noise">SIMD Perlin Noise: Beating the compiler with SSE!</a>
+    </p>
+    <p>
+      Moving from 128-wide SSE to 256-wide AVX should be pretty straight forward.
+      We'd expect another 2x speedup, since we're now going to process twice
+      as many elements.
+    </p>
+
+    <h3>First Steps</h3>
+    <p>
+      Our current implementation is a direct port of Perlin noise to 4-wide SSE
+      instructions.  Porting to AVX should be a matter of making 8-wide datatypes
+      and using the <code class='inline'>_mm256_</code> instructions.
+    </p>
+    <p>
+      So, after copying <code class='inline'>simd_sse.h</code> to <code class='inline'>simd_avx.h</code>
+      and hooking up <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/master/src/simd_avx2.h'>the new instructions</a>,
+      we're ready for some more gains!!
+    </p>
+
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_checkin_5.png"></img>
+      <figcaption> Current: 17.2 cycles/cell</figcaption>
+      <figcaption> Baseline: 36.2  cycles/cell</figcaption>
+    </figure>
+
+    <p>
+      BOOM.  That's some good speedup right there.
+    </p>
+
+    <h3>Next Steps</h3>
+    <p>
+      Well, there's one extremely likely suspect which we didn't talk about much
+      last time, which is the data setup before actually computing the noise value.
+    </p>
+
+    <p>
+      Before we continue, a brief note on the Perlin noise algorithm.  The basic
+      idea is that if you hash points in space, you can compute gradients from
+      those hashes in a stable way across cells.
+    </p>
+
+    <p>
+      Let's take a closer look.
+    </p>
+
+    <code>
+  u32 Xi = u32(x) & 255;
+  u32 Yi = u32(y) & 255;
+  u32 Zi = u32(z) & 255;
+
+  u32 A  = (u32)Global_PerlinIV[Xi]  + Yi;
+  u32 AA = (u32)Global_PerlinIV[A]   + Zi;
+
+  // .. more similar table lookups ..
+
+
+  // These are the hash values used to compute gradients
+  u32 H0 = Global_PerlinIV[AA];
+  u32 H1 = Global_PerlinIV[AB];
+
+  // .. more similar table lookups ..
+    </code>
+
+    <p>
+      Right, so, we're using a series of table lookups to hash points.  Not only
+      do these not vectorize well, but the loads are largely dependent on one
+      another.  Meaning, subsequent loads depend on the value of previous lookups!
+      This is a bad situation to be in if you're trying to maximize throughput.
+    </p>
+
+    <p>
+      Not to worry!  We now know we're just trying to compute a hash value from
+      a point in space.  Question is, can we use .. any hash function we want?
+    </p>
+
+    <p>
+      As it turns out, we can!  I cracked open the source of <code class='inline'>FastNoise2</code>
+      at this point to see how Jordan does it.  Turns out, he uses a pretty simple
+      hashing function.  I'm not totally sure why, but the inputs were also
+      multiplied or offset by large prime numbers prior to hashing.  I'm going
+      to start by trying out this implementation and seeing what it gets us.
+    </p>
+
+    <code>
+    template<typename SIMD = FS, typename... P>
+    FS_INLINE static int32v HashPrimes( int32v seed, P... primedPos )
+    {
+        int32v hash = seed;
+        hash ^= (primedPos ^ ...);
+
+        hash *= int32v( 0x27d4eb2d );
+        return (hash >> 15) ^ hash;
+    }
+    </code>
+
+    <p>
+      After futzing around a little bit (and fixing a couple minor bugs) ..
+    </p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_checkin_6.png"></img>
+      <figcaption> Current: 12.9 cycles/cell</figcaption>
+      <figcaption> Baseline: 36.2  cycles/cell</figcaption>
+    </figure>
+
+    <p>
+      And there you have it folks!  Got a 2x speedup from going to AVX, and
+      eliminating data dependencies.
+    </p>
+
+    <p>
+      This begs the question, how fast is <code class='inline'>FastNoise2</code>,
+      and how fast can we possibly get?  Stay tuned for the conclusion to this
+      epic saga in Part III!
+    </p>
+
+  </div>
+</body>
+
