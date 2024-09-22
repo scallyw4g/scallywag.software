@@ -218,11 +218,11 @@
 
     <p>
       I'm officially into no-mans-land.  I have no idea what I'm doing at this
-      point (not that I ever had much of an idea of what I was doing).
+      point (not that I ever had much of an idea in the first place).
     </p>
     <p>
-      I tried experimenting with different hashing functions, which turns out
-      had some room for tradeoffs.  The FastNoise2 hashing function exhibits
+      I tried experimenting with different hashing functions, which turned out
+      to be an area to make tradeoffs.  The FastNoise2 hashing function exhibits
       extremely good entropy for how cheap it is.  I played around with a few
       derivitives, some of which shaved an entire cycle, but couldn't find one
       that didn't produce repeating visual artifacts.
@@ -330,7 +330,6 @@
       <figcaption>Baseline: 13.3 cycles/cell</figcaption>
     </figure>
 
-    <h3>Conclusion</h3>
     <p>
       This is as fast as it gets for now.  I believe there's still a fair bit
       of room for improvement here; at one point I ended up with a
@@ -341,14 +340,16 @@
       job at finding ways to de-congest ports 1 and 5.
     </p>
 
+    <h3>Conclusion</h3>
+
     <p>
-      So, if you're willing to go 16-wide, and accept a maybe-slightly-inferior
+      If you're willing to go 16-wide, and accept a maybe-slightly-inferior
       <code class='inline'>Grad</code> function, you too can compute perlin
       noise for the low, low cost of 6.3 cycles per cell, under ideal conditions ;)
     </p>
 
     <p>
-      If you're interested, read the <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/e2bfc016bd343b4e4f45eb34df329ac076c5bfa2/src/perlin.cpp#L43'>source</a> Luke!
+      If you're interested, use the <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/e2bfc016bd343b4e4f45eb34df329ac076c5bfa2/src/perlin.cpp#L43'>source</a> Luke!
     </p>
   </div>
 </body>
