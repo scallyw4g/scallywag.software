@@ -402,21 +402,16 @@
     <code>
       f32_4x Select(u32_4x Mask, f32_4x A, f32_4x B)
       {
-        u32_4x Result = {{ _mm_or_ps(
-                              _mm_and_ps(Mask.Sse, A.Sse),
-                              _mm_andnot_ps(Mask.Sse, B.Sse) ) }};
+        u32_4x Result = {{ _mm_blendv_ps(A.Sse, B.Sse, Mask.Sse) }};
         return Result;
       }
     </code>
 
     <p>
-      Now, this might look like a doozie, but it's pretty simple.  We take two
-      sets of four operands, A and B, and a Mask, and we mix the two sets
-      together to form a new set, based on the Mask.  Now, the mask must be ALL
-      ONEs when we want to take side A, and ALL ZEROs when we want side B.
-      This works very conveniently because compare instructions, for example
-      <code class='inline'>_mm_cmpeq_ps</code> (compare floats for equality),
-      produces masks exactly like the one we need for <code class='inline'>Select</code>.
+      The <code class='inline'>_mm_blendv_ps</code> instruction 'blends' between
+      side A and side B, based on Mask.  Meaning, if Mask is 0xFFFFFFFF, take
+      side A, if mask is 0, take side B.  Conveniently, predicate instructions
+      (less than, greater than, equal to, etc) produce masks in exactly this format!
     </p>
 
     <p>
