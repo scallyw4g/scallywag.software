@@ -360,10 +360,10 @@ const Main = (State) => {
 
   SetDisplay(document.body, DISPLAY_BLOCK);
 
-  const IntroComplete = ReadCookie(INTRO_ANIM_COMPLETE);
-  if (IntroComplete === false) {
-    Router.navigate(ROUTE_INTRO);
-  }
+  // const IntroComplete = ReadCookie(INTRO_ANIM_COMPLETE);
+  // if (IntroComplete === false) {
+  //   Router.navigate(ROUTE_INTRO);
+  // }
 
 }
 
