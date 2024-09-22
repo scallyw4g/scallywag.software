@@ -1,6 +1,6 @@
 <body>
   <div>
-    <h5>Sept 21, 2024</h5>
+    <h5>Sept 20, 2024</h5>
     <h1>SIMD Perlin Noise Part II</h1>
     <h2>AVX Strikes Back!</h2>
 
@@ -41,13 +41,13 @@
     </figure>
 
     <p>
-      BOOM.  That's some good speedup right there.
+      BOOM!  Those are some good gains right there.
     </p>
 
-    <h3>Next Steps</h3>
+    <h3>Next Target</h3>
     <p>
-      Well, there's one extremely likely suspect which we didn't talk about much
-      last time, which is the data setup before actually computing the noise value.
+      There's one likely suspect which we didn't talk about much last time;
+      the point hashing before actually computing the noise value.
     </p>
 
     <p>
@@ -72,6 +72,7 @@
 
 
   // These are the hash values used to compute gradients
+  //
   u32 H0 = Global_PerlinIV[AA];
   u32 H1 = Global_PerlinIV[AB];
 
@@ -81,8 +82,9 @@
     <p>
       Right, so, we're using a series of table lookups to hash points.  Not only
       do these not vectorize well, but the loads are largely dependent on one
-      another.  Meaning, subsequent loads depend on the value of previous lookups!
-      This is a bad situation to be in if you're trying to maximize throughput.
+      another.  Meaning, subsequent loads depend on the value of previous
+      loads!  These are called dependency chains, and having them is a bad
+      situation to be in if you're trying to maximize throughput.
     </p>
 
     <p>
@@ -95,7 +97,7 @@
       at this point to see how Jordan does it.  Turns out, he uses a pretty simple
       hashing function.  I'm not totally sure why, but the inputs were also
       multiplied or offset by large prime numbers prior to hashing.  I'm going
-      to start by trying out this implementation and seeing what it gets us.
+      to start by trying out this implementation and see what it gets us.
     </p>
 
     <code>
@@ -116,13 +118,16 @@
 
     <figure class='inline-block'>
       <img class='full-width' src="/assets/perlin_checkin_6.png"></img>
-      <figcaption> Current: 12.9 cycles/cell</figcaption>
+      <figcaption> Current: 13.3 cycles/cell</figcaption>
       <figcaption> Baseline: 36.2  cycles/cell</figcaption>
     </figure>
+    <p>
+      More easy wins today!
+    </p>
 
     <p>
-      And there you have it folks!  Got a 2x speedup from going to AVX, and
-      eliminating data dependencies.
+      So, there you have it folks!  Got a speedup by a factor of 2.7x by going
+      to AVX, and eliminating data dependencies.
     </p>
 
     <p>

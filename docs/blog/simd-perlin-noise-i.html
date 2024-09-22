@@ -7,7 +7,8 @@
     <h3>TL;DR</h3>
     <p>
       Wrote some 4-wide SIMD code, ended up with a core algorithm that looks
-      almost identical to the original, although there's a lot more data setup code.
+      almost identical to the original, although there's a lot more code to
+      produce the hash values.
     </p>
     <p>
       Went from 102.7 to 36.2 cycles per cell to compute Perlin noise.
@@ -567,7 +568,7 @@
     for (u32 VoxelIndex = 0; VoxelIndex < 8; VoxelIndex +=4)
     {
       //
-      // data setup omitted for brevity.  Take a look at the <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/2e1e8e4bf618a3eba301eadf22f35ef6d9852f42/src/perlin.h#L241'>complete function</a> on Github
+      // Hashing omitted for brevity.  Take a look at the <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/2e1e8e4bf618a3eba301eadf22f35ef6d9852f42/src/perlin.h#L241'>complete function</a> on Github
       //
 
       // This looks remarkably similar to the original implementation.  So much

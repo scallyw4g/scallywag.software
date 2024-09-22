@@ -1,0 +1,352 @@
+<body>
+  <div>
+    <h5>Sept 22, 2024</h5>
+    <h1>SIMD Perlin Noise Part III</h1>
+    <h2>Can we beat FastNoise2?</h2>
+
+    <h3>TL;DR</h3>
+    <p>
+      Managed to shave off 3.6 cycles per cell on FastNoise2; sped up by a factor of 1.57x
+    </p>
+
+
+    <h3>Preface</h3>
+    <p>
+      FastNoise2 turns out to be, as the name might suggest, very fast and
+      surprisingly approachable.  Getting my implementation to sub-10-cycles-per-cell
+      would have taken significantly more work if not for this fantastic libaray.
+    </p>
+
+    <p>
+      If you didn't catch the first part of this series where we vectorized
+      with AVX, check out <a href="/vim/blog/simd-perlin-noise-ii">SIMD Perlin Noise Part II : AVX Strikes Back!</a>
+    </p>
+
+    <h3>FastNoise2 Baseline</h3>
+    <p>
+      If we're going to try to beat FastNoise2, we better have a good baseline,
+      or at least <i>some</i> baseline!  I took a look at the benchmarks
+      provided and felt the unit of measurement, cells-per-second, a bit
+      lacking for two reasons; cells-per-second varies on clock rate, and time
+      is an indirect measurement in hardware.  I would think both of those add
+      noise to this measurement, whereas cycles-per-cell has neither problem.
+      It has it's own issues, but I decided those problems were smaller than
+      the ones with cells-per-second.
+    </p>
+
+    <p>
+      So, off to compute how many cycles-per-cell FastNoise2 gets.
+    </p>
+
+    <p>
+      Cracking open the source code to <code class='inline'>tests/FastNoiseBenchmark.cpp</code>
+      gives us a pretty convenient place to insert some profiling code.
+    </p>
+
+    <code>
+
+    void BenchFastNoiseGenerator3D( benchmark::State& state,
+                                    const FastNoise::SmartNode<> generator )
+    {
+      // FastNoise data setup omitted for brevity ..
+
+      // Add a couple variables for tracking cycle counts and cells generated
+      //
+      unsigned long long TotalCycles = 0;
+      unsigned long long TotalCells = 0;
+
+      for( auto _ : state )
+      {
+          auto StartCycles = __rdtsc();
+            generator->GenPositionArray3D( data, gPositionCount,
+                                           gPositionFloats,
+                                           gPositionFloats,
+                                           gPositionFloats,
+                                           0, 0, 0, seed++ );
+          auto EndCycles = __rdtsc();
+
+          // Compute and record number of cycles the noise function took,
+          // and how many cells it generated!
+          //
+          auto ElapsedCycles = EndCycles-StartCycles;
+          TotalCycles += ElapsedCycles;
+          TotalCells += gPositionCount;
+      }
+
+      double CyclesPerCell = double(TotalCycles)/double(TotalCells);
+      printf("Cycles Per Cell : (%f)\n", CyclesPerCell);
+    }
+    </code>
+
+    <p>
+      This produced (last line was produced by the FastNoise2 benchmark):
+    </p>
+
+    <code>
+  Cycles Per Element : (13.602051)
+  Cycles Per Element : (9.783423)
+  Cycles Per Element : (9.960336)
+  Cycles Per Element : (10.034423)
+  Cycles Per Element : (9.948371)
+  Cycles Per Element : (9.826148)
+  3D/Perlin   29967 ns   13602 ns   74667  items_per_second=602.262M/s
+    </code>
+
+    <p>
+      I did several runs, and experimented with adding an extra loop to really
+      make sure I wasn't seeing a lot of noise (pun intended).  They all came
+      out roughly the same for cycles-per-cell, but points-per-second varied
+      pretty wildly, which solidified my decision to go with cycles/cell as the
+      performance metric.
+    </p>
+
+    <p>
+      Looks like about 9.9 cycles-per-cell is our baseline measurement for FastNoise2.
+    </p>
+
+    <h3>Improving our Baseline Measurement</h3>
+    <p>
+      Up until now, I've been pretty fast-and-loose with the timing
+      measurements.  I've been manually calculating cycles-per-cell from the
+      average number of cycles to fully initialize a 72^3 chunk.  This has been
+      working out so far because we've been seeing huge performance wins.  As
+      we close the gap, we need to tighten up our profile.
+    </p>
+
+    <p>
+      I kept my measurement tecnique as close as possible to how I measured the
+      duration in FastNoise2.
+    </p>
+
+   <code>
+     __rdtsc();
+
+       // .. do perlin stuff ..
+
+     __rdtsc();
+
+      // .. compute cycles per cell ..
+   </code> 
+
+
+    <p>
+      Taking a baseline reading with this more controlled measurement produced
+      the same result as our previous best, which is encouraging.
+    </p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_checkin_7.png"></img>
+      <figcaption>Baseline: 13.3 cycles/cell</figcaption>
+    </figure>
+
+    <h3>Going Faster</h3>
+    <p>
+      In part II, we noticed there were data dependencies during some table
+      lookups that we could eliminate, which provided significant speedup.
+    </p>
+
+    <p>
+      There are no easy wins anymore, but if we look at the Lerp-y
+      part of the algorithm, we notice some more data dependencies.
+    </p>
+
+    <code>
+    auto L0  = Lerp8x(xs, G0, G1);
+    auto L1  = Lerp8x(xs, G2, G3);
+    auto L2  = Lerp8x(xs, G4, G5);
+    auto L3  = Lerp8x(xs, G6, G7);
+
+    auto L4  = Lerp8x(ys, L0, L1); // dependant on L0, L1
+    auto L5  = Lerp8x(ys, L2, L3); // dependant on L2, L3
+
+    auto Res = Lerp8x(zs, L4, L5); // dependant on L4, L5  :'(
+    </code>
+
+    <p>
+      So there's a three-deep dependancy chain there, which is pretty nasty.
+      I don't think there's a way of eliminating the dependency, but there is a
+      way of side-stepping it.  Instead of doing 8-wide, we can do 8-wide
+      twice, with a loop.  This works because modern processors are what are
+      called out-of-order processors; they can execute instructions out of
+      order as long as there are no data-dependencies!  So if we do a loop (and
+      mark it with <code class='inline'>#pragma unroll(2)</code>) the processor will be able to start work
+      on the second iteration while the first one completes!
+    </p>
+    <p>
+      Fucking .. magical!
+    </p>
+
+    <p>
+      The other thing we can notice is that every time we execute the inner
+      Perlin kernel, we needlessly recompute the Y and Z parameters.  If we
+      had a little <code class='inline'>perlin_params</code> struct that had
+      all the necessary information, we could compute those on the outside of
+      the kernel and pass them in.
+    </p>
+
+    <p>
+      It turned out these two changes were inter-related, so I did them both at
+      the same time.
+    </p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_checkin_8.png"></img>
+      <figcaption>Current: 7.59 cycles/cell</figcaption>
+      <figcaption>Baseline: 13.3 cycles/cell</figcaption>
+    </figure>
+
+    <p>
+      Wait, wut?  That must be a bug.
+    </p>
+
+    <p>
+      ... furiously check again ...
+    </p>
+
+    <p>
+      Nope!  By avoiding redundant work, and making sure the CPU instruction
+      pipelines are full, we beat FastNoise2 and got down to ~7.6 cycles-per-cell!
+    </p>
+    <p>
+      I tried doing a wider swath in X, Y and Z (ie 24x1x1, 16x2x2, 16x2x1),
+      all of which worsened the benchmark, so it looks like this is as good as 
+      it gets.  Or is it ..
+    </p>
+
+
+    <h3>Getting Fastest</h3>
+
+    <p>
+      I'm officially into no-mans-land.  I have no idea what I'm doing at this
+      point (not that I ever had much of an idea of what I was doing).
+    </p>
+    <p>
+      I tried experimenting with different hashing functions, which turns out
+      had some room for tradeoffs.  The FastNoise2 hashing function exhibits
+      extremely good entropy for how cheap it is.  I played around with a few
+      derivitives, some of which shaved an entire cycle, but couldn't find one
+      that didn't produce repeating visual artifacts.
+    </p>
+    <p>
+      I also tried some of these hashing functions Chris Wellons found with his
+      <a href='https://nullprogram.com/blog/2018/07/31/'>Prospector</a>
+      project, which I've been waiting for an excuse to try out.  These are
+      are apparely damn-near optimal integer hashing functions, and the results
+      did not disappoint.  Unfortunately, they're about a cycle and a half slower
+      than the FastNoise2 hash function, so I decided to leave them out of the
+      final implementation.  Maybe I'll add an option for which hash to use in
+      the future.
+    </p>
+
+    <p>
+      Having run out of ideas to try, other than randomly fiddling with instructions,
+      I cracked open a tool I'd never used before, <code class='inline'>llvm-mca</code>,
+      or LLVM Machine Code Analyzer.  <code class='inline'>llvm-mca</code> is the
+      spiritual successor to Intels <code class='inline'>IACA</code>, which is
+      an interesting performance analysis tool.  The basic idea is you feed the
+      tool a snippet of assembly code and, using the compilers' internal model
+      of CPU microarchitecture, it produces a schedule and can attempt to
+      identify bottlenecks and resource contention.
+    </p>
+
+    <p>
+      So, after an hour or two goofing around with it, I was able to make an
+      interesting observation from this snippet of output.
+    </p>
+
+    <code>
+        40.   vblendvps	%ymm5, %ymm6, %ymm3, %ymm1
+        41.   vmovups	%ymm1, 736(%rsp)
+ +----< 42.   vmovdqa	64(%rdx), %ymm1
+ |      43.   vmovdqu	%ymm1, 160(%rsp)
+ +----> 44.   vpxor	%ymm0, %ymm1, %ymm3          ## REGISTER dependency:  %ymm1
+ |      45.   vmovdqa	%ymm11, %ymm7
+ |      46.   vmovdqu	%ymm11, 64(%rsp)
+ +----> 47.   vpxor	%ymm3, %ymm11, %ymm1         ## REGISTER dependency:  %ymm3
+ |      48.   vmovdqu	%ymm1, 672(%rsp)
+ +----> 49.   vpand	%ymm1, %ymm12, %ymm0         ## REGISTER dependency:  %ymm1
+ +----> 50.   vpcmpeqd	%ymm0, %ymm8, %ymm0      ## REGISTER dependency:  %ymm0
+ +----> 51.   vblendvps	%ymm0, %ymm14, %ymm4, %ymm10  ## REGISTER dependency:  %ymm0
+ |      52.   vmovaps	128(%rdx), %ymm0
+ |      53.   vpsrld	$15, %ymm1, %ymm1
+ |      54.   vmovdqu	%ymm1, 608(%rsp)
+ +----> 55.   vpand	%ymm1, %ymm13, %ymm1         ## RESOURCE interference:  HWPort5 [ probability: 99% ]
+ |      56.   vmovdqu	%ymm1, (%rsp)
+ +----> 57.   vpcmpgtd	%ymm1, %ymm9, %ymm11     ## REGISTER dependency:  %ymm1
+ +----> 58.   vblendvps	%ymm11, %ymm0, %ymm10, %ymm1 ## REGISTER dependency:  %ymm11
+ |      59.   vmovups	%ymm1, 640(%rsp)
+ |      60.   vmovdqa	%ymm2, %ymm1
+ |      61.   vmovdqu	%ymm2, 352(%rsp)
+ |      62.   vpxor	%ymm2, %ymm3, %ymm2
+    </code>
+
+
+    <p>
+      Here we notice a bunch of data dependencies (I think that's what
+      "REGISTER dependency" means, at least), and resource contention on Port5.
+      We can also notice there are a bunch of <code class='inline'>vblendps</code>
+      instructions, which are from our <code class='inline'>Select</code> function.
+      This is a good indication that our <code class='inline'>Grad8x</code>
+      routine is currently a bottleneck and is a good place to look for speedups.
+    </p>
+
+    <code>
+    link_internal f32_8x
+    Grad8x(u32_8x hash, f32_8x x, f32_8x y, f32_8x z)
+    {
+      auto h = hash & 15;
+
+      u32_8x uSel = h < 8;
+      u32_8x vSel = h < 4;
+      u32_8x xSel = (h == 12 | h == 14 );
+
+      f32_8x u  = Select(uSel, x, y);
+      f32_8x xz = Select(xSel, x, z);
+      f32_8x v  = Select(vSel, y, xz);
+
+      auto h1 = hash << 31;
+      auto h2 = (hash & U32_8X(2)) << 30 ;
+      f32_8x Result = ( u ^ Cast_f32_8x(h1) ) + ( v ^ Cast_f32_8x(h2) );
+
+      return Result;
+    }
+    </code>
+
+    <p>
+      Taking a look at <code class='inline'>Grad8x</code>, we can make the
+      observation that both u and v are blended together in the result.  I could
+      also theorize that we just need to blend the x, y, and z components in some
+      way, which makes me think that we might be able to get away with just two
+      selects, blending xy in u, and yz in v.
+    </p>
+
+    <p>
+      This change produces no noticable visual artifacts, and shaves almost a cycle and a half!
+    </p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_checkin_9.png"></img>
+      <figcaption>Current: 6.3 cycles/cell</figcaption>
+      <figcaption>Baseline: 13.3 cycles/cell</figcaption>
+    </figure>
+
+    <h3>Conclusion</h3>
+    <p>
+      This is as fast as it gets for now.  I believe there's still a fair bit
+      of room for improvement here; at one point I ended up with a
+      nearly-identical implementation to FastNoise2 and was still a couple
+      cycles shy.  Which makes me think there are some more cycle-shaving
+      bit-tricks to be played in the Perlin kernel.  And, if my <code class='inline'>llvm-mca</code>-fu
+      was better, I could probably do a much more thorough analysis and a better
+      job at finding ways to de-congest ports 1 and 5.
+    </p>
+
+    <p>
+      So, if you're willing to go 16-wide, and accept a maybe-slightly-inferior
+      <code class='inline'>Grad</code> function, you too can compute perlin
+      noise for the low, low cost of 6.3 cycles per cell, under ideal conditions ;)
+    </p>
+
+  </div>
+</body>
+
