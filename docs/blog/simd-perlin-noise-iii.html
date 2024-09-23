@@ -12,15 +12,16 @@
 
     <h3>Preface</h3>
     <p>
-      FastNoise2 turns out to be, as the name might suggest, very fast and
-      surprisingly approachable.  Getting my implementation to sub-10-cycles-per-cell
-      would have taken significantly more work if not for this fantastic libaray.
-    </p>
-
-    <p>
       If you didn't catch the first part of this series where we vectorized
       with AVX, check out <a href="/vim/blog/simd-perlin-noise-ii">SIMD Perlin Noise Part II : AVX Strikes Back!</a>
     </p>
+    <p>
+      As the name might suggest, FastNoise2 turns out to be very fast, and
+      surprisingly approachable.  Doing this work on my implementation would
+      have taken significantly more time and effort if not for this fantastic
+      library.  Shoutout to Jordan Peck and his awesome work <3
+    </p>
+
 
     <h3>FastNoise2 Baseline</h3>
     <p>
@@ -83,12 +84,12 @@
     </p>
 
     <code>
-  Cycles Per Element : (13.602051)
-  Cycles Per Element : (9.783423)
-  Cycles Per Element : (9.960336)
-  Cycles Per Element : (10.034423)
-  Cycles Per Element : (9.948371)
-  Cycles Per Element : (9.826148)
+  Cycles Per Cell : (13.602051)
+  Cycles Per Cell : (9.783423)
+  Cycles Per Cell : (9.960336)
+  Cycles Per Cell : (10.034423)
+  Cycles Per Cell : (9.948371)
+  Cycles Per Cell : (9.826148)
   3D/Perlin   29967 ns   13602 ns   74667  items_per_second=602.262M/s
     </code>
 
