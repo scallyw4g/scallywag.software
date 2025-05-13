@@ -19,30 +19,17 @@
       an idea while I was napping the other day, so here we are.  Let's get right into it.
     </p>
 
-    <h3>i am speed</h3>
+    <h3>i am spd</h3>
     <p>
-      If we think about the Perlin noise algorithm as a whole, it consists of
-      three parts:
-    </p>
-    <p>
-      1. Hash grid points
-      2. Compute gradients from the hashes
-      3. Blend the gradients
+
+      The cute idea I had is that the 3D matrix of output is effectively the product
+      of three 1D vectors of information.  The vectors are just some values
+      that stay constant across their entire row, column or channel, depending
+      on the axis.
     </p>
 
     <p>
-      We've already established that we can use any hashing function we want
-      the exhibits good entropy.  Presumably, the function that computes
-      gradients should produce them with a reasonably uniform  distribution on
-      the unit sphere.  However, our article today is about something
-      different.  The cute idea I had was that we can produce three 'vectors'
-      of information for the 3D matrix that is the output.  The output is the
-      product of the input vectors in 3D space.  So we're in the business
-      of producing these vectors in 1D space.. but, what do we need to produce?
-    </p>
-
-    <p>
-      Let's look at some pseudo-code from the main loop:
+      So, taking a look at some pseudo-code from the main loop:
     </p>
 
     <code>
@@ -85,17 +72,20 @@
     </code>
 
     <p>
-      The main thing to notice here is that the result of
-      ComputePerlinParameters for the x, y and z coordinates remains constant
-      across the entire block of output.  The observation about the current
-      loop configuration is that we needlessly re-compute the x parameters
-      every time we stride through the array in y or z.
+      The thing to notice here is that the result of ComputePerlinParameters
+      for the x, y and z coordinates remains constant across the entire block
+      of output.  The observation about the current loop configuration is that
+      we needlessly re-compute the x parameters every time we stride through
+      the array in y or z.  Furthermore, we're doing ComputePerlinParameters
+      inside the hot loop, which is going to pollute the instruction cache,
+      even if it's not particularly frequently.
     </p>
 
     <p>
       So, instead of computing the perlin_params inputs inside the hot loop,
       we can pull them out and pre-compute all the parameters for the entire
-      output block, then
+      output block, then just loop through the pre-computed parameter 'vectors'
+      to do the product.
     </p>
 
     <code>
@@ -153,8 +143,7 @@
 
     <p>
       By pulling the parameter computation out of the hot loop we were able to
-      go back to 8-wide, instead of 16-wide, in the hot loop and still managed
-      to get a 13% speedup.
+      go back to 8-wide, instead of 16-wide, in the hot loop and managed a 13% speedup.
     </p>
 
     <p>
@@ -196,16 +185,14 @@
                    G0*G3*G5 +
                    G1*G3*G4 +
                    G1*G3*G5;
+
     </code>
 
     <p>
       So, there you have it.  We went 102 cycles/cell in the first part of this
       series to just 5.56 cycles/cell and a state-of-the-art implementation.
-    </p>
-
-    <p>
-      All in all we got a total speedup of 18.5x, and beat the current state of
-      the art by 1.8x
+      All in all, we got a total speedup of 18.5x, and beat the current state
+      of the art by 1.8x
     </p>
 
     <p>
