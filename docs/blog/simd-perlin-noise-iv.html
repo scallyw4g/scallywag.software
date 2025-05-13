@@ -113,7 +113,7 @@
           yParams[y] = ComputePerlinParameters(F32_8X(y), PrimeY);
 
         perlin_params xParams[Dim.x/8];
-        for ( s32 x = 0; x < Dim.x; ++ x)
+        for ( s32 x = 0; x < Dim.x/8; ++ x)
           f32_8x xCoords = { ... compute strided x coordinates ... };
           xParams[x] = ComputePerlinParameters(xCoords, PrimeX);
 
