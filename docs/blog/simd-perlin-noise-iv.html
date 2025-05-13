@@ -1,0 +1,216 @@
+<body>
+  <div>
+    <h5>Sept 28, 2024</h5>
+    <h1>SIMD Perlin Noise Part IV</h1>
+    <h2>State of the Art</h2>
+
+    <h3>TL;DR</h3>
+    <p>
+      As far as I can tell, I came up with a novel technique for optimizing
+      the generation of Perlin noise.  This implementation handily beats the
+      next-fastest open source implementation I could find, which I think makes
+      it the worlds fastest AVX2 Perlin noise implementation.
+    </p>
+
+
+    <h3>Preface</h3>
+    <p>
+      I didn't expect there to be a fourth part in this series, but hey, I had
+      an idea while I was napping the other day, so here we are.  Let's get right into it.
+    </p>
+
+    <h3>i am speed</h3>
+    <p>
+      If we think about the Perlin noise algorithm as a whole, it consists of
+      three parts:
+    </p>
+    <p>
+      1. Hash grid points
+      2. Compute gradients from the hashes
+      3. Blend the gradients
+    </p>
+
+    <p>
+      We've already established that we can use any hashing function we want
+      the exhibits good entropy.  Presumably, the function that computes
+      gradients should produce them with a reasonably uniform  distribution on
+      the unit sphere.  However, our article today is about something
+      different.  The cute idea I had was that we can produce three 'vectors'
+      of information for the 3D matrix that is the output.  The output is the
+      product of the input vectors in 3D space.  So we're in the business
+      of producing these vectors in 1D space.. but, what do we need to produce?
+    </p>
+
+    <p>
+      Let's look at some pseudo-code from the main loop:
+    </p>
+
+    <code>
+
+      struct perlin_params
+      {
+        u32_8x P0;
+        u32_8x P1;
+        f32_8x Fract0;
+        f32_8x Fract1;
+        f32_8x Gradient;
+      };
+
+      void
+      PerlinNoise_avx2_16x( ... )
+      {
+        ... setup code ...
+
+        for ( s32 z = 0; z < Dim.z; ++ z)
+        {
+          perlin_params zParams = ComputePerlinParameters(F32_8X(z), PrimeZ);
+          for ( s32 y = 0; y < Dim.y; ++ y)
+          {
+            perlin_params yParams = ComputePerlinParameters(F32_8X(y), PrimeY);
+
+            perlin_params xParams[2];
+            for ( s32 x = 0; x < Dim.x; x += 16)
+            {
+              _x0 = { ... compute strided x   coordinates ... };
+              _x1 = { ... compute strided x+8 coordinates ... };
+              xParams[0] = ComputePerlinParameters(_x0, PrimeX);
+              xParams[1] = ComputePerlinParameters(_x1, PrimeX);
+
+              PerlinNoise_16x_avx2(xParams, yParams, zParams, Dest);
+            }
+          }
+        }
+      }
+
+    </code>
+
+    <p>
+      The main thing to notice here is that the result of
+      ComputePerlinParameters for the x, y and z coordinates remains constant
+      across the entire block of output.  The observation about the current
+      loop configuration is that we needlessly re-compute the x parameters
+      every time we stride through the array in y or z.
+    </p>
+
+    <p>
+      So, instead of computing the perlin_params inputs inside the hot loop,
+      we can pull them out and pre-compute all the parameters for the entire
+      output block, then
+    </p>
+
+    <code>
+
+      struct perlin_params
+      {
+        u32_8x P0;
+        u32_8x P1;
+        f32_8x Fract0;
+        f32_8x Fract1;
+        f32_8x Gradient;
+      };
+
+      void
+      PerlinNoise_avx2_8x( ... )
+      {
+        ... setup code ...
+
+        perlin_params zParams[Dim.z];
+        for ( s32 z = 0; z < Dim.z; ++ z)
+          zParams[z] = ComputePerlinParameters(F32_8X(z), PrimeZ);
+
+        perlin_params yParams[Dim.y];
+        for ( s32 y = 0; y < Dim.y; ++ y)
+          yParams[y] = ComputePerlinParameters(F32_8X(y), PrimeY);
+
+        perlin_params xParams[Dim.x/8];
+        for ( s32 x = 0; x < Dim.x; ++ x)
+          f32_8x xCoords = { ... compute strided x coordinates ... };
+          xParams[x] = ComputePerlinParameters(xCoords, PrimeX);
+
+        for ( s32 z = 0; z < Dim.z; ++ z)
+        {
+          for ( s32 y = 0; y < Dim.y; ++ y)
+          {
+            for ( s32 x = 0; x < Dim.x; x += 8)
+            {
+              PerlinNoise_8x_avx2(xParams[x/8], yParams[y], zParams[z], Dest);
+            }
+          }
+        }
+      }
+
+    </code>
+
+    <p>
+      This is starting to look pretty tight, and the profile agrees.
+    </p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/perlin_checkin_10.png"></img>
+      <figcaption>Current: 5.56 cycles/cell</figcaption>
+      <figcaption>Baseline: 6.3 cycles/cell</figcaption>
+    </figure>
+
+    <p>
+      By pulling the parameter computation out of the hot loop we were able to
+      go back to 8-wide, instead of 16-wide, in the hot loop and still managed
+      to get a 13% speedup.
+    </p>
+
+    <p>
+      I tried a few other things during this time that ended up being dead ends.
+      Most notably I attempted an alternative formulation to the 3-way blend:
+    </p>
+
+    <code>
+        // Instead of the giant lerp-fest, which has dependency chains ...
+
+        auto L0  = Lerp8x(perlinX->Fade, G0, G1);
+        auto L1  = Lerp8x(perlinX->Fade, G2, G3);
+        auto L2  = Lerp8x(perlinX->Fade, G4, G5);
+        auto L3  = Lerp8x(perlinX->Fade, G6, G7);
+
+        auto L4  = Lerp8x(perlinY->Fade, L0, L1);
+        auto L5  = Lerp8x(perlinY->Fade, L2, L3);
+
+        auto Res = Lerp8x(perlinZ->Fade, L4, L5);
+
+        // I tried this giant mul-add fest, which turned out to be slower.
+        // Presumably the instruction pipelines are full, so eliminating dependencies
+        // at the cost of more instructions doesn't get us any further at this point.
+
+        // V000 (1 - x) (1 - y) (1 - z) +
+        // V100      x  (1 - y) (1 - z) +
+        // V010 (1 - x)      y  (1 - z) +
+        // V001 (1 - x) (1 - y)      z  +
+        // V101      x  (1 - y)      z  +
+        // V011 (1 - x)      y       z  +
+        // V110      x       y  (1 - z) +
+        // V111      x       y       z
+
+        auto Res = G0*G2*G4 +
+                   G1*G2*G4 +
+                   G0*G3*G4 +
+                   G0*G2*G5 +
+                   G1*G2*G5 +
+                   G0*G3*G5 +
+                   G1*G3*G4 +
+                   G1*G3*G5;
+    </code>
+
+    <p>
+      So, there you have it.  We went 102 cycles/cell in the first part of this
+      series to just 5.56 cycles/cell and a state-of-the-art implementation.
+    </p>
+
+    <p>
+      All in all we got a total speedup of 18.5x, and beat the current state of
+      the art by 1.8x
+    </p>
+
+    <p>
+      For refrence, the <a href='https://github.com/scallyw4g/bonsai_stdlib/blob/770baa72a8243ed6c48cc20464d44158feb43d0b/src/perlin.cpp#L374'>Perlin implementation</a> is on github.
+      As well as the <a href='https://github.com/scallyw4g/bonsai/blob/8ed60afa96f6349595a4a0740e51b8962816d14a/src/engine/terrain.cpp#L157'>code that we worked on</a> in this article that calls it.
+  </div>
+</body>
+

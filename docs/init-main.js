@@ -26,6 +26,7 @@ const ROUTE_VIM_BLOG_VOXEL_ENGINE_FAQ           = "/vim/blog/voxel-engine-faq";
 const ROUTE_VIM_BLOG_SIMD_PERLIN_NOISE          = "/vim/blog/simd-perlin-noise-i";
 const ROUTE_VIM_BLOG_SIMD_PERLIN_NOISE_II       = "/vim/blog/simd-perlin-noise-ii";
 const ROUTE_VIM_BLOG_SIMD_PERLIN_NOISE_III      = "/vim/blog/simd-perlin-noise-iii";
+const ROUTE_VIM_BLOG_SIMD_PERLIN_NOISE_IV       = "/vim/blog/simd-perlin-noise-iv";
 
 const INTRO_ANIM_COMPLETE = "IntroAnimationComplete"
 const INDEX_ANIM_COMPLETE = "IndexAnimationComplete"
