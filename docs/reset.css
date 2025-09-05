@@ -59,7 +59,7 @@ p, code, img {
   margin-bottom: 1.3rem;
 }
 
-p {
+p, ul {
   width: 768px;
 }
 

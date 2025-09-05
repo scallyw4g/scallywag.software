@@ -52,28 +52,34 @@
       struct v3 { f32 Elements[3]; }
     </code>
 
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/gui-ii-0.png"></img>
+      <figcaption>The default widget</figcaption>
+    </figure>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/gui-ii-1.png"></img>
+      <figcaption>A much better color picker</figcaption>
+    </figure>
+
+
     <p>
-      poof supports arbitrary data tags on pretty much everything, so we can
-      create a little escape hatch for ourselves that lets us inject arbitrary
-      code into the output stream.
+      So, to get from A to B, we need to create a little escape hatch for ourself.
+      Thankfully, poof supports arbitrary data tags on pretty much everything,
+      so we can create a tag that lets us inject arbitrary code into the output
+      stream.
     </p>
 
     <code>
-      // Let's imagine we already have a function that does the color picker UI
-      // for a vector quantity.
-      //
-      void UiColorPicker(renderer_2d *Ui, v3 *Color)
-      { ... color picker stuff ... }
-
-      // And we added a color to our entity struct for .. reasons ..
+      // Let's add a color to our entity struct for .. reasons ..
       //
       struct entity
       {
-        // .. existing stuff
+        // .. existing stuff ..
 
         v3 Color;
 
-          // the @ui_custom_display tag here is applied to the previous member
+          // the @ui_custom_display tag here is applied to the previous `Color` member
           //
           poof(@ui_custom_display( UiColorPicker(Ui, &Element->Color) ))
       }
@@ -118,6 +124,12 @@
         UiDisplay(Ui, &Element->Transform);
         UiColorPicker(Ui, &Element->Color);
       }
+
+      // For completeness, we're going to pretend there's already a color
+      // picker widget that accepts a vector quantity.
+      //
+      void UiColorPicker(renderer_2d *Ui, v3 *Color) { ... do color picker stuff ... }
+
     </code>
 
     <p>
