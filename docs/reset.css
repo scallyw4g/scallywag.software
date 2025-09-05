@@ -1,6 +1,6 @@
 
 html, body {
-  font-size: 24px;
+  font-size: 18px;
   margin: 0;
   padding: 0;
 }
@@ -8,7 +8,7 @@ html, body {
 @media print {
 
   html, body {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .page-break-before {
@@ -27,6 +27,9 @@ ul {
   padding: 0;
 }
 
+li {
+  padding: 10px;
+}
 
 quote {
   display: block;
@@ -54,6 +57,10 @@ p, code, img {
 
 p, code, img {
   margin-bottom: 1.3rem;
+}
+
+p {
+  width: 768px;
 }
 
 figure img {
@@ -125,13 +132,13 @@ h4, .h4 {
 }
 
 h5, .h5 {
-  font-size: 0.8rem;
-  margin-bottom: 0.25rem;
+  font-size: 1.0rem;
+  margin-bottom: 0.35rem;
 }
 
 h6, .h6 {
-  font-size: 0.5rem;
-  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.20rem;
 }
 
 img {

@@ -1,0 +1,235 @@
+<body>
+  <div>
+    <h5>May 27, 2025</h5>
+    <h1>A Metaprogrammable GUI toolkit</h1>
+
+    <div class=part-link-container>
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-i'>
+          <h4 class='part-link-0 active'>
+            Part I
+          </h4>
+          <h4 class='part-link-1 active'>
+            Displaying Engine Data
+          </h4>
+        </a>
+      </div>
+
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-ii'>
+          <h4 class='part-link-0'>
+            Part II
+          </h4>
+          <h4 class='part-link-1'>
+            Custom UI
+          </h4>
+        </a>
+      </div>
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-iii'>
+          <h4 class='part-link-0'>
+            Part III
+          </h4>
+          <h4 class='part-link-1'>
+            Low Level API : Coming Soon
+          </h4>
+        </a>
+      </div>
+
+    </div>
+
+    <h4>Disclaimer</h4>
+    <p>I have no idea what I'm talking about.  Act accordingly.</p>
+
+    <h3>Thesis</h3>
+    <p>
+      For my game engine project, Bonsai, I wanted a GUI toolkit that satisfied a few requirements:
+
+      <ul>
+        <li>
+          1. Extremely low programmer overhead for the boring but important job
+          of displaying arbitrary engine data at runtime.
+        </li>
+
+        <li>2. Low overhead for building custom UI widgets.</li>
+
+        <li>3. Ability to build sophisticated and pixel perfect UI components
+               with arbitrarily complex interaction responses.</li>
+      </ul>
+    </p>
+
+    <p>
+      That sounds like a pretty tall order, and it was. We're going to tackle
+      this one part at a time.  Let's get into the first one.
+    </p>
+
+    <p>First of all, what do I mean by "engine data"?</p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/engine_data.png"></img>
+      <figcaption>Some of the engine data Bonsai displays</figcaption>
+    </figure>
+
+    <p>
+      This is an example of UI displaying a small portion of the
+      `engine_resources` struct.  engine_resources is a global singleton which
+      contains, or points to, every piece of data that the engine uses at
+      runtime.
+    </p>
+
+    <p>
+      The above UI is completely generated at compile time by a metaprogramming
+      tool called `poof`.  The basic observation is that every data structure
+      forms a type-tree of sorts, with the leaves being primitive types..  u32,
+      s32, float, string, etc.  For generating UI, we would really like to
+      iterate over the members of a given type and recurse down the type-tree
+      for each member, doing a UI display function at each level.
+      Unfortunately Bonsai is written in C++, which has extremely primitive
+      support for doing these kinds of operations.
+    </p>
+
+    <h4>Enter poof : stage left</h4>
+    <p>
+      `poof` is a metaprogramming tool that I wrote to assist with certain tasks
+      in Bonsai that I could not figure out how to do with C++ template
+      metaprogramming.  I won't go into great detail about the genesis of the
+      tool here, but the basic idea is it's runs a two stage process:
+
+      <ul>
+        <li>
+          1. poof runs a bespoke lex/parse stage on the program source code.
+          During this first stage, it builds internal representations of the
+          datatypes found in the program it's parsing.</li>
+
+        <li>
+          2. poof scans for all instances of the `poof(...)` macro keyword,
+          which contains the metaprogramming code.  It interprets this code and
+          emits the result to a new file which is #included directly following
+          the poof macro.</li>
+      <ul>
+    </p>
+
+    <p>
+      Generally, calling poof meta functions looks like this:
+    </p>
+
+    <code>
+        // Example entity struct, this can be any valid C structure, enum or union.
+        //
+        struct entity
+        {
+          u32 EntityIndex;
+          mesh_3d Mesh;
+          transform_3d Transform;
+          // .. etc ..
+        };
+
+        // generates code for a list container, containing entities
+        poof(gen_list_container(entity))
+        #include "generated/gen_list_container_entity.h"
+
+        // generates code for a hashtable container, containing entities
+        poof(gen_hashtable_container(entity))
+        #include "generated/gen_hashtable_container_entity.h"
+
+        // generates code to display the entity at runtime in a UI
+        poof(gen_ui_display(entity))
+        #include "generated/gen_ui_display_entity.h"
+
+        // .. dump the entity as text to console
+        poof(gen_console_display(entity))
+
+        // .. serialize/deserialize the entity to disk
+        poof(gen_serdes(entity))
+
+        //
+        // .. etc
+        //
+    </code>
+
+    <p>
+      With poof, iterating over a type is easy.  Inside a poof function, we
+      simply call `type.map()`, and the runtime executes the following block
+      for each member.  We can (ab)use function overloading here and just call
+      a display function for each member.  In this example, we'll call it
+      UiDisplay.
+    </p>
+
+    <code>
+
+      // The poof meta function that generates the cpp UiDisplay function
+      //
+      poof(
+
+        // poof meta function signature
+        //
+        func gen_ui_display(type)
+        {
+
+          // cpp function definition
+          //
+          void UiDisplay(renderer_2d *Ui, type *Element)
+          {
+            // iterate over members of 'type'
+            type.map(member)
+            {
+              // emit for each member in 'type'
+              UiDisplay(Ui, &Element->(member.name));
+            }
+          }
+        }
+      )
+
+      // Consider our example entity struct from the previous code
+      //
+      struct entity
+      {
+        u32 EntityIndex;
+        mesh_3d Mesh;
+        transform_3d Transform;
+      };
+
+      // We can call the meta func that generates UiDisplay for an 'entity' like so
+      //
+      poof(gen_ui_display(test_struct))
+      #include "generated/gen_ui_display_test_struct.h"
+
+
+      // Which produces the following inside "generated/gen_ui_display_test_struct.h"
+      //
+      void UiDisplay(renderer_2d *Ui, test_struct *Element)
+      {
+        UiDisplay(Ui, &Element->EntityIndex);
+        UiDisplay(Ui, &Element->Mesh);
+        UiDisplay(Ui, &Element->Transform);
+      }
+    </code>
+
+    <p>
+      This is the basic premise that the UI toolkit in Bonsai uses to display
+      arbitrary engine data at runtime.  The actual implementation is somewhat
+      more sophisticated than the example above, but the general idea is the
+      same.  For every member of a type, call `UiDisplay` .. which in turn is
+      composed of more display functions ..  until you get to the primitive
+      'leaves' of the type tree.
+    </p>
+
+    <p>
+      The UI it generates is all very generic and boring, but that's the point;
+      it's very fast for a programmer to get runtime data on the screen.
+    </p>
+
+    <p>
+      So, with the basics out of the way, how do we make UI that's a little more tailored?
+    </p>
+
+    <p>
+      Let's take a closer look in <a href='/vim/blog/gui-ii'>Part II : Custom UI</a>
+    </p>
+
+  </div>
+</body>
+

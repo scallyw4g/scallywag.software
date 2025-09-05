@@ -1,0 +1,136 @@
+<body>
+  <div>
+    <h5>Sept 4, 2025</h5>
+    <h1>A Metaprogrammable GUI toolkit</h1>
+
+    <div class=part-link-container>
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-i'>
+          <h4 class='part-link-0'>
+            Part I
+          </h4>
+          <h4 class='part-link-1'>
+            Displaying Engine Data
+          </h4>
+        </a>
+      </div>
+
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-ii'>
+          <h4 class='part-link-0 active'>
+            Part II
+          </h4>
+          <h4 class='part-link-1 active'>
+            Custom UI
+          </h4>
+        </a>
+      </div>
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-iii'>
+          <h4 class='part-link-0'>
+            Part III
+          </h4>
+          <h4 class='part-link-1'>
+            Low Level API : Coming Soon
+          </h4>
+        </a>
+      </div>
+
+    </div>
+
+    <p>
+      What if, for example, we had a vector quantity that represented a color
+      value? We'd want to display a color picker instead of the default widget.
+    </p>
+
+    <code>
+      // Imagine our vector looks something like this.
+      //
+      struct v3 { f32 Elements[3]; }
+    </code>
+
+    <p>
+      poof supports arbitrary data tags on pretty much everything, so we can
+      create a little escape hatch for ourselves that lets us inject arbitrary
+      code into the output stream.
+    </p>
+
+    <code>
+      // Let's imagine we already have a function that does the color picker UI
+      // for a vector quantity.
+      //
+      void UiColorPicker(renderer_2d *Ui, v3 *Color)
+      { ... color picker stuff ... }
+
+      // And we added a color to our entity struct for .. reasons ..
+      //
+      struct entity
+      {
+        // .. existing stuff
+
+        v3 Color;
+
+          // the @ui_custom_display tag here is applied to the previous member
+          //
+          poof(@ui_custom_display( UiColorPicker(Ui, &Element->Color) ))
+      }
+
+      // Picking up where we left off in our meta function:
+      //
+      poof(
+        func gen_ui_display(type)
+        {
+          void UiDisplay(renderer_2d *Ui, type *Element)
+          {
+            type.map(member)
+            {
+              /// We can check if the current member has our escape hatch tag
+              member.has_tag(ui_custom_display)
+              {
+                /// and inject the tag value verbatim if it does
+                member.tag_value(ui_custom_display)
+              }
+              {
+                /// Otherwise we do the generic display path
+                UiDisplay(Ui, &Element->(member.name));
+              }
+            }
+          }
+        }
+      )
+
+      poof(gen_ui_display(test_struct))
+
+    </code>
+
+    <p>
+      Which yeilds:
+    </p>
+
+    <code>
+      void UiDisplay(renderer_2d *Ui, test_struct *Element)
+      {
+        UiDisplay(Ui, &Element->EntityIndex);
+        UiDisplay(Ui, &Element->Mesh);
+        UiDisplay(Ui, &Element->Transform);
+        UiColorPicker(Ui, &Element->Color);
+      }
+    </code>
+
+    <p>
+      Great.  So we have a system for doing low effort, generic UI for displaying
+      data, and an escape hatch for doing custom functions.  But what does the
+      underlying API look like for doing something a litte more custom?
+    </p>
+
+
+    <p>
+      Let's take a closer look in <a href='/vim/blog/gui-iii'>Part III : Low Level API</a>
+    </p>
+
+  </div>
+</body>
+

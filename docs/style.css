@@ -256,3 +256,44 @@ img.full-width {
   display: inline-block;
 }
 
+
+
+
+
+
+.part-link {
+  display: block;
+  a:hover {
+    text-decoration: none;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    border-bottom: 2px solid var(--link-color-4);
+  }
+  .active {
+    font-size: 1.75rem;
+    border-bottom: 2px solid var(--link-color-2);
+  }
+}
+
+.part-link-0, .part-link-1, .part-link h2 {
+  display: inline-block;
+  color: var(--text-normal);
+  min-width: 180px;
+  margin-bottom: 8px;
+}
+
+.part-link-1 {
+  margin-left: -12px;
+  width: 50%;
+}
+
+.part-link:hover {
+  h1, h2, h3, h4, h5, h6 {
+    border-bottom: 2px solid var(--link-color-5);
+  }
+}
+
+.part-link-container {
+  margin-bottom: 1.5rem;
+}
+
