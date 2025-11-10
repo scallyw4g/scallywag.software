@@ -1,6 +1,6 @@
 <body>
   <div>
-    <h5>Sept 4, 2025</h5>
+    <h5>Nov 7, 2025</h5>
     <h1>A Metaprogrammable GUI toolkit</h1>
 
     <div class=part-link-container>
@@ -23,7 +23,7 @@
             Part II
           </h4>
           <h4 class='part-link-1'>
-            Custom UI
+            A Primitive Widget
           </h4>
         </a>
       </div>
@@ -34,54 +34,135 @@
             Part III
           </h4>
           <h4 class='part-link-1 active'>
-            Coming Soon
+            Custom Widgets
+          </h4>
+        </a>
+      </div>
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-iv'>
+          <h4 class='part-link-0'>
+            Part IV
+          </h4>
+          <h4 class='part-link-1'>
+            Low Level API
           </h4>
         </a>
       </div>
 
     </div>
+  </div>
 
-    <!-- <h3>Preface</h3> -->
-    <!-- <p> -->
-    <!--   Until now, we've hand-waved the API provided by Bonsai which is -->
-    <!--   eventually responsible for putting pixels on the screen.  If we want to -->
-    <!--   do more complex UI elements, we're going to have to take a closer look -->
-    <!--   there. -->
-    <!-- </p> -->
+  <div>
+    <h3>A Color Picker</h3>
+    <p>
+      What if, for example, we had a vector quantity that represented a color
+      value? We'd want to display a color picker instead of the default widget.
+    </p>
 
-    <!-- <p> -->
-    <!--   But first, let's inspect a piece of UI that's impractical to generate programatically. -->
-    <!-- </p> -->
+    <code>
+      // Imagine we have a vector struct that looks something like this.
 
-    <!-- <figure class='inline-block'> -->
-    <!--   <img class='full-width' src="/assets/call_graph_with_context_switches_5.png"></img> -->
-    <!--   <figcaption>A callgraph with context switch information</figcaption> -->
-    <!-- </figure> -->
+      struct v3 { f32 Elements[3]; }
+    </code>
 
-    <!-- <p> -->
-    <!--   This window has three seperate content regions, absolute and relative -->
-    <!--   layouts, and elements with custom clip bounds.  So, how do we get from -->
-    <!--   our high-level `UiDisplay` paradigm, which knows nothing about any of -->
-    <!--   this, down to this? -->
-    <!-- </p> -->
+    <p>
+      The default behavior for a vector quantity isn't particularly useful for
+      displaying a color value, especially the color is encoded as something other than RGB.
+    </p>
 
-    <!-- <h3>API</h3> -->
-    <!-- <p> -->
-    <!--   The Bonsai UI API is an immediate mode, command-buffer style API.  The -->
-    <!--   public APIs simply write information to a command buffer for later processing. -->
-    <!-- </p> -->
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/gui-ii-0.png"></img>
+      <figcaption>The default widget</figcaption>
+    </figure>
 
-    <!-- <p> -->
-    <!--   The most common pair of APIs for displaying data are the `Text` and -->
-    <!--   `Column` functions.  Many APIs return an `interactable_handle`, which can -->
-    <!--   be used to query interaction state, such as was the element hovered or -->
-    <!--   clicked, on the last frame. -->
-    <!-- </p> -->
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/gui-ii-1.png"></img>
+      <figcaption>A much better HSV color picker</figcaption>
+    </figure>
 
-    <!-- <p> -->
-    <!--   Let's take a look at a couple of the highest level APIs: -->
-    <!-- </p> -->
+
+    <p>
+      So, to get from A to B, we need to create a little escape hatch for ourself.
+      Thankfully, poof supports arbitrary data tags on pretty much everything,
+      so we can create a tag that lets us do a custom UI function instead of
+      the default one.
+    </p>
+
+    <code>
+      // Let's add a color to our entity struct for the example, and add a custom
+      // @ui_custom_display tag to the color member
+      //
+      struct entity
+      {
+        // .. existing stuff ..
+
+        // the @ui_custom_display tag here is applied to the member parsed immediately before it occurs
+        // In this case, it applies to the `Color` member
+        //
+        v3 Color;      poof(@ui_custom_display( UiColorPicker(Ui, &Element->Color) ))
+      }
+
+      // Picking up where we left off in our meta function:
+      //
+      poof(
+        func gen_ui_display(type)
+        {
+          void UiDisplay(renderer_2d *Ui, type *Element)
+          {
+            type.map(member)
+            {
+              /// We can check if the current member has our @ui_custom_display tag
+              member.has_tag(ui_custom_display)
+              {
+                /// and inject the tag value verbatim if it does
+                member.tag_value(ui_custom_display)
+              }
+              {
+                /// Otherwise we do the generic display path
+                UiDisplay(Ui, &Element->(member.name));
+              }
+            }
+          }
+        }
+      )
+
+      poof(gen_ui_display(test_struct))
+
+    </code>
+
+    <p>
+      Which yeilds:
+    </p>
+
+    <code>
+      void UiDisplay(renderer_2d *Ui, test_struct *Element)
+      {
+        UiDisplay(Ui, &Element->EntityIndex);
+        UiDisplay(Ui, &Element->Mesh);
+        UiDisplay(Ui, &Element->Transform);
+        UiColorPicker(Ui, &Element->Color);
+      }
+
+      // For completeness, we're going to pretend there's already a color
+      // picker widget that accepts a vector quantity.
+      //
+      void UiColorPicker(renderer_2d *Ui, v3 *Color) { /* ... do color picker stuff ... */ }
+
+    </code>
+
+    <p>
+      Great.  So we have a system for doing low effort, generic UI for displaying
+      data, and an escape hatch for doing custom functions.  But what does the
+      underlying API look like for doing something a litte more custom?
+    </p>
+
+
+    <p>
+      Let's take a closer look in <a href='/vim/blog/gui-iii'>Part III : Low Level API</a>
+    </p>
 
   </div>
+
 </body>
 

@@ -23,7 +23,7 @@
             Part II
           </h4>
           <h4 class='part-link-1 active'>
-            Custom UI
+            A Primitive Widget
           </h4>
         </a>
       </div>
@@ -34,116 +34,123 @@
             Part III
           </h4>
           <h4 class='part-link-1'>
-            Coming Soon
+            Custom Widgets
           </h4>
         </a>
       </div>
 
+      <div class=part-link>
+        <a href='/vim/blog/gui-iv'>
+          <h4 class='part-link-0'>
+            Part IV
+          </h4>
+          <h4 class='part-link-1'>
+            Low Level API
+          </h4>
+        </a>
+      </div>
+
+
+      </div>
+
     </div>
+  </div>
+
+  <div>
+    <h3>Overview</h3>
+    <p>
+      So far, we've seen how to generate high-level DisplayUi functions for
+      arbitrary datatypes.  Let's go a little deeper and understand how we'd
+      implement the UI functions for the leaves of the type-tree.
+    </p>
 
     <p>
-      What if, for example, we had a vector quantity that represented a color
-      value? We'd want to display a color picker instead of the default widget.
+      Let's define a type that represents a 3D vector quantity.
     </p>
 
     <code>
-      // Imagine our vector looks something like this.
-      //
-      struct v3 { f32 Elements[3]; }
+    struct v3 { f32 Elements[3]; }
     </code>
+
+    <p>
+      And take a look at the current default widget for this type in Bonsai.
+    </p>
+
 
     <figure class='inline-block'>
       <img class='full-width' src="/assets/gui-ii-0.png"></img>
       <figcaption>The default widget</figcaption>
     </figure>
 
-    <figure class='inline-block'>
-      <img class='full-width' src="/assets/gui-ii-1.png"></img>
-      <figcaption>A much better color picker</figcaption>
-    </figure>
-
-
+    <h3>Bonsai UI API</h3>
     <p>
-      So, to get from A to B, we need to create a little escape hatch for ourself.
-      Thankfully, poof supports arbitrary data tags on pretty much everything,
-      so we can create a tag that lets us inject arbitrary code into the output
-      stream.
+      Before trying to construct the UI functions for this type, let's take a look
+      at some of the API Bonsai provides that we're going to use.
     </p>
 
     <code>
-      // Let's add a color to our entity struct for .. reasons ..
-      //
-      struct entity
-      {
-        // .. existing stuff ..
+      struct cs { u32 Count; char *Start; } // cs is a mnemonic for counted_string
 
-        v3 Color;
 
-          // the @ui_custom_display tag here is applied to the previous `Color` member
-          //
-          poof(@ui_custom_display( UiColorPicker(Ui, &Element->Color) ))
-      }
+      ui_element_reference PushTableStart(renderer_2d *Ui, ui_render_params *Params);
+                      void PushTableEnd  (renderer_2d *Ui);
 
-      // Picking up where we left off in our meta function:
-      //
-      poof(
-        func gen_ui_display(type)
-        {
-          void UiDisplay(renderer_2d *Ui, type *Element)
-          {
-            type.map(member)
-            {
-              /// We can check if the current member has our escape hatch tag
-              member.has_tag(ui_custom_display)
-              {
-                /// and inject the tag value verbatim if it does
-                member.tag_value(ui_custom_display)
-              }
-              {
-                /// Otherwise we do the generic display path
-                UiDisplay(Ui, &Element->(member.name));
-              }
-            }
-          }
-        }
-      )
+      void PushColumn(renderer_2d *Ui, cs Text);
 
-      poof(gen_ui_display(test_struct))
-
+      b32 Button(renderer_2d *Ui, cs Text, ui_id Id);
     </code>
 
     <p>
-      Which yeilds:
+      Most elements will be contained within Tables, which are book-ended with
+      PushTable(Start|End).  Tables are just layout containers, and do not
+      necessarily contain tabular data. After opening a Table with PushTableStart,
+      PushColumn will do most of the heavy lifting.
+    </p>
+
+    <p>
+      With the API surface inspected, let's get to work
     </p>
 
     <code>
-      void UiDisplay(renderer_2d *Ui, test_struct *Element)
+      // We'll hand-wave the lowest-level function for a minute ..
+      //
+      void UiDisplay(renderer_2d *Ui, f32 *Value);
+
+      // Let's start by defining the function that displays a label and editor
+      // widgets for the f32 elements
+      //
+      void UiDisplay(renderer_2d *Ui, cs Label, v3 *Vector)
       {
-        UiDisplay(Ui, &Element->EntityIndex);
-        UiDisplay(Ui, &Element->Mesh);
-        UiDisplay(Ui, &Element->Transform);
-        UiColorPicker(Ui, &Element->Color);
+        PushTableStart(Ui);
+          PushColumn(Ui, Label);
+
+          UiDisplay(Ui, Vector->Elements + 0);
+          UiDisplay(Ui, Vector->Elements + 1);
+          UiDisplay(Ui, Vector->Elements + 2);
+
+          PushNewRow(Ui);
+        PushTableEnd(Ui);
       }
 
-      // For completeness, we're going to pretend there's already a color
-      // picker widget that accepts a vector quantity.
+      // Now for the lowest level widget for displaying and editing an f32 value
       //
-      void UiColorPicker(renderer_2d *Ui, v3 *Color) { ... do color picker stuff ... }
+      void UiDisplay(renderer_2d *Ui, f32 *Value)
+      {
+        // These IDs have to be globally unique 128bit identifiers.
+        // This computation is a stand-in for brevity
+        ui_id Id0 = {"-" ^ Value};
+        ui_id Id1 = {"+" ^ Value};
 
+        PushTableStart(Ui);
+          if (Button(Ui, CSz("-"), Id0)) { *Value -= 1.f; }
+          PushColumn(Ui, CS(*Value);
+          if (Button(Ui, CSz("+")), Id1) { *Value += 1.f; }
+        PushTableEnd(Ui);
+      }
     </code>
 
-    <p>
-      Great.  So we have a system for doing low effort, generic UI for displaying
-      data, and an escape hatch for doing custom functions.  But what does the
-      underlying API look like for doing something a litte more custom?
-    </p>
-
-
-    <p>
-      <!-- Let's take a closer look in <a href='/vim/blog/gui-iii'>Part III : Low Level API</a> -->
-      Stay tuned for Part III Coming Soon!
-    </p>
 
   </div>
+
 </body>
 

@@ -30,8 +30,11 @@ const ROUTE_VIM_BLOG_SIMD_PERLIN_NOISE_III      = "/vim/blog/simd-perlin-noise-i
 const ROUTE_VIM_BLOG_SIMD_PERLIN_NOISE_IV       = "/vim/blog/simd-perlin-noise-iv";
 
 const ROUTE_VIM_BLOG_GUI_I                      = "/vim/blog/gui-i";
-const ROUTE_VIM_BLOG_GUI_II                      = "/vim/blog/gui-ii";
-const ROUTE_VIM_BLOG_GUI_III                     = "/vim/blog/gui-iii";
+const ROUTE_VIM_BLOG_GUI_II                     = "/vim/blog/gui-ii";
+const ROUTE_VIM_BLOG_GUI_III                    = "/vim/blog/gui-iii";
+const ROUTE_VIM_BLOG_GUI_IV                     = "/vim/blog/gui-iv";
+
+const ROUTE_VIM_BLOG_POOF_I                     = "/vim/blog/poof-i";
 
 const INTRO_ANIM_COMPLETE = "IntroAnimationComplete"
 const INDEX_ANIM_COMPLETE = "IndexAnimationComplete"

@@ -1,0 +1,263 @@
+<body>
+  <div>
+    <h5>Sept 4, 2025</h5>
+    <h1>A Metaprogrammable GUI toolkit</h1>
+
+    <div class=part-link-container>
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-i'>
+          <h4 class='part-link-0'>
+            Part I
+          </h4>
+          <h4 class='part-link-1'>
+            Displaying Engine Data
+          </h4>
+        </a>
+      </div>
+
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-ii'>
+          <h4 class='part-link-0'>
+            Part II
+          </h4>
+          <h4 class='part-link-1'>
+            A Primitive Widget
+          </h4>
+        </a>
+      </div>
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-iii'>
+          <h4 class='part-link-0'>
+            Part III
+          </h4>
+          <h4 class='part-link-1'>
+            Custom Widgets
+          </h4>
+        </a>
+      </div>
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-iv'>
+          <h4 class='part-link-0 active'>
+            Part IV
+          </h4>
+          <h4 class='part-link-1 active'>
+            Low Level API
+          </h4>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <div>
+    <h3>Preface</h3>
+    <p>
+      Until now, we've hand-waved the API provided by Bonsai which is
+      eventually responsible for putting pixels on the screen.  If we want to
+      do more complex UI elements, we're going to have to take a closer look
+      there.
+    </p>
+
+    <p>
+      But first, let's inspect a piece of UI that's impractical to generate programatically at compile time.
+    </p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/callgraph_gui_0.png"></img>
+      <figcaption>A callgraph with context switch information</figcaption>
+    </figure>
+
+    <p>
+      This window has three seperate content regions, absolute and relative
+      layouts, and elements with custom clip bounds.  So, how do we get from
+      our high-level `UiDisplay` paradigm, which knows nothing about any of
+      this, down to this?
+    </p>
+
+    <h3>API</h3>
+    <p>
+      The Bonsai UI API is an immediate mode, command-buffer style API.  The
+      public APIs simply write information to a command buffer for later processing.
+    </p>
+
+    <p>
+      Let's take a look at a couple of the APIs that make the above UI possible
+    </p>
+
+    <code>
+      void PushTextAt(renderer_2d *Ui, cs Text, v2 At, rect2 Clip);
+      void PushUntexturedQuadAt(renderer_2d *Ui, v2 AbsoluteP, v2 QuadDim);
+    </code>
+
+    <p>
+      The first thing we're going to sketch out is creating the window, and
+      making the little status message that tells us if we were able to
+      successfully start tracing context switch information.
+    </p>
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/callgraph_gui_1.png"></img>
+      <figcaption>The first region</figcaption>
+    </figure>
+
+
+    <h3>Window and babys-first-content</h3>
+    <p>
+      This bit is, as you might expect, extremely simple.  Let's sketch it out.
+    </p>
+
+    <code>
+  // Function that opens a window and displays recorded callgraph information
+  //
+  void DoThreadViewWindow(renderer_2d *Ui)
+  {
+    // First we ask the UI system for a window context with the name "Thread View"
+    // On the first frame the UI creates this context for us and adds it to an internal
+    // hashtable; on subsequent frames it gives us the same pointer, which remembers
+    // window state such as screen position, scroll position, zoom level, etc.
+    //
+    window_layout *Window = GetOrCreateWindow(Ui, CSz("Thread View"))
+
+    // Tell the UI system that any commands between the Window Start/End
+    // bookends should be drawn and clipped to the window bounds. The extra
+    // scopes are purely a stylistic choice
+    //
+    PushWindowStart(Ui, Window);
+    {
+      // Create a container for the "CSwitch Tracing" text
+      //
+      PushTableStart(Ui);
+      {
+        // Query some other system to check if we successfully started CSwitch Tracing
+        b32 CSTracingStarted = IsContextSwitchTracingIsRunning();
+
+        cs ContextSwitchText = CSTracingStarted ?
+          CSz("CSwitch Tracing : Running") :
+          CSz("CSwitch Tracing : Failed to Start") ;
+
+        // Finally display the text
+        PushColumn(Ui, ContextSwitchText);
+      }
+      PushTableEnd();
+    }
+    PushWindowEnd(Ui, Window);
+  }
+    </code>
+
+
+    <h3>Profile Sample Information</h3>
+
+    <p>
+      Now, with that out of the way, let's get into something a bit meatier,
+      the actual callgraph information.
+    </p>
+
+
+    <figure class='inline-block'>
+      <img class='full-width' src="/assets/callgraph_gui_2.png"></img>
+      <figcaption>The first region</figcaption>
+    </figure>
+
+    <code>
+  // Continuing on from where we left off ..
+  //
+  void DoThreadViewWindow(renderer_2d *Ui)
+  {
+    window_layout *Window = GetOrCreateWindow(Ui, CSz("Thread View"))
+
+    PushWindowStart(Ui, Window);
+    {
+
+      // Context Switch Tracing status message
+      //
+      {
+        PushTableStart(Ui);
+          cs ContextSwitchText = IsContextSwitchTracingIsRunning() ?
+                                   CSz("CSwitch Tracing : Running") :
+                                   CSz("CSwitch Tracing : Failed to Start") ;
+          PushColumn(Ui, ContextSwitchText);
+        PushTableEnd();
+      }
+
+      // Main content region; displaly the callgraph information
+      // 
+      // In this example, profile samples are measured in CPU cycles with _rdtsc()
+      //
+      // We're going to assume we're running locked at 60fps on a 3.3ghz machine,
+      // which makes a single frame 55 million CPU cycles.  Clearly, a real profiler
+      // would use a more sophistaicated system for determining FrameCycles.
+      //
+      u32 FrameCycles = 55000000;
+
+      // Sample boxes are 15px high
+      //
+      r32 BoxHeight = 15.f;
+      {
+        PushTableStart(Ui);
+
+        // Draw the samples collected during profiling.
+        //
+        // The PushColumn API is going to be insufficient for this task.  Instead,
+        // we're going to compute absolute offsets and use the PushUntexturedQuadAt
+        // and PushTextAt APIs to absolutely position the sample rects and labels
+        //
+        {
+          s32 ThreadCount = GetThreadCount();
+          for (s32 ThreadIndex = 0; ThreadIndex < ThreadCount; ++ThreadIndex)
+          {
+            // Running total of how far down in Y we've drawn.  We advance
+            // this every time we draw an entire sample buffer, by the maximum
+            // callstack depth we saw.
+            r32 yBasis = 0;
+
+            // We're going to hand-wave how we record samples and pretend
+            // we magically end up with a buffer of samples to draw.
+            //
+            auto SampleBuffer = GetProfileSamplesForThread(ThreadIndex);
+
+            for (s32 SampleIndex = 0; SampleIndex < SampleBuffer.Count; ++SampleIndex)
+            {
+              auto Sample = SampleBuffer[SampleIndex];
+
+              // Compute the x-offset from the left-hand side of the window
+              r32 xOffset = Sample.StartCycle / FrameCycles;
+              r32 yOffset = Sample.CallstackDepth * BoxHeight;
+
+              // Compute the width of the current sample
+              r32 Span    = Sample.TotalCycles / FrameCycles;
+
+              v2 AbsoluteP = V2(xOffset, yBasis + yOffset);
+              v2 QuadDim   = V2(Span, BoxHeight);
+              PushUntexturedQuadAt(Ui, AbsoluteP, v2 QuadDim);
+
+              // Label the sample, clipped to the box bounds we computed above
+              rect2 Clip = RectMinDim(AbsoluteP, QuadDim);
+              PushTextAt(Ui, Sample.Name, AbsoluteP, Clip);
+            }
+
+            // Update yBasis for the next block of thread samples
+            //
+            yBasis += SampleBuffer.MaxCallstackDepth * BoxHeight;
+          }
+        }
+
+        PushTableEnd(Ui);
+      }
+
+    }
+    PushWindowEnd(Ui, Window);
+  }
+    </code>
+
+
+  <p>
+    Let's put it all together in <a href='/vim/blog/gui-iv'>Part IV : Putting it all Together</a>
+  </p>
+
+  </div>
+</body>
+

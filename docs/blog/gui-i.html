@@ -23,7 +23,7 @@
             Part II
           </h4>
           <h4 class='part-link-1'>
-            Custom UI
+            A Primitive Widget
           </h4>
         </a>
       </div>
@@ -34,19 +34,35 @@
             Part III
           </h4>
           <h4 class='part-link-1'>
-            Coming Soon
+            Custom Widgets
+          </h4>
+        </a>
+      </div>
+
+      <div class=part-link>
+        <a href='/vim/blog/gui-iv'>
+          <h4 class='part-link-0'>
+            Part IV
+          </h4>
+          <h4 class='part-link-1'>
+            Low Level API
           </h4>
         </a>
       </div>
 
     </div>
+  </div>
 
-    <h4>Disclaimer</h4>
-    <p>I have no idea what I'm talking about.  Act accordingly.</p>
-
-    <h3>Thesis</h3>
+  <div>
+    <h3>Preamble</h3>
     <p>
-      For my game engine project, Bonsai, I wanted a GUI toolkit that satisfied a few requirements:
+      The following article series make use of a metaprogramming tool I wrote called `poof`.
+        For those unfamiliar with the tool, I would recommend at least skimming the <a href='/vim/blog/poof-i'>Introduction to Poof</a>.
+    </p>
+
+    <h3>Problem Statement</h3>
+    <p>
+      For my game engine project, Bonsai, I wanted to build a GUI toolkit that satisfied a few requirements:
 
       <ul>
         <li>
@@ -62,8 +78,7 @@
     </p>
 
     <p>
-      That sounds like a pretty tall order, and it was. We're going to tackle
-      this one part at a time.  Let's get into the first one.
+      
     </p>
 
     <p>First of all, what do I mean by "engine data"?</p>
@@ -87,103 +102,49 @@
       s32, float, string, etc.  For generating UI, we would really like to
       iterate over the members of a given type and recurse down the type-tree
       for each member, doing a UI display function at each level.
-      Unfortunately Bonsai is written in C++, which has extremely primitive
-      support for doing these kinds of operations.
-    </p>
-
-    <h4>Enter poof : stage left</h4>
-    <p>
-      `poof` is a metaprogramming tool that I wrote to assist with certain tasks
-      in Bonsai that I could not figure out how to do with C++ template
-      metaprogramming.  I won't go into great detail about the genesis of the
-      tool here, but the basic idea is it's runs a two stage process:
-
-      <ul>
-        <li>
-          1. poof runs a bespoke lex/parse stage on the program source code.
-          During this first stage, it builds internal representations of the
-          datatypes found in the program it's parsing.</li>
-
-        <li>
-          2. poof scans for all instances of the `poof(...)` macro keyword,
-          which contains the metaprogramming code.  It interprets this code and
-          emits the result to a new file which is #included directly following
-          the poof macro.</li>
-      </ul>
     </p>
 
     <p>
-      Generally, calling poof meta functions looks like this:
+      Unlike in C++, iterating over the members in a type is easy with poof.
+      Inside a poof function, we simply call `type.map`, and the runtime
+      executes the following block for each member.
     </p>
 
-    <code>
-        // Example entity struct, this can be any valid C structure, enum or union.
-        //
-        struct entity
-        {
-          u32 EntityIndex;
-          mesh_3d Mesh;
-          transform_3d Transform;
-          // .. etc ..
-        };
-
-        // generates code for a list container, containing entities
-        poof(gen_list_container(entity))
-        #include "generated/gen_list_container_entity.h"
-
-        // generates code for a hashtable container, containing entities
-        poof(gen_hashtable_container(entity))
-        #include "generated/gen_hashtable_container_entity.h"
-
-        // generates code to display the entity at runtime in a UI
-        poof(gen_ui_display(entity))
-        #include "generated/gen_ui_display_entity.h"
-
-        // .. dump the entity as text to console
-        poof(gen_console_display(entity))
-
-        // .. serialize/deserialize the entity to disk
-        poof(gen_serdes(entity))
-
-        //
-        // .. etc
-        //
-    </code>
-
     <p>
-      With poof, iterating over a type is easy.  Inside a poof function, we
-      simply call `type.map()`, and the runtime executes the following block
-      for each member.  We can (ab)use function overloading here and just call
-      a display function for each member.  In this example, we'll call it
-      UiDisplay.
+      In the context of generating UI for our datastructures, we can (ab)use
+      C++ function polymorphism and call a display function for each member.
+      In this example, we'll call the C++ display function UiDisplay.  This
+      example follows the same pattern outlined in the <a href='/vim/blog/poof-i'>Introduction to Poof</a>
+      mentioned at the start of this article.  Now would be a good time to skim
+      that if you're unfamiliar with the basics of how poof works.
     </p>
 
     <code>
 
-      // The poof meta function that generates the cpp UiDisplay function
-      //
-      poof(
+    // The poof function that generates the C++ UiDisplay function
+    //
+    poof(
 
-        // poof meta function signature
-        //
-        func gen_ui_display(type)
+      func gen_ui_display(type)
+      {
+        void UiDisplay(renderer_2d *Ui, type *Element)
         {
-
-          // cpp function definition
-          //
-          void UiDisplay(renderer_2d *Ui, type *Element)
+          type.map(member) // iterate over members of 'type'
           {
-            // iterate over members of 'type'
-            type.map(member)
-            {
-              // emit for each member in 'type'
-              UiDisplay(Ui, &Element->(member.name));
-            }
+            // emit a display function call for each member in 'type'
+            UiDisplay(Ui, &Element->(member.name));
           }
         }
-      )
+      }
 
-      // Consider our example entity struct from the previous code
+    )
+    </code>
+
+    <h4>
+      And the code that calls it
+    </h4>
+    <code>
+      // Consider an example entity struct
       //
       struct entity
       {
@@ -194,18 +155,24 @@
 
       // We can call the meta func that generates UiDisplay for an 'entity' like so
       //
-      poof(gen_ui_display(test_struct))
-      #include "generated/gen_ui_display_test_struct.h"
+      poof(gen_ui_display(entity))
+      #include "generated/gen_ui_display_entity.h"
 
 
-      // Which produces the following inside "generated/gen_ui_display_test_struct.h"
+      // Which produces the following inside "generated/gen_ui_display_entity.h"
       //
-      void UiDisplay(renderer_2d *Ui, test_struct *Element)
+      void UiDisplay(renderer_2d *Ui, entity *Element)
       {
         UiDisplay(Ui, &Element->EntityIndex);
-        UiDisplay(Ui, &Element->Mesh);
+        UiDisplay(Ui, &Element->Mesh); 
         UiDisplay(Ui, &Element->Transform);
       }
+
+      // We make the assumption in this example that we've already called the
+      // gen_ui_display poof function for mesh_3d and transform_3d types.
+      // Worth noting, there exists an easy way to automate this process, but
+      // for brevity I've omitted it in this example.
+
     </code>
 
     <p>
@@ -223,11 +190,7 @@
     </p>
 
     <p>
-      So, with the basics out of the way, how do we make UI that's a little more tailored?
-    </p>
-
-    <p>
-      Let's take a closer look in <a href='/vim/blog/gui-ii'>Part II : Custom UI</a>
+      Let's take a closer look in <a href='/vim/blog/gui-ii'>Part II : A Primitive Widget</a>
     </p>
 
   </div>
