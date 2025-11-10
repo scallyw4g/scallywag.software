@@ -89,38 +89,39 @@
     </p>
 
     <code>
-      struct cs { u32 Count; char *Start; } // cs is a mnemonic for counted_string
-
-
-      ui_element_reference PushTableStart(renderer_2d *Ui, ui_render_params *Params);
+      ui_element_reference PushTableStart(renderer_2d *Ui);
                       void PushTableEnd  (renderer_2d *Ui);
 
-      void PushColumn(renderer_2d *Ui, cs Text);
+      void PushColumn(renderer_2d *Ui, string Text);
 
-      b32 Button(renderer_2d *Ui, cs Text, ui_id Id);
+      b32 Button(renderer_2d *Ui, string Text, ui_id Id);
     </code>
 
     <p>
       Most elements will be contained within Tables, which are book-ended with
-      PushTable(Start|End).  Tables are just layout containers, and do not
-      necessarily contain tabular data. After opening a Table with PushTableStart,
-      PushColumn will do most of the heavy lifting.
+      PushTable(Start|End).  Tables are layout containers; they do not
+      necessarily contain tabular data. After opening a Table with
+      PushTableStart, PushColumn will do most of the heavy lifting.
     </p>
 
     <p>
-      With the API surface inspected, let's get to work
+      The Button API is the first interactive element we've seen.  It requires
+      that you construct a 'ui_id', which must be a globally unique identifier
+      that represents the specific UI interaction.  Discussing robust construction
+      of these IDs is outside the scope of this article, but could be the topic
+      of future writing.
+    </p>
+
+    <p>
+      Alright, with the API surface inspected, let's get to work.
     </p>
 
     <code>
-      // We'll hand-wave the lowest-level function for a minute ..
+      // Let's start by defining the v3 editor widget, which displays a label and
+      // editor widgets for the three f32 values
       //
-      void UiDisplay(renderer_2d *Ui, f32 *Value);
-
-      // Let's start by defining the function that displays a label and editor
-      // widgets for the f32 elements
-      //
-      void UiDisplay(renderer_2d *Ui, cs Label, v3 *Vector)
-      {
+      void UiDisplay(renderer_2d *Ui, string Label, v3 *Vector)
+      {
         PushTableStart(Ui);
           PushColumn(Ui, Label);
 
@@ -132,22 +133,25 @@
         PushTableEnd(Ui);
       }
 
-      // Now for the lowest level widget for displaying and editing an f32 value
+      // Now for the lowest level f32 widget
       //
       void UiDisplay(renderer_2d *Ui, f32 *Value)
       {
-        // These IDs have to be globally unique 128bit identifiers.
         // This computation is a stand-in for brevity
         ui_id Id0 = {"-" ^ Value};
         ui_id Id1 = {"+" ^ Value};
 
         PushTableStart(Ui);
-          if (Button(Ui, CSz("-"), Id0)) { *Value -= 1.f; }
-          PushColumn(Ui, CS(*Value);
-          if (Button(Ui, CSz("+")), Id1) { *Value += 1.f; }
+          if (Button(Ui, String("-"), Id0)) { *Value -= 1.f; }
+          PushColumn(Ui, String(*Value);
+          if (Button(Ui, String("+")), Id1) { *Value += 1.f; }
         PushTableEnd(Ui);
       }
     </code>
+
+    <p>
+      Great, we've 
+    </p>
 
     <h3>Conclusion</h3>
     <p>

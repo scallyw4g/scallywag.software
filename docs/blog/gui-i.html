@@ -62,7 +62,7 @@
 
     <h3>Problem Statement</h3>
     <p>
-      For my game engine project, Bonsai, I wanted to build a GUI toolkit that satisfied a few requirements:
+      For my game engine project, <a href="https://github.com/scallyw4g/bonsai">Bonsai</a>, I wanted to build a GUI toolkit that satisfied a few requirements:
 
       <ul>
         <li>
@@ -110,15 +110,6 @@
       executes the following block for each member.
     </p>
 
-    <p>
-      In the context of generating UI for our datastructures, we can (ab)use
-      C++ function polymorphism and call a display function for each member.
-      In this example, we'll call the C++ display function UiDisplay.  This
-      example follows the same pattern outlined in the <a href='/vim/blog/poof-i'>Introduction to Poof</a>
-      mentioned at the start of this article.  Now would be a good time to skim
-      that if you're unfamiliar with the basics of how poof works.
-    </p>
-
     <code>
 
     // The poof function that generates the C++ UiDisplay function
@@ -127,11 +118,11 @@
 
       func gen_ui_display(type)
       {
-        void UiDisplay(renderer_2d *Ui, type *Element)
+        void UiDisplay(renderer_2d *Ui, type.name *Element)
         {
-          type.map(member) // iterate over members of 'type'
+          type.map(member) /// iterate over members of 'type'
           {
-            // emit a display function call for each member in 'type'
+            /// emit a UiDisplay function call for each member in 'type'
             UiDisplay(Ui, &Element->(member.name));
           }
         }
@@ -170,6 +161,7 @@
 
       // We make the assumption in this example that we've already called the
       // gen_ui_display poof function for mesh_3d and transform_3d types.
+      //
       // Worth noting, there exists an easy way to automate this process, but
       // for brevity I've omitted it in this example.
 

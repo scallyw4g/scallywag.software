@@ -82,7 +82,7 @@
     </p>
 
     <code>
-      void PushTextAt(renderer_2d *Ui, cs Text, v2 At, rect2 Clip);
+      void PushTextAt(renderer_2d *Ui, string Text, v2 At, rect2 Clip);
       void PushUntexturedQuadAt(renderer_2d *Ui, v2 AbsoluteP, v2 QuadDim);
     </code>
 
@@ -113,7 +113,7 @@
     // hashtable; on subsequent frames it gives us the same pointer, which remembers
     // window state such as screen position, scroll position, zoom level, etc.
     //
-    window_layout *Window = GetOrCreateWindow(Ui, CSz("Thread View"))
+    window_layout *Window = GetOrCreateWindow(Ui, String("Thread View"))
 
     // Tell the UI system that any commands between the Window Start/End
     // bookends should be drawn and clipped to the window bounds. The extra
@@ -128,9 +128,9 @@
         // Query some other system to check if we successfully started CSwitch Tracing
         b32 CSTracingStarted = IsContextSwitchTracingIsRunning();
 
-        cs ContextSwitchText = CSTracingStarted ?
-          CSz("CSwitch Tracing : Running") :
-          CSz("CSwitch Tracing : Failed to Start") ;
+        string ContextSwitchText = CSTracingStarted ?
+              String("CSwitch Tracing : Running") :
+              String("CSwitch Tracing : Failed to Start") ;
 
         // Finally display the text
         PushColumn(Ui, ContextSwitchText);
@@ -141,6 +141,9 @@
   }
     </code>
 
+    <p>
+      Easy-peasy lemon-squeezy.
+    </p>
 
     <h3>Profile Sample Information</h3>
 
@@ -152,7 +155,7 @@
 
     <figure class='inline-block'>
       <img class='full-width' src="/assets/callgraph_gui_2.png"></img>
-      <figcaption>The first region</figcaption>
+      <figcaption>Callgraph information</figcaption>
     </figure>
 
     <code>
@@ -160,7 +163,7 @@
   //
   void DoThreadViewWindow(renderer_2d *Ui)
   {
-    window_layout *Window = GetOrCreateWindow(Ui, CSz("Thread View"))
+    window_layout *Window = GetOrCreateWindow(Ui, String("Thread View"))
 
     PushWindowStart(Ui, Window);
     {
@@ -169,9 +172,9 @@
       //
       {
         PushTableStart(Ui);
-          cs ContextSwitchText = IsContextSwitchTracingIsRunning() ?
-                                   CSz("CSwitch Tracing : Running") :
-                                   CSz("CSwitch Tracing : Failed to Start") ;
+          string ContextSwitchText = IsContextSwitchTracingIsRunning() ?
+                                   String("CSwitch Tracing : Running") :
+                                   String("CSwitch Tracing : Failed to Start") ;
           PushColumn(Ui, ContextSwitchText);
         PushTableEnd();
       }

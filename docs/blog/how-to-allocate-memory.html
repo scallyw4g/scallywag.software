@@ -19,7 +19,7 @@
   One of the cases I've run into that requires a heap is allocating geometry
   data.  Typically, 3D geometry data has an unpredictable lifetime; it could be
   on the screen for a handful of frames, the majority of frames, or for the
-  entire playsession.  The size of data also varies greatly.  Some geometries
+  entire program.  The size of data also varies greatly.  Some geometries
   require a handful of triangles, some are tens or hundreds-of-thousands.  For
   offline rendering (or, indeed, advanced real-time renderers) it's not
   uncommon to reach into the hundreds-of-millions or billions of triangles.
