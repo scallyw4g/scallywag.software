@@ -60,12 +60,6 @@
       value? We'd want to display a color picker instead of the default widget.
     </p>
 
-    <code>
-      // Imagine we have a vector struct that looks something like this.
-
-      struct v3 { f32 Elements[3]; }
-    </code>
-
     <p>
       The default behavior for a vector quantity isn't particularly useful for
       displaying a color value, especially the color is encoded as something other than RGB.
@@ -113,7 +107,7 @@
             type.map(member)
             {
               /// We can check if the current member has our @ui_custom_display tag
-              member.has_tag(ui_custom_display)
+              member.has_tag(ui_custom_display)?
               {
                 /// and inject the tag value verbatim if it does
                 member.tag_value(ui_custom_display)
@@ -159,7 +153,7 @@
 
 
     <p>
-      Let's take a closer look in <a href='/vim/blog/gui-iii'>Part III : Low Level API</a>
+      Let's take a closer look in <a href='/vim/blog/gui-iv'>Part IV : Low Level API</a>
     </p>
 
   </div>

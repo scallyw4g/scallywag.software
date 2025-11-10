@@ -22,13 +22,16 @@
   <div>
     <h3>Introduction</h3>
     <p>
-      `poof` is a metaprogramming tool I wrote to assist with certain tasks in
+      poof is a metaprogramming tool I wrote to assist with certain tasks in
       Bonsai that fall somewhere between 'painful' and 'impossible' by using
-      traditional C++ template metaprogramming.
+      traditional C++ template metaprogramming.  Poof operations are generally
+      based on one of two constructs; looping, or branching.  For some reason,
+      the C++ standards comittee decided to make these operations intolerably
+      difficult in their metaprogramming language, so I wrote a better one.
     </p>
 
     <p>
-      The basic idea is that poof runs as a two stage process:
+      The poof compiler runs as a two stage process:
     </p>
 
     <h4>Stage 1</h4>
@@ -159,33 +162,31 @@
     <h4>Generic DebugPrint</h4>
     <p>
       We could use what we've learned to far to write a generic DebugPrint
-      function that pretty-prints the members of a struct at runtime.
+      function that pretty-prints the members of an arbitrary struct at
+      runtime.  This is a good example where poof excels and C++ fails
+      miserably; doing this with templates is a <i>fucking nightmare</i>.
     </p>
 
     <code>
 
-    // First, we're going to do some typedefs and manually define DebugPrint functions for primitive types
-
-    typedef int          s32;
-    typedef unsigned int u32;
-    typedef float        f32;
+    // First we define the DebugPrint functions for the primitive types we're using
 
     void DebugPrint( const char *Value )
     {
       printf("%s", Value);
     }
 
-    void DebugPrint( u32 *Value )
+    void DebugPrint( unsigned int *Value )
     {
       printf("%u", *Value);
     }
 
-    void DebugPrint( s32 *Value )
+    void DebugPrint( int *Value )
     {
       printf("%d", *Value);
     }
 
-    void DebugPrint( f32 *Value )
+    void DebugPrint( float *Value )
     {
       printf("%f", *Value);
     }
@@ -266,15 +267,29 @@
       example_struct {
       example_struct::SomeNumber = -42
       example_struct::SomeOtherNumber = 69
-      example_struct::FloatValue = 42.00000000000tip of the iceberg 
+      example_struct::FloatValue = 42.00000000000
       }
     </code>
 
-    <h3>Conclusion</h3>
+    <h3>Closing Remarks</h3>
     <p>
       That is a brief overview of the very basics of metaprogramming with poof.
+      In this nearly-trivial example program, we accomplished something that
+      requires an almost comical 14192 lines of dependency code 
+      (<a href="https://github.com/boostorg/pfr/tree/develop/include/boost">boost::pfr</a>)
+       in C++.
+    </p>
+
+    <p>
       There are a number of real example programs you can run on your own machine
-      and experiment with in the source code repository: https://github.com/scallyw4g/poof/tree/master/examples
+      and experiment with in the <a href="https://github.com/scallyw4g/poof/tree/master/examples">Github Repo</a>.
+    </p>
+
+    <p>
+      For examples of real world code generated with poof, take a look at the
+      standard library of poof functions included in <a href="https://github.com/scallyw4g/bonsai_stdlib/blob/master/src/poof_functions.h">Bonsai</a>.
+      This library includes generics for containers, operator overloads, debug
+      printing, and a number of other utility functions.
     </p>
 
   </div>
