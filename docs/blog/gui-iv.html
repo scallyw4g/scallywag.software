@@ -82,8 +82,9 @@
     </p>
 
     <code>
-      void PushTextAt(renderer_2d *Ui, string Text, v2 At, rect2 Clip);
-      void PushUntexturedQuadAt(renderer_2d *Ui, v2 AbsoluteP, v2 QuadDim);
+      void PushUntexturedQuadAt(renderer_2d *Ui, rect2 Quad);
+
+      void PushTextAt(renderer_2d *Ui, string Text, v2 AbsoluteP, rect2 Clip);
     </code>
 
     <p>
@@ -228,11 +229,12 @@
 
               v2 AbsoluteP = V2(xOffset, yBasis + yOffset);
               v2 QuadDim   = V2(Span, BoxHeight);
-              PushUntexturedQuadAt(Ui, AbsoluteP, v2 QuadDim);
+
+              rect2 Quad = RectMinDim(AbsoluteP, QuadDim);
+              PushUntexturedQuadAt(Ui, Quad);
 
               // Label the sample, clipped to the box bounds we computed above
-              rect2 Clip = RectMinDim(AbsoluteP, QuadDim);
-              PushTextAt(Ui, Sample.Name, AbsoluteP, Clip);
+              PushTextAt(Ui, Sample.Name, AbsoluteP, Quad);
             }
 
             // Update yBasis for the next block of thread samples
@@ -249,10 +251,16 @@
   }
     </code>
 
+    <p>
+      That's a lot to digest, but that's kind of the point.  We can do arbitrarily
+      complex UI layout if we want to, while maintaining the ability to do very
+      low-effort generated UI code when a default layout will do.
+    </p>
+
     <h3>Conclusion</h3>
     <p>
-      And with that, we've covered the basics of how the Bonsai UI API supports
-      both generic metaprogrammed UI and highly-tailored custom UI elements.
+      We've covered the basics of how the Bonsai UI API supports both generic
+      metaprogrammed UI and highly-tailored custom UI elements.
     </p>
 
     <p>

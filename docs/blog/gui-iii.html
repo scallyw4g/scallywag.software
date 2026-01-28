@@ -54,15 +54,17 @@
   </div>
 
   <div>
-    <h3>A Color Picker</h3>
+    <h3>Recap</h3>
     <p>
-      What if, for example, we had a vector quantity that represented a color
-      value? We'd want to display a color picker instead of the default widget.
+      In the previous parts, we learned to 
     </p>
 
+    <h3>A Color Picker</h3>
     <p>
-      The default behavior for a vector quantity isn't particularly useful for
-      displaying a color value, especially the color is encoded as something other than RGB.
+      What if we had a vector quantity that represented a color value?  The
+      default behavior for a vector quantity isn't particularly useful for
+      displaying a color value, especially the color is encoded as something
+      other than RGB.  We'd rather display a color picker.
     </p>
 
     <figure class='inline-block'>
@@ -79,7 +81,7 @@
     <p>
       So, to get from A to B, we need to create a little escape hatch for ourself.
       Thankfully, poof supports arbitrary data tags on pretty much everything,
-      so we can create a tag that lets us do a custom UI function instead of
+      so we can create a tag that lets us do a color picker function instead of
       the default one.
     </p>
 
@@ -146,9 +148,10 @@
     </code>
 
     <p>
-      Great.  So we have a system for doing low effort, generic UI for displaying
-      data, and an escape hatch for doing custom functions.  But what does the
-      underlying API look like for doing something more complex?
+      Great.  So we have a system for doing low effort, generic UI for
+      displaying data, and an escape hatch for calling arbitrary functions
+      instead.  But what does the underlying API look like for doing something
+      more complex?
     </p>
 
     <p>
