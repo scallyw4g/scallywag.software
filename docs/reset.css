@@ -8,7 +8,8 @@ html, body {
 @media print {
 
   html, body {
-    font-size: 16px;
+    font-size: 16px !important;
+    color: #000 !important;
   }
 
   .page-break-before {
@@ -19,6 +20,14 @@ html, body {
     page-break-after: always;
   }
 
+  .noprint {
+    display: none !important;
+  }
+
+  #vim {
+    border: none !important;
+    margin: 0 0 !important;
+  }
 }
 
 ul {
